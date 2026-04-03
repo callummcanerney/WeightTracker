@@ -1009,7 +1009,6 @@
     <!-- CHART -->
     <div class="chart-wrap">
       <div class="chart-header">
-        <span class="chart-title">Body Weight</span>
         <div class="chart-controls">
           <div class="style-picker" id="style-picker">
             <button class="range-btn" id="style-trigger" type="button">Smooth ▾</button>
@@ -1885,10 +1884,9 @@
     const indexSliderLabel = document.getElementById('index-slider-label');
 
     function syncRangeSliderVisibility() {
-      const isIndex = activeScaleMode === 'index';
-      document.getElementById('range-controls').style.display = isIndex ? 'none' : 'flex';
-      document.getElementById('range-sep').style.display = 'none'; // slider always present; sep not needed
-      document.getElementById('index-slider-wrap').classList.remove('hidden'); // visible in both modes
+      document.getElementById('range-controls').style.display = 'none';
+      document.getElementById('range-sep').style.display = 'none';
+      document.getElementById('index-slider-wrap').classList.remove('hidden');
     }
 
     function syncSliderToState() {
