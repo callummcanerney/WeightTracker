@@ -1020,6 +1020,8 @@
             </div>
           </div>
           <div class="ctrl-sep"></div>
+          <button class="range-btn active" id="trend-toggle" type="button">LOBF</button>
+          <div class="ctrl-sep"></div>
           <div class="scale-mode-group" id="scale-mode-btns">
             <button class="range-btn active" data-scale="time" type="button">Date</button>
             <button class="range-btn" data-scale="index" type="button">Step</button>
@@ -1188,6 +1190,7 @@
     let chart = null;
     let activeRange = 'all';
     let activeLineStyle = 'smooth';
+    let activeTrend = true;
     let panMin = null;         // ms timestamp, null when 'all'
     let panMax = null;         // ms timestamp
     let panIndexMin = null;    // entry index, null when 'all' (index mode)
@@ -1444,7 +1447,7 @@
 
         datasets = [
           { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
           ...(goalPts.length ? [{ label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.5)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false }] : []),
         ];
 
@@ -1510,7 +1513,7 @@
 
         datasets = [
           { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
           ...goalDataset,
         ];
 
@@ -1957,6 +1960,17 @@
           indexSliderLabel.textContent = formatDays(val);
         }
         if (chart) applyPanToChart();
+      }
+    });
+
+    // ─── TREND TOGGLE ────────────────────────────────────────────────────────────
+    document.getElementById('trend-toggle').addEventListener('click', () => {
+      activeTrend = !activeTrend;
+      localStorage.setItem('wt-trend', activeTrend);
+      document.getElementById('trend-toggle').classList.toggle('active', activeTrend);
+      if (chart) {
+        chart.data.datasets[1].hidden = !activeTrend;
+        chart.update('none');
       }
     });
 
@@ -2431,6 +2445,12 @@
           opt.classList.add('active');
           document.getElementById('style-trigger').textContent = opt.textContent + ' ▾';
         }
+      }
+
+      const savedTrend = localStorage.getItem('wt-trend');
+      if (savedTrend !== null) {
+        activeTrend = savedTrend !== 'false';
+        document.getElementById('trend-toggle').classList.toggle('active', activeTrend);
       }
 
       renderRangeBtns(); // reflect restored activeRange
