@@ -1075,6 +1075,7 @@
           </div>
           <div class="ctrl-sep"></div>
           <button class="range-btn active" id="trend-toggle" type="button">LOBF</button>
+          <button class="range-btn active" id="optimal-toggle" type="button">Optimal</button>
           <div class="ctrl-sep"></div>
           <div class="scale-mode-group" id="scale-mode-btns">
             <button class="range-btn active" data-scale="time" type="button">Date</button>
@@ -1296,6 +1297,7 @@
     let activeRange = 'all';
     let activeLineStyle = 'smooth';
     let activeTrend = true;
+    let activeOptimal = true;
     let panMin = null;         // ms timestamp, null when 'all'
     let panMax = null;         // ms timestamp
     let panIndexMin = null;    // entry index, null when 'all' (index mode)
@@ -1549,7 +1551,7 @@
 
         datasets = [
           { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.5)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
           { label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
         ];
 
@@ -1606,8 +1608,7 @@
         _visibleCount = Math.max(1, visible.length);
 
         const trendData = computeTrend(visible);
-        const optCurve = computeOptimalCurve();
-        // Goal line extends to the optimal curve's end date (if any) so they meet at goal weight
+        const optCurve = activeOptimal ? computeOptimalCurve() : null;
         const goalEndX = optCurve ? Math.max(data[data.length - 1].x, optCurve.targetMs) : data[data.length - 1].x;
         const goalData = goal && data.length >= 2
           ? [{ x: data[0].x, y: goal }, { x: goalEndX, y: goal }] : [];
@@ -1615,7 +1616,7 @@
 
         datasets = [
           { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.5)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
           { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
           { label: 'Optimal', data: optData, borderColor: 'rgba(251,191,36,0.35)', borderDash: [3, 3], borderWidth: 1.5, pointRadius: 0, tension: 0.35, fill: false },
         ];
@@ -2114,7 +2115,9 @@
         if (!sorted.length) { indexSlider.min = 7; indexSlider.max = 7; indexSliderLabel.textContent = 'All'; return; }
         const totalMinMs = new Date(sorted[0].date + 'T00:00:00').getTime();
         const totalMaxMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
-        const totalDays = Math.max(7, Math.ceil((totalMaxMs - totalMinMs) / 86400000));
+        const optCS = activeOptimal ? computeOptimalCurve() : null;
+        const effectiveMaxMs = optCS ? Math.max(totalMaxMs, optCS.targetMs) : totalMaxMs;
+        const totalDays = Math.max(7, Math.ceil((effectiveMaxMs - totalMinMs) / 86400000));
         indexSlider.min = Math.min(7, totalDays);
         indexSlider.max = totalDays;
         if (panMin === null) {
@@ -2150,17 +2153,19 @@
         if (!sorted.length) return;
         const totalMinMs = new Date(sorted[0].date + 'T00:00:00').getTime();
         const totalMaxMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
-        const totalDays = Math.ceil((totalMaxMs - totalMinMs) / 86400000);
+        const optCI = activeOptimal ? computeOptimalCurve() : null;
+        const effectiveMaxMsI = optCI ? Math.max(totalMaxMs, optCI.targetMs) : totalMaxMs;
+        const totalDays = Math.ceil((effectiveMaxMsI - totalMinMs) / 86400000);
         const val = parseInt(indexSlider.value);
         if (val >= totalDays) {
           panMin = null; panMax = null;
           indexSliderLabel.textContent = 'All';
         } else {
           const spanMs = val * 86400000;
-          const rightMs = panMax !== null ? panMax : totalMaxMs;
+          const rightMs = panMax !== null ? panMax : effectiveMaxMsI;
           panMax = rightMs;
           panMin = Math.max(totalMinMs, panMax - spanMs);
-          if (panMin === totalMinMs) panMax = Math.min(totalMaxMs, totalMinMs + spanMs);
+          if (panMin === totalMinMs) panMax = Math.min(effectiveMaxMsI, totalMinMs + spanMs);
           indexSliderLabel.textContent = formatDays(val);
         }
         if (chart) applyPanToChart();
@@ -2176,6 +2181,17 @@
         chart.data.datasets[1].hidden = !activeTrend;
         chart.update('none');
       }
+    });
+
+    // ─── OPTIMAL TOGGLE ──────────────────────────────────────────────────────────
+    document.getElementById('optimal-toggle').addEventListener('click', () => {
+      activeOptimal = !activeOptimal;
+      localStorage.setItem('wt-optimal', activeOptimal);
+      document.getElementById('optimal-toggle').classList.toggle('active', activeOptimal);
+      // Rebuild so x-axis range recalculates (extends to targetMs or contracts back)
+      if (chart && activeScaleMode === 'time') { chart.destroy(); chart = null; }
+      refresh();
+      syncSliderToState();
     });
 
     // ─── PHASE MODAL ─────────────────────────────────────────────────────────────
@@ -2697,14 +2713,16 @@
       const { chartArea } = chart;
       const msPerPx = (panMax - panMin) / (chartArea.right - chartArea.left);
       const sorted = _panSorted();
-      const dataMinMs = new Date(sorted[0].date).getTime();
-      const dataMaxMs = new Date(sorted[sorted.length - 1].date).getTime();
+      const dataMinMs = new Date(sorted[0].date + 'T00:00:00').getTime();
+      const dataMaxMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
+      const optC = activeOptimal ? computeOptimalCurve() : null;
+      const effectiveMaxMs = optC ? Math.max(dataMaxMs, optC.targetMs) : dataMaxMs;
       let newMin = panMin + e.deltaX * msPerPx;
       let newMax = panMax + e.deltaX * msPerPx;
       if (newMin < dataMinMs) { newMax += dataMinMs - newMin; newMin = dataMinMs; }
-      if (newMax > dataMaxMs) { newMin -= newMax - dataMaxMs; newMax = dataMaxMs; }
+      if (newMax > effectiveMaxMs) { newMin -= newMax - effectiveMaxMs; newMax = effectiveMaxMs; }
       panMin = Math.max(newMin, dataMinMs);
-      panMax = Math.min(newMax, dataMaxMs);
+      panMax = Math.min(newMax, effectiveMaxMs);
       if (_panRAF) return;
       _panRAF = requestAnimationFrame(() => { _panRAF = null; applyPanToChart(); });
     }, { passive: false });
@@ -2739,6 +2757,12 @@
       if (savedTrend !== null) {
         activeTrend = savedTrend !== 'false';
         document.getElementById('trend-toggle').classList.toggle('active', activeTrend);
+      }
+
+      const savedOptimal = localStorage.getItem('wt-optimal');
+      if (savedOptimal !== null) {
+        activeOptimal = savedOptimal !== 'false';
+        document.getElementById('optimal-toggle').classList.toggle('active', activeOptimal);
       }
 
       renderRangeBtns(); // reflect restored activeRange
