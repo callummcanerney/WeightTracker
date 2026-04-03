@@ -1,51 +1,136 @@
 # Weight Tracker — Claude Code Context
 
 ## What this project is
-A personal weight loss tracking app for Callum. Single HTML file, no build step, no npm. Currently runs as a local `file://` in Arc browser on Mac — GitHub Pages deployment is the immediate next step.
+A personal weight loss tracking dashboard for Callum. Single HTML file, no build step, no npm. Deployed via GitHub Pages, syncing live across Mac and iPhone via Firebase Firestore.
 
-## Current state
-- Single file: `Tracker.html`
-- Data stored in **Firebase Firestore** (project: `weighttracker-3ab18`) — localStorage has been replaced
-- Firestore data confirmed working on Mac (entries persist across refreshes)
-- GitHub repo: `callummcanerney/WeightTracker` — exists, but GitHub Pages not yet enabled
-- iPhone cannot access the app yet (no public URL)
-- Charts via Chart.js + chartjs-adapter-date-fns (CDN)
-- Fonts: Syne + JetBrains Mono (Google Fonts CDN)
-- Dark theme, green accent (`#4ade80`), minimal aesthetic
+---
 
-## Firestore security rules
-Open (`allow read, write: if true`) — no expiry. Acceptable for personal weight data with no auth requirement.
+## Infrastructure (all done — don't revisit)
 
-## Completed steps
-1. ~~**Firebase Firestore**~~ — done, integrated and working
-2. ~~**GitHub Pages**~~ — live at `https://callummcanerney.github.io/WeightTracker/Tracker.html`
-3. ~~**Firestore security rules**~~ — set to open with no expiry, published
+| Concern | Solution | Status |
+|---|---|---|
+| File | `Tracker.html` — single file, CDN-only | ✅ |
+| Data | Firebase Firestore (`weighttracker-3ab18`) | ✅ |
+| Hosting | GitHub Pages → `https://callummcanerney.github.io/WeightTracker/Tracker.html` | ✅ |
+| Multi-device | Mac + iPhone via Arc browser (pinned tab) — both read same Firestore data | ✅ |
+| Auth | None — Firestore rules open (`allow read, write: if true`), acceptable for personal data | ✅ |
 
-## Remaining steps (in order)
-4. **Responsive design** — different layouts for desktop (Mac) and mobile (iPhone), both using the same HTML file via CSS media queries
+**Dev workflow:** edit `Tracker.html` → `git add . && git commit -m "..." && git push` → live in ~30s
 
-## Architecture decisions
-- **Stay single-file HTML** — no Vite, no React, no npm. CDN scripts only. This keeps zero startup overhead (just open the URL) and easy deployment via git push.
-- **No login/auth** — personal use only. Firebase security rules will restrict by domain rather than user auth.
-- **GitHub Pages for hosting** — free, permanent, updates in ~30s after `git push`
-- **Firebase free tier** — no credit card needed, personal usage (100-200 reads/writes/day) is far below limits
+---
 
-## User context
-- Callum is a software developer — no need to over-explain technical concepts
-- Uses Arc browser on both Mac and iPhone
-- Wants zero manual intervention to open the app (pinned tab in Arc)
-- Previous pain point: RENPHO app doesn't use a true time-scaled X axis — this app does
-- Wants near-instant dev feedback loop when making changes
+## Architecture constraints (non-negotiable)
+- **Single-file HTML only** — no Vite, no React, no npm. CDN scripts only.
+- **No login/auth** — personal use, no need.
+- **No backend** — Firestore is the only server-side dependency.
+
+---
+
+## Tech stack
+- **Chart.js 4.4.1** + `chartjs-adapter-date-fns` (CDN) — time-scaled X axis (true to scale, unlike RENPHO)
+- **Firebase Firestore compat SDK 10.12.2** (CDN) — live `onSnapshot` sync
+- **Fonts:** Syne (UI), JetBrains Mono (numbers/labels) — Google Fonts CDN
+
+---
+
+## Current app structure
+
+### Layout (desktop, `100vh` no-scroll dashboard)
+```
+┌─────────────────────────────────────────────────┐
+│ Header                                           │
+├─────────────────────────────────────────────────┤
+│ Stats row (5 cards)                              │
+├─────────────────────────────────────────────────┤
+│ Chart — full width, fills remaining height       │
+├──────────────────────┬──────────────────────────┤
+│ Log Entry panel      │ [right panel — TBD]      │
+└──────────────────────┴──────────────────────────┘
+```
+
+### Stats row (5 cards)
+1. **Starting** — first logged weight + date
+2. **Current** — most recent weight + date
+3. **Total Lost** — delta from first to last, coloured red/green
+4. **Weekly Rate** — kg/week avg over full history, coloured red/green
+5. **Goal Progress** — % to goal, coloured amber/green
+
+### Chart
+- Line chart: actual weight (green), trend (dashed white), goal (dashed amber)
+- Range buttons: 1M / 3M / 6M / All
+- `maintainAspectRatio: false` — fills container height
+- True time-scaled X axis (key differentiator vs RENPHO)
+
+### Log Entry panel
+- Custom date picker: text input (`DD/MM/YYYY`) + calendar dropdown toggle
+- Weight input (kg)
+- Add Entry button (also triggered by Enter)
+- Goal weight input
+- Export / Import CSV
+
+### Firestore data model
+```js
+// collection: 'tracker', doc: 'data'
+{
+  entries: [{ date: 'YYYY-MM-DD', weight: number }, ...],
+  goal: number | null
+}
+```
+Live sync via `onSnapshot` — all state is in `_entries` and `_goal` in-memory.
+
+---
 
 ## Design system
-- Background: `#0b0c0e` (--bg), `#111316` (--bg2), `#181a1f` (--bg3)
-- Borders: `#222429` (--border), `#2a2d35` (--border2)
-- Text: `#e8eaf0` (--text), `#5a5f70` (--muted)
-- Accent: `#4ade80` (--accent), green glow at 25% opacity
-- Red: `#f87171`, Amber: `#fbbf24`
-- Font: Syne (UI), JetBrains Mono (labels/numbers)
 
-## Dev workflow
-1. Edit `Tracker.html` locally
-2. `git add . && git commit -m "..." && git push`
-3. GitHub Pages republishes in ~30s — both Mac and iPhone see update on refresh
+| Token | Value | Usage |
+|---|---|---|
+| `--bg` | `#0b0c0e` | Page background |
+| `--bg2` | `#111316` | Panel/card background |
+| `--bg3` | `#181a1f` | Input background |
+| `--border` | `#222429` | Subtle borders |
+| `--border2` | `#2a2d35` | Input borders, hover states |
+| `--text` | `#e8eaf0` | Primary text |
+| `--muted` | `#5a5f70` | Labels, secondary text |
+| `--accent` | `#4ade80` | Green — positive, active, brand |
+| `--red` | `#f87171` | Negative delta, gain |
+| `--amber` | `#fbbf24` | Neutral/in-progress states |
+
+**Fonts:** Syne for UI text, JetBrains Mono for all numbers and monospaced labels.
+**Inputs:** bg3 background, border2 border, accent focus ring (`box-shadow: 0 0 0 3px var(--accent-dim)`).
+
+---
+
+## User context
+- Callum is a software developer — no need to over-explain
+- Stats-oriented and visual/geometric thinker
+- Uses Arc browser, Mac (primary) + iPhone
+- Wants the dashboard to be as information-dense and insightful as possible
+- No scroll on desktop — everything visible at once
+
+---
+
+## Roadmap / planned features
+These are in-progress or agreed — implement in this order unless told otherwise:
+
+1. **[In progress]** Insights panel (right panel, replaces history log):
+   - Progress ring/arc (SVG, % of goal)
+   - Projected goal date (extrapolated from trend)
+   - Consistency stat (X/30 days · X%)
+   - Goal % weekly loss rate input → drives a 14-day exponential decay projection line on the chart
+
+2. **Responsive design** — mobile layout for iPhone (same HTML, CSS media queries)
+
+---
+
+## Known issues / bugs
+- Export CSV calls were previously broken (called `load()` — now fixed to use `_entries`)
+
+---
+
+## Feature ideas (backlog — not yet agreed)
+- 7-day rolling average overlay on chart
+- Rate-of-change sparkline (weekly delta over time)
+- Plateau detection (flag on chart when <0.2 kg change over 7+ days)
+- Ideal BMI band on chart (requires height input)
+- Best week ever stat
+- "What if" pace calculator

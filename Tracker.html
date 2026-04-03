@@ -184,6 +184,138 @@
   .range-btn:hover { border-color: var(--border2); color: var(--text); }
   .range-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+  .chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* EXTERNAL TOOLTIP */
+  .ext-tooltip {
+    position: absolute;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.12s;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+  .ext-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--border2);
+  }
+  .ext-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid var(--bg3);
+    z-index: 1;
+  }
+  .ext-tooltip-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-bottom: 5px;
+    letter-spacing: 0.04em;
+  }
+  .ext-tooltip-body {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* STYLE PICKER */
+  .style-picker { position: relative; }
+  .style-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 4px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 88px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+  .style-dropdown.hidden { display: none; }
+  .style-option {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    padding: 6px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: left;
+    letter-spacing: 0.05em;
+    transition: all 0.1s;
+    white-space: nowrap;
+  }
+  .style-option:hover { background: var(--bg3); color: var(--text); }
+  .style-option.active { color: var(--accent); background: var(--accent-dim); }
+
+  /* CUSTOM RANGE PRESETS */
+  .range-custom-wrap { position: relative; display: inline-flex; }
+  .range-del {
+    position: absolute;
+    top: -5px; right: -5px;
+    width: 14px; height: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 50%;
+    color: var(--muted);
+    font-size: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+    padding: 0;
+    line-height: 1;
+  }
+  .range-custom-wrap:hover .range-del { opacity: 1; }
+  .range-del:hover { color: var(--red); border-color: var(--red); }
+
+  .range-add-form { display: flex; align-items: center; gap: 4px; }
+  .range-add-form.hidden { display: none; }
+  .range-add-input {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    padding: 5px 8px;
+    width: 52px;
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s;
+  }
+  .range-add-input:focus { border-color: var(--accent); }
+  .range-add-input::placeholder { color: var(--muted); }
+
   .chart-canvas-wrap {
     flex: 1;
     position: relative;
@@ -632,11 +764,22 @@
   <div class="chart-wrap">
     <div class="chart-header">
       <span class="chart-title">Body Weight</span>
-      <div class="range-btns" id="range-btns">
-        <button class="range-btn" data-range="30">1M</button>
-        <button class="range-btn" data-range="90">3M</button>
-        <button class="range-btn" data-range="180">6M</button>
-        <button class="range-btn active" data-range="all">All</button>
+      <div class="chart-controls">
+        <div class="style-picker" id="style-picker">
+          <button class="range-btn" id="style-trigger" type="button">Smooth ▾</button>
+          <div class="style-dropdown hidden" id="style-dropdown">
+            <button class="style-option active" data-style="smooth" type="button">Smooth</button>
+            <button class="style-option" data-style="linear" type="button">Linear</button>
+            <button class="style-option" data-style="stepped" type="button">Stepped</button>
+          </div>
+        </div>
+        <div class="range-btns" id="range-btns"></div>
+        <button class="range-btn" id="range-add-btn" type="button" title="Add custom range">+</button>
+        <form class="range-add-form hidden" id="range-add-form">
+          <input class="range-add-input" id="range-add-input" type="number" placeholder="days" min="1" max="3650" autocomplete="off">
+          <button class="range-btn" type="submit">✓</button>
+          <button class="range-btn" type="button" id="range-add-cancel">✕</button>
+        </form>
       </div>
     </div>
     <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
@@ -759,6 +902,10 @@ function sortedEntries(entries) {
 // ─── CHART ───────────────────────────────────────────────────────────────────
 let chart = null;
 let activeRange = 'all';
+let activeLineStyle = 'smooth';
+let panMin = null;   // ms timestamp, null when 'all'
+let panMax = null;   // ms timestamp
+let _visibleCount = 1; // entries visible in current window (for pointRadius density)
 
 function filterByRange(entries, range) {
   if (range === 'all' || entries.length === 0) return entries;
@@ -767,11 +914,84 @@ function filterByRange(entries, range) {
   return entries.filter(e => new Date(e.date) >= cutoff);
 }
 
+function initPan(entries, range) {
+  if (range === 'all' || !entries.length) { panMin = null; panMax = null; return; }
+  const sorted = sortedEntries(entries);
+  const days = parseInt(range);
+  const latestMs = Math.max(Date.now(), new Date(sorted[sorted.length - 1].date).getTime());
+  panMax = latestMs;
+  panMin = latestMs - days * 86400000;
+}
+
+function getWindowEntries(entries) {
+  if (panMin === null) return entries;
+  return entries.filter(e => {
+    const t = new Date(e.date).getTime();
+    return t >= panMin && t <= panMax;
+  });
+}
+
+// Tight y bounds for the visible entries, including goal if set
+function getYBounds(visibleEntries) {
+  if (!visibleEntries.length) return {};
+  const ws = visibleEntries.map(e => e.weight);
+  if (_goal != null) ws.push(_goal);
+  const lo = Math.min(...ws), hi = Math.max(...ws);
+  const pad = Math.max((hi - lo) * 0.12, 1.5);
+  return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
+}
+
+function applyPanToChart() {
+  if (!chart) return;
+  const sorted = sortedEntries(_entries);
+  const visible = getWindowEntries(sorted);
+  _visibleCount = Math.max(1, visible.length);
+  chart.data.datasets[1].data = computeTrend(visible);
+  const x = chart.options.scales.x;
+  if (panMin !== null) {
+    x.min = panMin; // numeric ms — avoids date-string parsing on every frame
+    x.max = panMax;
+  } else {
+    delete x.min; delete x.max;
+  }
+  Object.assign(chart.options.scales.y, getYBounds(visible));
+  chart.update('none');
+}
+
+// ─── EXTERNAL TOOLTIP ────────────────────────────────────────────────────────
+let _extTooltipEl = null;
+
+function externalTooltipHandler({ chart, tooltip }) {
+  if (!_extTooltipEl) {
+    _extTooltipEl = document.createElement('div');
+    _extTooltipEl.className = 'ext-tooltip';
+    document.querySelector('.chart-canvas-wrap').appendChild(_extTooltipEl);
+  }
+  const el = _extTooltipEl;
+
+  if (tooltip.opacity === 0) { el.style.opacity = '0'; return; }
+
+  const title = tooltip.title?.[0] ?? '';
+  const lines = (tooltip.body ?? []).flatMap(b => b.lines).filter(Boolean);
+
+  el.innerHTML = [
+    title ? `<div class="ext-tooltip-title">${title}</div>` : '',
+    ...lines.map(l => `<div class="ext-tooltip-body">${l.trim()}</div>`),
+  ].join('');
+
+  // Measure before positioning
+  el.style.left = '0'; el.style.top = '0'; el.style.opacity = '0';
+  const w = el.offsetWidth;
+  const h = el.offsetHeight;
+
+  el.style.left = (tooltip.caretX - w / 2) + 'px';
+  el.style.top  = (tooltip.caretY - h - 22) + 'px';
+  el.style.opacity = '1';
+}
+
 function buildChart(entries, goal) {
   const canvas = document.getElementById('chart');
   const noData = document.getElementById('no-data-msg');
-  const canvasWrap = document.querySelector('.chart-canvas-wrap');
-  const filtered = filterByRange(entries, activeRange);
 
   if (entries.length === 0) {
     canvas.style.display = 'none';
@@ -783,17 +1003,33 @@ function buildChart(entries, goal) {
   canvas.style.display = 'block';
   noData.style.display = 'none';
 
-  const data = filtered.map(e => ({ x: e.date, y: e.weight }));
+  // All entries go into the dataset so panning can reveal them.
+  // Visible window is controlled by x-axis min/max.
+  const data = entries.map(e => ({ x: e.date, y: e.weight }));
+  const visible = getWindowEntries(entries);
+  _visibleCount = Math.max(1, visible.length);
 
-  // Trend line (linear regression)
-  const trendData = computeTrend(filtered);
+  // Span in days for autoUnit (use pan window or full range)
+  const spanDays = panMin !== null
+    ? (panMax - panMin) / 86400000
+    : entries.length < 2 ? 1
+    : (new Date(entries[entries.length - 1].date) - new Date(entries[0].date)) / 86400000;
+  const timeUnit = spanDays <= 60 ? 'day' : spanDays <= 365 ? 'week' : 'month';
 
-  // Goal annotation dataset
-  const goalDataset = goal ? [{
+  // Line style props
+  const lsProps = activeLineStyle === 'stepped'
+    ? { tension: 0, stepped: 'before' }
+    : activeLineStyle === 'linear'
+    ? { tension: 0, stepped: false }
+    : { tension: 0.35, stepped: false };
+
+  // Trend computed from visible window only
+  const trendData = computeTrend(visible);
+
+  // Goal line spans full entry range so panning doesn't break it
+  const goalDataset = goal && entries.length >= 2 ? [{
     label: 'Goal',
-    data: filtered.length >= 2
-      ? [{ x: filtered[0].date, y: goal }, { x: filtered[filtered.length - 1].date, y: goal }]
-      : [],
+    data: [{ x: entries[0].date, y: goal }, { x: entries[entries.length - 1].date, y: goal }],
     borderColor: 'rgba(251,191,36,0.5)',
     borderDash: [6, 4],
     borderWidth: 1.5,
@@ -805,24 +1041,33 @@ function buildChart(entries, goal) {
   const datasets = [
     {
       label: 'Weight (kg)',
-      data: data,
+      data,
       borderColor: '#4ade80',
       backgroundColor: (ctx) => {
-        const chart = ctx.chart;
-        const { ctx: c, chartArea } = chart;
+        const c = ctx.chart;
+        const { ctx: cx, chartArea } = c;
         if (!chartArea) return 'transparent';
-        const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-        gradient.addColorStop(0, 'rgba(74,222,128,0.18)');
-        gradient.addColorStop(1, 'rgba(74,222,128,0)');
-        return gradient;
+        const g = cx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        g.addColorStop(0, 'rgba(74,222,128,0.18)');
+        g.addColorStop(1, 'rgba(74,222,128,0)');
+        return g;
       },
       borderWidth: 2,
-      pointRadius: data.length <= 60 ? 4 : 2,
+      pointRadius: (ctx) => {
+        const { chartArea } = ctx.chart;
+        if (!chartArea) return 3;
+        const pxPt = (chartArea.right - chartArea.left) / _visibleCount;
+        if (pxPt >= 10) return 4;
+        if (pxPt >= 6)  return 3;
+        if (pxPt >= 3)  return 2;
+        if (pxPt >= 1.5) return 1;
+        return 0;
+      },
       pointBackgroundColor: '#4ade80',
       pointBorderColor: '#0b0c0e',
       pointBorderWidth: 1.5,
       pointHoverRadius: 6,
-      tension: 0.35,
+      ...lsProps,
       fill: true,
     },
     {
@@ -838,8 +1083,14 @@ function buildChart(entries, goal) {
     ...goalDataset,
   ];
 
+  // x-axis scale bounds from pan window (numeric ms — no string parsing overhead)
+  const xOpts = panMin !== null ? { min: panMin, max: panMax } : {};
+  const yOpts = getYBounds(visible);
+
   if (chart) {
     chart.data.datasets = datasets;
+    Object.assign(chart.options.scales.x, xOpts);
+    Object.assign(chart.options.scales.y, yOpts);
     chart.update('none');
     return;
   }
@@ -854,14 +1105,8 @@ function buildChart(entries, goal) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#181a1f',
-          borderColor: '#2a2d35',
-          borderWidth: 1,
-          titleColor: '#5a5f70',
-          bodyColor: '#e8eaf0',
-          titleFont: { family: 'JetBrains Mono', size: 11 },
-          bodyFont: { family: 'JetBrains Mono', size: 13, weight: '500' },
-          padding: 12,
+          enabled: false,
+          external: externalTooltipHandler,
           callbacks: {
             title: (items) => {
               const d = new Date(items[0].parsed.x);
@@ -869,8 +1114,8 @@ function buildChart(entries, goal) {
             },
             label: (item) => {
               if (item.dataset.label === 'Trend') return null;
-              if (item.dataset.label === 'Goal') return ` Goal: ${item.parsed.y.toFixed(1)} kg`;
-              return ` ${item.parsed.y.toFixed(1)} kg`;
+              if (item.dataset.label === 'Goal') return `Goal  ${item.parsed.y.toFixed(1)} kg`;
+              return item.parsed.y.toFixed(1) + ' kg';
             },
           },
           filter: (item) => item.dataset.label !== 'Trend',
@@ -879,7 +1124,7 @@ function buildChart(entries, goal) {
       scales: {
         x: {
           type: 'time',
-          time: { unit: autoUnit(filtered), tooltipFormat: 'dd MMM yyyy' },
+          time: { unit: timeUnit, tooltipFormat: 'dd MMM yyyy' },
           adapters: { date: {} },
           grid: { color: '#1a1c22', drawBorder: false },
           ticks: {
@@ -889,8 +1134,10 @@ function buildChart(entries, goal) {
             maxTicksLimit: 8,
           },
           border: { display: false },
+          ...xOpts,
         },
         y: {
+          ...yOpts,
           grid: { color: '#1a1c22', drawBorder: false },
           ticks: {
             color: '#5a5f70',
@@ -905,13 +1152,6 @@ function buildChart(entries, goal) {
   });
 }
 
-function autoUnit(entries) {
-  if (entries.length < 2) return 'day';
-  const span = (new Date(entries[entries.length - 1].date) - new Date(entries[0].date)) / 86400000;
-  if (span <= 60) return 'day';
-  if (span <= 365) return 'week';
-  return 'month';
-}
 
 function computeTrend(entries) {
   if (entries.length < 2) return [];
@@ -1038,15 +1278,125 @@ function refresh() {
   renderTable(_entries);
 }
 
-// ─── RANGE BUTTONS ───────────────────────────────────────────────────────────
+// ─── STYLE PICKER ─────────────────────────────────────────────────────────────
+const styleTrigger = document.getElementById('style-trigger');
+const styleDropdown = document.getElementById('style-dropdown');
+
+function applyLineStyle() {
+  if (!chart) return;
+  const ds = chart.data.datasets[0];
+  if (activeLineStyle === 'smooth')  { ds.tension = 0.35; ds.stepped = false; }
+  if (activeLineStyle === 'linear')  { ds.tension = 0;    ds.stepped = false; }
+  if (activeLineStyle === 'stepped') { ds.tension = 0;    ds.stepped = 'before'; }
+  chart.update();
+}
+
+styleTrigger.addEventListener('click', e => {
+  e.stopPropagation();
+  styleDropdown.classList.toggle('hidden');
+});
+
+styleDropdown.addEventListener('click', e => {
+  const opt = e.target.closest('.style-option');
+  if (!opt) return;
+  activeLineStyle = opt.dataset.style;
+  styleDropdown.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
+  opt.classList.add('active');
+  styleTrigger.textContent = opt.textContent + ' ▾';
+  styleDropdown.classList.add('hidden');
+  applyLineStyle();
+});
+
+document.addEventListener('click', () => styleDropdown.classList.add('hidden'));
+
+// ─── RANGE PRESETS ────────────────────────────────────────────────────────────
+const DEFAULT_RANGES = [
+  { label: '1M', days: 30 },
+  { label: '3M', days: 90 },
+  { label: '6M', days: 180 },
+  { label: 'All', days: null },
+];
+
+function loadCustomRanges() {
+  try { return JSON.parse(localStorage.getItem('wt-custom-ranges') || '[]'); } catch { return []; }
+}
+function saveCustomRanges(r) { localStorage.setItem('wt-custom-ranges', JSON.stringify(r)); }
+
+function formatDays(d) {
+  if (d % 365 === 0) return `${d / 365}Y`;
+  if (d % 30  === 0) return `${d / 30}M`;
+  if (d % 7   === 0) return `${d / 7}W`;
+  return `${d}D`;
+}
+
+function renderRangeBtns() {
+  const container = document.getElementById('range-btns');
+  const customs = loadCustomRanges();
+  const all = [
+    ...DEFAULT_RANGES.map(r => ({ ...r, custom: false })),
+    ...customs.map(r => ({ ...r, custom: true })),
+  ];
+  container.innerHTML = all.map(r => {
+    const val = r.days === null ? 'all' : String(r.days);
+    const active = String(activeRange) === val ? ' active' : '';
+    if (r.custom) {
+      return `<div class="range-custom-wrap">` +
+        `<button class="range-btn${active}" data-range="${r.days}" type="button">${r.label}</button>` +
+        `<button class="range-del" data-range="${r.days}" type="button">×</button>` +
+        `</div>`;
+    }
+    return `<button class="range-btn${active}" data-range="${val}" type="button">${r.label}</button>`;
+  }).join('');
+}
+
+renderRangeBtns();
+
 document.getElementById('range-btns').addEventListener('click', e => {
+  const del = e.target.closest('.range-del');
+  if (del) {
+    e.stopPropagation();
+    const days = parseInt(del.dataset.range);
+    const wasActive = String(activeRange) === String(days);
+    saveCustomRanges(loadCustomRanges().filter(c => c.days !== days));
+    if (wasActive) { activeRange = 'all'; initPan(_entries, 'all'); }
+    renderRangeBtns();
+    if (wasActive) { if (chart) { chart.destroy(); chart = null; } refresh(); }
+    return;
+  }
   const btn = e.target.closest('.range-btn');
   if (!btn) return;
-  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   activeRange = btn.dataset.range;
+  initPan(_entries, activeRange);
+  renderRangeBtns();
   if (chart) { chart.destroy(); chart = null; }
   refresh();
+});
+
+// + button / add form
+const rangeAddBtn    = document.getElementById('range-add-btn');
+const rangeAddForm   = document.getElementById('range-add-form');
+const rangeAddInput  = document.getElementById('range-add-input');
+const rangeAddCancel = document.getElementById('range-add-cancel');
+
+rangeAddBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  rangeAddForm.classList.toggle('hidden');
+  if (!rangeAddForm.classList.contains('hidden')) { rangeAddInput.value = ''; rangeAddInput.focus(); }
+});
+
+rangeAddCancel.addEventListener('click', () => rangeAddForm.classList.add('hidden'));
+
+rangeAddForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const days = parseInt(rangeAddInput.value);
+  if (!days || days < 1 || days > 3650) return;
+  const customs = loadCustomRanges();
+  if (!customs.find(c => c.days === days)) {
+    customs.push({ label: formatDays(days), days });
+    saveCustomRanges(customs);
+  }
+  rangeAddForm.classList.add('hidden');
+  renderRangeBtns();
 });
 
 // ─── ADD ENTRY ────────────────────────────────────────────────────────────────
@@ -1104,6 +1454,46 @@ document.getElementById('btn-export').addEventListener('click', () => {
 });
 
 // ─── IMPORT ───────────────────────────────────────────────────────────────────
+// Parses a single CSV line, respecting quoted fields (handles embedded commas)
+function parseCSVLine(line) {
+  const fields = [];
+  let cur = '', inQuotes = false;
+  for (const ch of line) {
+    if (ch === '"') { inQuotes = !inQuotes; }
+    else if (ch === ',' && !inQuotes) { fields.push(cur.trim()); cur = ''; }
+    else { cur += ch; }
+  }
+  fields.push(cur.trim());
+  return fields;
+}
+
+// Parses a RENPHO data row into { date: 'YYYY-MM-DD', weight: number } or null.
+// Handles both quoted datetime ("04/02/2026, 07:50:53") and unquoted (split into two fields).
+function parseRENPHORow(fields) {
+  const raw = fields[0].trim();
+  const dateOnly = /^(\d{2})\/(\d{2})\/(\d{4})$/;       // unquoted: just date in fields[0]
+  const dateStart = /^(\d{2})\/(\d{2})\/(\d{4})/;        // quoted or other: datetime starts with date
+
+  let dateStr, weight;
+
+  if (dateOnly.test(raw)) {
+    // Unquoted datetime was split by the embedded comma:
+    // fields[0] = "04/02/2026", fields[1] = "07:50:53", fields[2] = weight
+    const [, mm, dd, yyyy] = raw.match(dateOnly);
+    dateStr = `${yyyy}-${mm}-${dd}`;
+    weight = parseFloat(fields[2]);
+  } else {
+    // Quoted datetime in fields[0]: "04/02/2026, 07:50:53"
+    const m = raw.match(dateStart);
+    if (!m) return null;
+    const [, mm, dd, yyyy] = m;
+    dateStr = `${yyyy}-${mm}-${dd}`;
+    weight = parseFloat(fields[1]);
+  }
+
+  return (dateStr && !isNaN(weight)) ? { date: dateStr, weight } : null;
+}
+
 document.getElementById('btn-import-trigger').addEventListener('click', () => {
   document.getElementById('import-file').click();
 });
@@ -1113,21 +1503,51 @@ document.getElementById('import-file').addEventListener('change', (e) => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = async (ev) => {
-    const lines = ev.target.result.split('\n').map(l => l.trim()).filter(Boolean);
-    let count = 0;
+    const lines = ev.target.result
+      .split('\n')
+      .map(l => l.trim().replace(/\r$/, ''))
+      .filter(Boolean);
+
+    if (lines.length < 2) return showFeedback('File appears empty', true);
+
+    const header = parseCSVLine(lines[0]);
+    const isRENPHO = header.some(h => /time of measurement/i.test(h));
+    const isOwn    = header[0].toLowerCase() === 'date';
+
+    if (!isRENPHO && !isOwn) return showFeedback('Unrecognised CSV format', true);
+
+    let count = 0, skipped = 0;
     const entries = [..._entries];
-    lines.forEach(line => {
-      if (line.startsWith('date')) return;
-      const [date, weightStr] = line.split(',');
-      const weight = parseFloat(weightStr);
-      if (!date || isNaN(weight)) return;
-      const exists = entries.find(e => e.date === date);
-      if (exists) exists.weight = weight;
-      else entries.push({ date, weight });
+
+    lines.slice(1).forEach(line => {
+      const fields = parseCSVLine(line);
+      if (fields.length < 2) return;
+
+      let dateStr, weight;
+
+      if (isRENPHO) {
+        const row = parseRENPHORow(fields);
+        if (!row) { skipped++; return; }
+        ({ date: dateStr, weight } = row);
+      } else {
+        // Own format: date (YYYY-MM-DD), weight_kg
+        dateStr = fields[0];
+        weight  = parseFloat(fields[1]);
+      }
+
+      // Validate
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) { skipped++; return; }
+      if (isNaN(weight) || weight < 20 || weight > 500)      { skipped++; return; }
+
+      const existing = entries.find(e => e.date === dateStr);
+      if (existing) existing.weight = weight;
+      else entries.push({ date: dateStr, weight });
       count++;
     });
+
+    if (count === 0) return showFeedback('No valid entries found', true);
     await save(entries);
-    showFeedback(`Imported ${count} entries`);
+    showFeedback(skipped > 0 ? `Imported ${count} (${skipped} skipped)` : `Imported ${count} entries`);
     e.target.value = '';
   };
   reader.readAsText(file);
@@ -1280,6 +1700,35 @@ document.addEventListener('click', e => {
 
 renderCalendar();
 syncTextInput();
+
+// ─── PAN (2-finger swipe) ─────────────────────────────────────────────────────
+let _panRAF = null;
+const _panSorted = () => sortedEntries(_entries); // cached lazily per frame
+
+document.getElementById('chart').addEventListener('wheel', e => {
+  if (activeRange === 'all' || !chart || panMin === null) return;
+  if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // ignore vertical scroll
+  e.preventDefault();
+
+  // Accumulate pan state every event (high frequency) …
+  const { chartArea } = chart;
+  const msPerPx = (panMax - panMin) / (chartArea.right - chartArea.left);
+
+  const sorted = _panSorted();
+  const dataMinMs = new Date(sorted[0].date).getTime();
+  const dataMaxMs = new Date(sorted[sorted.length - 1].date).getTime();
+
+  let newMin = panMin + e.deltaX * msPerPx;
+  let newMax = panMax + e.deltaX * msPerPx;
+  if (newMin < dataMinMs) { newMax += dataMinMs - newMin; newMin = dataMinMs; }
+  if (newMax > dataMaxMs) { newMin -= newMax - dataMaxMs; newMax = dataMaxMs; }
+  panMin = Math.max(newMin, dataMinMs);
+  panMax = Math.min(newMax, dataMaxMs);
+
+  // … but only redraw once per animation frame
+  if (_panRAF) return;
+  _panRAF = requestAnimationFrame(() => { _panRAF = null; applyPanToChart(); });
+}, { passive: false });
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 // Live sync — fires immediately on load, then on every remote change
