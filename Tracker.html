@@ -873,6 +873,49 @@
     }
     .num-up { border-bottom: 1px solid var(--border2); }
 
+    /* GOAL ARC */
+    .goal-arc-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .goal-arc-bg { fill: none; stroke: var(--border2); stroke-width: 3; }
+    .goal-arc-fill {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 113.1;
+      stroke-dashoffset: 113.1;
+      transition: stroke-dashoffset 0.5s ease, stroke 0.4s;
+    }
+
+    /* GOAL MODAL PROJECTION */
+    .goal-proj-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 8px 10px;
+      background: rgba(251,191,36,0.06);
+      border: 1px solid rgba(251,191,36,0.2);
+      border-radius: 8px;
+    }
+    .goal-proj-row.hidden { display: none; }
+    .goal-proj-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+    .goal-proj-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+    }
+
     /* HAMBURGER MENU */
     .menu-wrap {
       position: relative;
@@ -1004,8 +1047,17 @@
       </div>
       <div class="stat-card">
         <div class="label">Goal Progress</div>
-        <div class="value" id="stat-goal-pct">—</div>
-        <div class="sub" id="stat-goal-rem">set a goal below</div>
+        <div class="goal-arc-row">
+          <svg width="44" height="44" viewBox="0 0 44 44" style="flex-shrink:0">
+            <circle class="goal-arc-bg" cx="22" cy="22" r="18"/>
+            <circle class="goal-arc-fill" id="goal-arc" cx="22" cy="22" r="18" transform="rotate(-90 22 22)"/>
+          </svg>
+          <div>
+            <div class="value" id="stat-goal-pct">—</div>
+            <div class="sub" id="stat-goal-rem">set a goal in menu</div>
+            <div class="sub" id="stat-goal-date" style="margin-top:2px;color:var(--amber);"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1111,7 +1163,7 @@
   <!-- GOAL MODAL -->
   <div class="entry-modal-overlay hidden" id="goal-modal-overlay">
     <div class="entry-modal">
-      <div class="entry-modal-title">Set Goal Weight</div>
+      <div class="entry-modal-title">Goal &amp; Pace</div>
       <div class="field">
         <label>Target Weight (kg)</label>
         <div class="num-wrap">
@@ -1121,6 +1173,20 @@
             <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
           </div>
         </div>
+      </div>
+      <div class="field">
+        <label>Weekly Loss Rate (% of body weight)</label>
+        <div class="num-wrap">
+          <input type="number" id="goal-rate-inp" step="0.05" min="0.1" max="3" placeholder="e.g. 0.75">
+          <div class="num-spin">
+            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
+            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="goal-proj-row hidden" id="goal-proj-row">
+        <span class="goal-proj-label">Projected</span>
+        <span class="goal-proj-date" id="goal-proj-date">—</span>
       </div>
       <div class="modal-btn-row">
         <button class="btn-add" id="goal-modal-save" style="flex:1">Set Goal</button>
@@ -1193,7 +1259,8 @@
     // In-memory state kept in sync via onSnapshot
     let _entries = [];
     let _goal = null;
-    let _phaseStart = null; // 'YYYY-MM-DD' | null
+    let _phaseStart = null;      // 'YYYY-MM-DD' | null
+    let _targetLossRate = null;  // % per week, e.g. 0.75
 
     async function save(entries) {
       _entries = entries;
@@ -1201,9 +1268,11 @@
       docRef.set({ entries, goal: _goal }, { merge: true });
     }
 
-    async function saveGoal(g) {
+    async function saveGoal(g, rate) {
       _goal = g;
-      await docRef.set({ goal: g }, { merge: true });
+      _targetLossRate = rate ?? null;
+      refresh();
+      docRef.set({ goal: g, targetLossRate: _targetLossRate }, { merge: true });
     }
 
     async function savePhaseStart(dateStr) {
@@ -1340,11 +1409,8 @@
       const visible = sorted.slice(idxMin, idxMax + 1);
       _visibleCount = Math.max(1, visible.length);
       chart.data.datasets[1].data = computeTrendOrdinal(visible, idxMin);
-      const goalDs = chart.data.datasets[2];
-      if (goalDs) {
-        goalDs.data = _goal != null && sorted.length >= 2
-          ? [{ x: xMin, y: _goal }, { x: xMax, y: _goal }] : [];
-      }
+      chart.data.datasets[2].data = _goal != null && sorted.length >= 2
+        ? [{ x: xMin, y: _goal }, { x: xMax, y: _goal }] : [];
       chart.options.scales.x.min = xMin;
       chart.options.scales.x.max = xMax;
       Object.assign(chart.options.scales.y, getYBounds(visible));
@@ -1483,8 +1549,8 @@
 
         datasets = [
           { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
-          ...(goalPts.length ? [{ label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.5)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false }] : []),
+          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.5)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
+          { label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
         ];
 
         xScale = {
@@ -1524,7 +1590,7 @@
 
         if (chart) {
           chart.data.datasets[1].data = trendData;
-          if (chart.data.datasets[2]) chart.data.datasets[2].data = goalPts;
+          chart.data.datasets[2].data = goalPts;
           chart.options.scales.x.min = xMin;
           chart.options.scales.x.max = xMax;
           Object.assign(chart.options.scales.y, yOpts);
@@ -1540,17 +1606,18 @@
         _visibleCount = Math.max(1, visible.length);
 
         const trendData = computeTrend(visible);
-        const goalDataset = goal && entries.length >= 2 ? [{
-          label: 'Goal',
-          data: [{ x: data[0].x, y: goal }, { x: data[data.length - 1].x, y: goal }],
-          borderColor: 'rgba(251,191,36,0.5)', borderDash: [6, 4], borderWidth: 1.5,
-          pointRadius: 0, tension: 0, fill: false,
-        }] : [];
+        const optCurve = computeOptimalCurve();
+        // Goal line extends to the optimal curve's end date (if any) so they meet at goal weight
+        const goalEndX = optCurve ? Math.max(data[data.length - 1].x, optCurve.targetMs) : data[data.length - 1].x;
+        const goalData = goal && data.length >= 2
+          ? [{ x: data[0].x, y: goal }, { x: goalEndX, y: goal }] : [];
+        const optData = optCurve ? optCurve.points : [];
 
         datasets = [
           { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
-          ...goalDataset,
+          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.5)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
+          { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
+          { label: 'Optimal', data: optData, borderColor: 'rgba(251,191,36,0.35)', borderDash: [3, 3], borderWidth: 1.5, pointRadius: 0, tension: 0.35, fill: false },
         ];
 
         const xWin = panMin !== null ? { min: panMin, max: panMax } : {};
@@ -1596,7 +1663,8 @@
 
         if (chart) {
           chart.data.datasets[1].data = trendData;
-          if (chart.data.datasets[2]) chart.data.datasets[2].data = goalDataset[0]?.data ?? [];
+          chart.data.datasets[2].data = goalData;
+          chart.data.datasets[3].data = optData;
           if (panMin !== null) { chart.options.scales.x.min = panMin; chart.options.scales.x.max = panMax; }
           Object.assign(chart.options.scales.y, yOpts);
           chart.update('none');
@@ -1617,7 +1685,7 @@
               enabled: false,
               external: externalTooltipHandler,
               callbacks: { title: titleCb, label: labelCb },
-              filter: (item) => item.dataset.label !== 'Trend',
+              filter: (item) => item.dataset.label !== 'Trend' && item.dataset.label !== 'Optimal',
             },
           },
           scales: {
@@ -1634,35 +1702,90 @@
     }
 
 
-    // ─── PHASE LINE PLUGIN ───────────────────────────────────────────────────────
+    // ─── OPTIMAL CURVE ───────────────────────────────────────────────────────────
+    // Returns { points: [{x:ms, y:weight}], targetMs } or null
+    function computeOptimalCurve() {
+      if (!_goal || !_targetLossRate || !_entries.length) return null;
+      const sorted = sortedEntries(_entries);
+      const startDate = _phaseStart || sorted[0].date;
+      const phaseEntries = sorted.filter(e => e.date >= startDate);
+      if (!phaseEntries.length) return null;
+      const startMs = new Date(startDate + 'T00:00:00').getTime();
+      const startWeight = phaseEntries[0].weight;
+      if (_goal >= startWeight) return null;
+      const rate = _targetLossRate / 100;
+      // W(t) = startWeight * (1 - rate)^t  [t in weeks]
+      const t_weeks = Math.log(_goal / startWeight) / Math.log(1 - rate);
+      if (!isFinite(t_weeks) || t_weeks <= 0 || t_weeks > 2600) return null;
+      const targetMs = startMs + t_weeks * 7 * 86400000;
+      const points = [];
+      for (let w = 0; w <= Math.ceil(t_weeks); w++) {
+        const ms = startMs + w * 7 * 86400000;
+        if (ms >= targetMs) { points.push({ x: targetMs, y: parseFloat(_goal.toFixed(2)) }); break; }
+        const weight = startWeight * Math.pow(1 - rate, w);
+        points.push({ x: ms, y: parseFloat(Math.max(_goal, weight).toFixed(2)) });
+      }
+      return { points, targetMs };
+    }
+
+    // Compute projected date string for display (or null)
+    function projectedDateStr(goalKg, ratePercent) {
+      if (!goalKg || !ratePercent || !_entries.length) return null;
+      const sorted = sortedEntries(_entries);
+      const startDate = _phaseStart || sorted[0].date;
+      const phaseEntries = sorted.filter(e => e.date >= startDate);
+      if (!phaseEntries.length || goalKg >= phaseEntries[0].weight) return null;
+      const rate = ratePercent / 100;
+      const t_weeks = Math.log(goalKg / phaseEntries[0].weight) / Math.log(1 - rate);
+      if (!isFinite(t_weeks) || t_weeks <= 0) return null;
+      const targetMs = new Date(startDate + 'T00:00:00').getTime() + t_weeks * 7 * 86400000;
+      return new Date(targetMs).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    // ─── CHART ANNOTATIONS PLUGIN ────────────────────────────────────────────────
     Chart.register({
-      id: 'phaseLine',
+      id: 'chartAnnotations',
       afterDraw(chart) {
-        if (!_phaseStart) return;
-        const xScale = chart.scales.x;
-        const { ctx, chartArea: { top, bottom } } = chart;
-        let xPos;
-        if (activeScaleMode === 'time') {
-          const ms = new Date(_phaseStart + 'T00:00:00').getTime();
-          if (ms < xScale.min || ms > xScale.max) return;
-          xPos = xScale.getPixelForValue(ms);
-        } else {
-          const idx = _ordinalVisible.findIndex(e => e.date >= _phaseStart);
-          if (idx < 0 || idx < xScale.min || idx > xScale.max) return;
-          xPos = xScale.getPixelForValue(idx);
-        }
+        const { ctx, chartArea: { top, bottom, right }, scales: { x: xScale, y: yScale } } = chart;
         ctx.save();
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(251,191,36,0.45)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([5, 4]);
-        ctx.moveTo(xPos, top);
-        ctx.lineTo(xPos, bottom);
-        ctx.stroke();
-        ctx.setLineDash([]);
         ctx.font = '500 9px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(251,191,36,0.7)';
-        ctx.fillText('PHASE', xPos + 5, top + 12);
+
+        // Phase vertical line
+        if (_phaseStart) {
+          let xPos;
+          if (activeScaleMode === 'time') {
+            const ms = new Date(_phaseStart + 'T00:00:00').getTime();
+            if (ms >= xScale.min && ms <= xScale.max) {
+              xPos = xScale.getPixelForValue(ms);
+            }
+          } else {
+            const idx = _ordinalVisible.findIndex(e => e.date >= _phaseStart);
+            if (idx >= 0 && idx >= xScale.min && idx <= xScale.max) xPos = xScale.getPixelForValue(idx);
+          }
+          if (xPos != null) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(251,191,36,0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 4]);
+            ctx.moveTo(xPos, top); ctx.lineTo(xPos, bottom); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(251,191,36,0.75)';
+            ctx.fillText('PHASE', xPos + 5, top + 12);
+          }
+        }
+
+        // Goal label at right edge of goal line
+        if (_goal != null && yScale) {
+          const yPos = yScale.getPixelForValue(_goal);
+          if (yPos >= top && yPos <= bottom) {
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(251,191,36,0.8)';
+            ctx.textAlign = 'right';
+            ctx.fillText('GOAL', right - 5, yPos - 5);
+            ctx.textAlign = 'left';
+          }
+        }
+
         ctx.restore();
       }
     });
@@ -1743,7 +1866,9 @@
         document.getElementById('stat-rate').className = 'value';
       }
 
-      // Goal
+      // Goal + arc
+      const arc = document.getElementById('goal-arc');
+      const arcCircumference = 2 * Math.PI * 18; // 113.1
       if (goal != null && first && last) {
         const total = first.weight - goal;
         const done = first.weight - last.weight;
@@ -1753,10 +1878,19 @@
         pctEl.textContent = pct.toFixed(0) + '%';
         pctEl.className = pct >= 100 ? 'value positive' : 'value neutral';
         document.getElementById('stat-goal-rem').textContent = rem > 0 ? fmtWeight(rem) + ' kg to go' : 'goal reached!';
+        arc.style.strokeDashoffset = (arcCircumference * (1 - Math.min(1, pct / 100))).toFixed(1);
+        arc.style.stroke = pct >= 100 ? 'var(--accent)' : 'var(--amber)';
+        // Projected end date
+        const proj = projectedDateStr(goal, _targetLossRate);
+        const dateEl = document.getElementById('stat-goal-date');
+        dateEl.textContent = proj ? '≈ ' + proj : '';
       } else {
         document.getElementById('stat-goal-pct').textContent = '—';
         document.getElementById('stat-goal-pct').className = 'value';
         document.getElementById('stat-goal-rem').textContent = 'set a goal in menu';
+        document.getElementById('stat-goal-date').textContent = '';
+        arc.style.strokeDashoffset = arcCircumference.toFixed(1);
+        arc.style.stroke = 'var(--amber)';
       }
     }
 
@@ -2209,8 +2343,27 @@
     });
 
     // ─── GOAL MODAL ──────────────────────────────────────────────────────────────
+    function updateGoalProjection() {
+      const g = parseFloat(document.getElementById('goal-modal-inp').value);
+      const r = parseFloat(document.getElementById('goal-rate-inp').value);
+      const projRow = document.getElementById('goal-proj-row');
+      const projDate = document.getElementById('goal-proj-date');
+      const proj = (!isNaN(g) && !isNaN(r) && r > 0) ? projectedDateStr(g, r) : null;
+      if (proj) {
+        projDate.textContent = proj;
+        projRow.classList.remove('hidden');
+      } else {
+        projRow.classList.add('hidden');
+      }
+    }
+
     function openGoalModal() {
       closeMenu();
+      if (_goal != null) document.getElementById('goal-modal-inp').value = fmtWeight(_goal);
+      if (_targetLossRate != null) document.getElementById('goal-rate-inp').value = _targetLossRate.toFixed(2);
+      else document.getElementById('goal-rate-inp').value = '';
+      document.getElementById('goal-feedback').className = 'feedback';
+      updateGoalProjection();
       document.getElementById('goal-modal-overlay').classList.remove('hidden');
       document.getElementById('goal-modal-inp').focus();
     }
@@ -2224,8 +2377,13 @@
       if (e.target === document.getElementById('goal-modal-overlay')) closeGoalModal();
     });
 
+    ['goal-modal-inp', 'goal-rate-inp'].forEach(id =>
+      document.getElementById(id).addEventListener('input', updateGoalProjection)
+    );
+
     document.getElementById('goal-modal-save').addEventListener('click', async () => {
       const g = parseFloat(document.getElementById('goal-modal-inp').value);
+      const r = parseFloat(document.getElementById('goal-rate-inp').value);
       const fb = document.getElementById('goal-feedback');
       if (isNaN(g) || g < 30 || g > 300) {
         fb.textContent = 'Enter a valid weight (30–300 kg)';
@@ -2233,14 +2391,16 @@
         setTimeout(() => fb.classList.remove('show'), 2500);
         return;
       }
-      await saveGoal(g);
+      await saveGoal(g, isNaN(r) ? null : r);
       closeGoalModal();
     });
 
-    document.getElementById('goal-modal-inp').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('goal-modal-save').click();
-      if (e.key === 'Escape') closeGoalModal();
-    });
+    ['goal-modal-inp', 'goal-rate-inp'].forEach(id =>
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('goal-modal-save').click();
+        if (e.key === 'Escape') closeGoalModal();
+      })
+    );
 
     // ─── EXPORT ───────────────────────────────────────────────────────────────────
     function doExport() {
@@ -2592,6 +2752,7 @@
       _entries = data.entries || [];
       _goal = data.goal ?? null;
       _phaseStart = data.phaseStart ?? null;
+      _targetLossRate = data.targetLossRate ?? null;
       if (_goal != null) document.getElementById('goal-modal-inp').value = _goal;
       if (!_panInitialized) {
         _panInitialized = true;
