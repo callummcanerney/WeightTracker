@@ -966,6 +966,9 @@
           <button class="menu-item" id="menu-goal" type="button">
             <span class="menu-item-icon">◎</span> Set Goal
           </button>
+          <button class="menu-item" id="menu-phase" type="button">
+            <span class="menu-item-icon">|</span> Set Phase
+          </button>
           <div class="menu-sep"></div>
           <button class="menu-item" id="menu-export" type="button">
             <span class="menu-item-icon">↓</span> Export CSV
@@ -980,7 +983,7 @@
     <!-- STATS -->
     <div class="stats-row" id="stats-row">
       <div class="stat-card">
-        <div class="label">Starting</div>
+        <div class="label" id="stat-start-label">Starting</div>
         <div class="value" id="stat-start">—</div>
         <div class="sub" id="stat-start-date">no data</div>
       </div>
@@ -1127,6 +1130,27 @@
     </div>
   </div>
 
+  <!-- PHASE MODAL -->
+  <div class="entry-modal-overlay hidden" id="phase-modal-overlay">
+    <div class="entry-modal">
+      <div class="entry-modal-title">Set Phase Start</div>
+      <div id="phase-active-row" class="hidden" style="display:none;align-items:center;gap:8px;margin-bottom:14px;padding:8px 10px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);border-radius:8px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--amber);letter-spacing:0.06em;text-transform:uppercase;">Active</span>
+        <span id="phase-active-date" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text);flex:1;"></span>
+        <button class="btn-ghost" id="phase-clear-btn" type="button" style="padding:4px 10px;font-size:0.72rem;">Clear</button>
+      </div>
+      <div class="field">
+        <label>Start Date (DD/MM/YYYY)</label>
+        <input type="text" id="phase-date-inp" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
+      </div>
+      <div class="modal-btn-row">
+        <button class="btn-add" id="phase-save-btn" style="flex:1">Set Phase</button>
+        <button class="btn-ghost" id="phase-cancel-btn">Cancel</button>
+      </div>
+      <div class="feedback" id="phase-feedback"></div>
+    </div>
+  </div>
+
   <!-- ENTRY EDIT MODAL -->
   <div class="entry-modal-overlay hidden" id="entry-modal-overlay">
     <div class="entry-modal">
@@ -1169,6 +1193,7 @@
     // In-memory state kept in sync via onSnapshot
     let _entries = [];
     let _goal = null;
+    let _phaseStart = null; // 'YYYY-MM-DD' | null
 
     async function save(entries) {
       _entries = entries;
@@ -1179,6 +1204,18 @@
     async function saveGoal(g) {
       _goal = g;
       await docRef.set({ goal: g }, { merge: true });
+    }
+
+    async function savePhaseStart(dateStr) {
+      _phaseStart = dateStr;
+      refresh();
+      docRef.set({ phaseStart: dateStr }, { merge: true });
+    }
+
+    async function clearPhaseStart() {
+      _phaseStart = null;
+      refresh();
+      docRef.set({ phaseStart: null }, { merge: true });
     }
 
     function sortedEntries(entries) {
@@ -1597,6 +1634,39 @@
     }
 
 
+    // ─── PHASE LINE PLUGIN ───────────────────────────────────────────────────────
+    Chart.register({
+      id: 'phaseLine',
+      afterDraw(chart) {
+        if (!_phaseStart) return;
+        const xScale = chart.scales.x;
+        const { ctx, chartArea: { top, bottom } } = chart;
+        let xPos;
+        if (activeScaleMode === 'time') {
+          const ms = new Date(_phaseStart + 'T00:00:00').getTime();
+          if (ms < xScale.min || ms > xScale.max) return;
+          xPos = xScale.getPixelForValue(ms);
+        } else {
+          const idx = _ordinalVisible.findIndex(e => e.date >= _phaseStart);
+          if (idx < 0 || idx < xScale.min || idx > xScale.max) return;
+          xPos = xScale.getPixelForValue(idx);
+        }
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(251,191,36,0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.moveTo(xPos, top);
+        ctx.lineTo(xPos, bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = '500 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(251,191,36,0.7)';
+        ctx.fillText('PHASE', xPos + 5, top + 12);
+        ctx.restore();
+      }
+    });
+
     // Show 2 decimals only when needed (82.05 → "82.05", 82.10 → "82.1")
     function fmtWeight(w) {
       const s = w.toFixed(2);
@@ -1645,6 +1715,7 @@
       const first = s[0];
       const last = s[s.length - 1];
 
+      document.getElementById('stat-start-label').textContent = _phaseStart ? 'Phase Start' : 'Starting';
       document.getElementById('stat-start').textContent = first ? fmt(first.weight) : '—';
       document.getElementById('stat-start-date').textContent = first ? fmtDate(first.date) : 'no data';
 
@@ -1685,7 +1756,7 @@
       } else {
         document.getElementById('stat-goal-pct').textContent = '—';
         document.getElementById('stat-goal-pct').className = 'value';
-        document.getElementById('stat-goal-rem').textContent = 'set a goal below';
+        document.getElementById('stat-goal-rem').textContent = 'set a goal in menu';
       }
     }
 
@@ -1743,7 +1814,8 @@
     // ─── REFRESH ─────────────────────────────────────────────────────────────────
     function refresh() {
       const sorted = sortedEntries(_entries);
-      updateStats(sorted, _goal);
+      const phaseEntries = _phaseStart ? sorted.filter(e => e.date >= _phaseStart) : sorted;
+      updateStats(phaseEntries, _goal);
       buildChart(sorted, _goal);
     }
 
@@ -1970,6 +2042,64 @@
         chart.data.datasets[1].hidden = !activeTrend;
         chart.update('none');
       }
+    });
+
+    // ─── PHASE MODAL ─────────────────────────────────────────────────────────────
+    function openPhaseModal() {
+      closeMenu();
+      // Pre-fill if phase already set
+      const inp = document.getElementById('phase-date-inp');
+      if (_phaseStart) {
+        const d = new Date(_phaseStart + 'T00:00:00');
+        inp.value = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        const activeRow = document.getElementById('phase-active-row');
+        activeRow.style.display = 'flex';
+        activeRow.classList.remove('hidden');
+        document.getElementById('phase-active-date').textContent =
+          d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      } else {
+        inp.value = '';
+        const activeRow = document.getElementById('phase-active-row');
+        activeRow.style.display = 'none';
+        activeRow.classList.add('hidden');
+      }
+      document.getElementById('phase-feedback').className = 'feedback';
+      document.getElementById('phase-modal-overlay').classList.remove('hidden');
+      inp.focus();
+    }
+
+    function closePhaseModal() {
+      document.getElementById('phase-modal-overlay').classList.add('hidden');
+    }
+
+    document.getElementById('menu-phase').addEventListener('click', openPhaseModal);
+    document.getElementById('phase-cancel-btn').addEventListener('click', closePhaseModal);
+    document.getElementById('phase-modal-overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('phase-modal-overlay')) closePhaseModal();
+    });
+
+    document.getElementById('phase-clear-btn').addEventListener('click', async () => {
+      await clearPhaseStart();
+      closePhaseModal();
+    });
+
+    document.getElementById('phase-save-btn').addEventListener('click', async () => {
+      const raw = document.getElementById('phase-date-inp').value.trim();
+      const dateStr = parseDateInput(raw);
+      const fb = document.getElementById('phase-feedback');
+      if (!dateStr) {
+        fb.textContent = 'Enter a valid date (DD/MM/YYYY)';
+        fb.className = 'feedback show err';
+        setTimeout(() => fb.classList.remove('show'), 2500);
+        return;
+      }
+      await savePhaseStart(dateStr);
+      closePhaseModal();
+    });
+
+    document.getElementById('phase-date-inp').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('phase-save-btn').click();
+      if (e.key === 'Escape') closePhaseModal();
     });
 
     // ─── SCALE MODE ───────────────────────────────────────────────────────────────
@@ -2461,6 +2591,7 @@
       const data = snap.exists ? snap.data() : {};
       _entries = data.entries || [];
       _goal = data.goal ?? null;
+      _phaseStart = data.phaseStart ?? null;
       if (_goal != null) document.getElementById('goal-modal-inp').value = _goal;
       if (!_panInitialized) {
         _panInitialized = true;
