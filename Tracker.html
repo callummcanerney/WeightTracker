@@ -824,15 +824,54 @@
       display: none;
     }
 
-    /* hide number input spinners */
+    /* hide browser default spinners — replaced by custom .num-spin */
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
-    input[type=number] {
-      -moz-appearance: textfield;
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* custom stepper wrapper */
+    .num-wrap {
+      position: relative;
+      display: flex;
     }
+    .num-wrap input[type=number] {
+      padding-right: 32px;
+      width: 100%;
+    }
+    .num-spin {
+      position: absolute;
+      right: 1px;
+      top: 1px;
+      bottom: 1px;
+      width: 26px;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border2);
+      border-radius: 0 7px 7px 0;
+      overflow: hidden;
+    }
+    .num-up,
+    .num-dn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.12s, background 0.12s;
+      padding: 0;
+    }
+    .num-up:hover,
+    .num-dn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .num-up { border-bottom: 1px solid var(--border2); }
 
     /* HAMBURGER MENU */
     .menu-wrap {
@@ -1047,7 +1086,13 @@
         </div>
         <div class="field">
           <label>Weight (kg)</label>
-          <input type="number" id="inp-weight" step="0.1" min="30" max="300" placeholder="e.g. 82.4">
+          <div class="num-wrap">
+            <input type="number" id="inp-weight" step="0.1" min="30" max="300" placeholder="e.g. 82.4">
+            <div class="num-spin">
+              <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
+              <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+            </div>
+          </div>
         </div>
 
         <button class="btn-add" id="btn-add">Add Entry</button>
@@ -1065,7 +1110,13 @@
       <div class="entry-modal-title">Set Goal Weight</div>
       <div class="field">
         <label>Target Weight (kg)</label>
-        <input type="number" id="goal-modal-inp" step="0.1" min="30" max="300" placeholder="e.g. 75.0">
+        <div class="num-wrap">
+          <input type="number" id="goal-modal-inp" step="0.1" min="30" max="300" placeholder="e.g. 75.0">
+          <div class="num-spin">
+            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
+            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+          </div>
+        </div>
       </div>
       <div class="modal-btn-row">
         <button class="btn-add" id="goal-modal-save" style="flex:1">Set Goal</button>
@@ -1085,7 +1136,13 @@
       </div>
       <div class="field">
         <label>Weight (kg)</label>
-        <input type="number" id="modal-weight" step="0.1" min="30" max="300" placeholder="e.g. 82.4">
+        <div class="num-wrap">
+          <input type="number" id="modal-weight" step="0.1" min="30" max="300" placeholder="e.g. 82.4">
+          <div class="num-spin">
+            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
+            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+          </div>
+        </div>
       </div>
       <div class="modal-btn-row">
         <button class="btn-add" id="modal-save" style="flex:1">Save</button>
@@ -1955,6 +2012,24 @@
       }
       await save(entries);
       document.getElementById('inp-weight').value = '';
+    });
+
+    // ─── CUSTOM NUMBER STEPPERS ──────────────────────────────────────────────────
+    document.addEventListener('click', e => {
+      const up = e.target.closest('.num-up');
+      const dn = e.target.closest('.num-dn');
+      if (!up && !dn) return;
+      const input = (up || dn).closest('.num-wrap').querySelector('input[type=number]');
+      const step = parseFloat(input.step) || 1;
+      const decimals = step.toString().includes('.') ? step.toString().split('.')[1].length : 0;
+      let val = parseFloat(input.value);
+      if (isNaN(val)) val = parseFloat(input.min) || 0;
+      val = up ? val + step : val - step;
+      const min = parseFloat(input.min); const max = parseFloat(input.max);
+      if (!isNaN(min)) val = Math.max(min, val);
+      if (!isNaN(max)) val = Math.min(max, val);
+      input.value = val.toFixed(decimals);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
     // Allow Enter key on weight input
