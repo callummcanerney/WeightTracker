@@ -1,1049 +1,1310 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weight Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0b0c0e;
-    --bg2: #111316;
-    --bg3: #181a1f;
-    --border: #222429;
-    --border2: #2a2d35;
-    --text: #e8eaf0;
-    --muted: #5a5f70;
-    --accent: #4ade80;
-    --accent-dim: rgba(74, 222, 128, 0.08);
-    --accent-glow: rgba(74, 222, 128, 0.25);
-    --red: #f87171;
-    --red-dim: rgba(248, 113, 113, 0.1);
-    --amber: #fbbf24;
-  }
-
-  html, body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    height: 100%;
-    overflow: hidden;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  /* LAYOUT — full-viewport dashboard */
-  .shell {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 24px;
-    gap: 12px;
-    overflow: hidden;
-  }
-
-  /* HEADER */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .logo-block h1 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    line-height: 1;
-    color: var(--text);
-  }
-
-  .logo-block h1 span {
-    color: var(--accent);
-  }
-
-  .logo-block p {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--muted);
-    margin-top: 4px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  /* STATS ROW */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .stat-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    transition: border-color 0.2s;
-  }
-
-  .stat-card:hover { border-color: var(--border2); }
-
-  .stat-card .label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-
-  .stat-card .value {
-    font-size: 1.35rem;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    color: var(--text);
-    line-height: 1;
-  }
-
-  .stat-card .value.positive { color: var(--accent); }
-  .stat-card .value.negative { color: var(--red); }
-  .stat-card .value.neutral { color: var(--amber); }
-
-  .stat-card .sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  /* CHART AREA */
-  .chart-wrap {
-    flex: 1;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 20px 16px;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  /* BOTTOM ROW — log entry + history side by side */
-  .bottom-grid {
-    flex-shrink: 0;
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 14px;
-    align-items: stretch;
-  }
-
-  .chart-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-    flex-shrink: 0;
-  }
-
-  .chart-title {
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .range-btns {
-    display: flex;
-    gap: 4px;
-  }
-
-  .range-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    padding: 5px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.05em;
-  }
-
-  .range-btn:hover { border-color: var(--border2); color: var(--text); }
-  .range-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-
-  .chart-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* EXTERNAL TOOLTIP */
-  .ext-tooltip {
-    position: absolute;
-    pointer-events: none;
-    z-index: 10;
-    opacity: 0;
-    transition: opacity 0.12s;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 10px 12px;
-    white-space: nowrap;
-  }
-  .ext-tooltip::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid var(--border2);
-  }
-  .ext-tooltip::before {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid var(--bg3);
-    z-index: 1;
-  }
-  .ext-tooltip-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--muted);
-    margin-bottom: 5px;
-    letter-spacing: 0.04em;
-  }
-  .ext-tooltip-body {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  /* STYLE PICKER */
-  .style-picker { position: relative; }
-  .style-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 4px;
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 88px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-  }
-  .style-dropdown.hidden { display: none; }
-  .style-option {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    padding: 6px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: left;
-    letter-spacing: 0.05em;
-    transition: all 0.1s;
-    white-space: nowrap;
-  }
-  .style-option:hover { background: var(--bg3); color: var(--text); }
-  .style-option.active { color: var(--accent); background: var(--accent-dim); }
-
-  /* CUSTOM RANGE PRESETS */
-  .range-custom-wrap { position: relative; display: inline-flex; }
-  .range-del {
-    position: absolute;
-    top: -5px; right: -5px;
-    width: 14px; height: 14px;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 50%;
-    color: var(--muted);
-    font-size: 0.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.15s, color 0.15s, border-color 0.15s;
-    padding: 0;
-    line-height: 1;
-  }
-  .range-custom-wrap:hover .range-del { opacity: 1; }
-  .range-del:hover { color: var(--red); border-color: var(--red); }
-
-  .range-add-form { display: flex; align-items: center; gap: 4px; }
-  .range-add-form.hidden { display: none; }
-  .range-add-input {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    padding: 5px 8px;
-    width: 52px;
-    outline: none;
-    -webkit-appearance: none;
-    transition: border-color 0.15s;
-  }
-  .range-add-input:focus { border-color: var(--accent); }
-  .range-add-input::placeholder { color: var(--muted); }
-
-  .chart-canvas-wrap {
-    flex: 1;
-    position: relative;
-    min-height: 0;
-  }
-
-  canvas { display: block; }
-
-  .no-data-msg {
-    display: none;
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-  }
-
-  /* PANELS */
-  .panel {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 20px;
-  }
-
-  .panel.history-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .panel-title {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 14px;
-    flex-shrink: 0;
-  }
-
-  .field {
-    margin-bottom: 12px;
-  }
-
-  .field label {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-
-  .field input {
-    width: 100%;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    padding: 9px 12px;
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    -webkit-appearance: none;
-  }
-
-  .field input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-
-  .field input::placeholder { color: var(--muted); }
-
-  .btn-add {
-    width: 100%;
-    background: var(--accent);
-    color: #0b1a11;
-    border: none;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    padding: 11px;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    margin-top: 4px;
-  }
-
-  .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-add:active { transform: translateY(0); }
-
-  .feedback {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    text-align: center;
-    margin-top: 8px;
-    min-height: 16px;
-    color: var(--accent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .feedback.show { opacity: 1; }
-  .feedback.err { color: var(--red); }
-
-  /* IMPORT/EXPORT */
-  .io-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .btn-io {
-    flex: 1;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 8px 10px;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-align: center;
-  }
-
-  .btn-io:hover { border-color: var(--border2); color: var(--text); background: var(--bg2); }
-
-  /* LOG TABLE */
-  .log-wrap {
-    overflow-y: auto;
-    max-height: 300px;
-  }
-
-  .log-wrap::-webkit-scrollbar { width: 4px; }
-  .log-wrap::-webkit-scrollbar-track { background: transparent; }
-  .log-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-  .log-empty {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-align: center;
-    padding: 30px 0;
-    letter-spacing: 0.05em;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead th {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 0 10px 10px;
-    text-align: left;
-    position: sticky;
-    top: 0;
-    background: var(--bg2);
-    z-index: 1;
-  }
-
-  thead th:last-child { text-align: right; }
-
-  tbody tr {
-    border-top: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-
-  tbody tr:hover { background: var(--bg3); }
-
-  tbody td {
-    padding: 9px 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-  }
-
-  .td-date { color: var(--muted); font-size: 0.7rem; }
-
-  .td-weight {
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .td-delta {
-    font-size: 0.7rem;
-  }
-
-  .delta-pos { color: var(--accent); }
-  .delta-neg { color: var(--red); }
-  .delta-nil { color: var(--muted); }
-
-  .td-actions { text-align: right; }
-
-  .btn-del {
-    background: none;
-    border: 1px solid transparent;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    padding: 3px 7px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.04em;
-  }
-
-  .btn-del:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
-
-  /* GOAL LINE */
-  .goal-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .goal-row label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .goal-row input {
-    flex: 1;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 7px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
-    padding: 6px 10px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .goal-row input:focus { border-color: var(--accent); }
-
-  .goal-row .btn-io {
-    flex: none;
-    padding: 6px 12px;
-    font-size: 0.62rem;
-  }
-
-  /* DATE PICKER */
-  .date-picker-wrap { position: relative; }
-
-  .date-input-row {
-    display: flex;
-    gap: 6px;
-  }
-
-  .date-text-input {
-    flex: 1;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    padding: 9px 12px;
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    -webkit-appearance: none;
-  }
-
-  .date-text-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-
-  .date-text-input::placeholder { color: var(--muted); }
-
-  .date-cal-btn {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    color: var(--muted);
-    padding: 0 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-
-  .date-cal-btn:hover, .date-cal-btn.open {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .date-dropdown {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 14px;
-    z-index: 100;
-    width: 244px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  }
-
-  .date-dropdown.hidden { display: none; }
-
-  .cal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-
-  .cal-nav {
-    background: none;
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-  }
-
-  .cal-nav:hover { border-color: var(--accent); color: var(--accent); }
-
-  .cal-month-year {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--text);
-    letter-spacing: 0.04em;
-  }
-
-  .cal-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 4px;
-  }
-
-  .cal-weekdays span {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--muted);
-    text-align: center;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 3px 0;
-  }
-
-  .cal-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-  }
-
-  .cal-day {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    border-radius: 6px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    background: none;
-    color: var(--text);
-    transition: all 0.1s;
-  }
-
-  .cal-day:hover { background: var(--bg3); border-color: var(--border2); }
-  .cal-day.other-month { color: var(--muted); opacity: 0.35; }
-  .cal-day.today { border-color: var(--accent); color: var(--accent); }
-  .cal-day.selected { background: var(--accent); color: #0b1a11; font-weight: 600; border-color: var(--accent); }
-  .cal-day.selected:hover { opacity: 0.9; }
-
-  /* hidden file input */
-  #import-file { display: none; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weight Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0b0c0e;
+      --bg2: #111316;
+      --bg3: #181a1f;
+      --border: #222429;
+      --border2: #2a2d35;
+      --text: #e8eaf0;
+      --muted: #5a5f70;
+      --accent: #4ade80;
+      --accent-dim: rgba(74, 222, 128, 0.08);
+      --accent-glow: rgba(74, 222, 128, 0.25);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.1);
+      --amber: #fbbf24;
+    }
+
+    html,
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      height: 100%;
+      overflow: hidden;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* LAYOUT — full-viewport dashboard */
+    .shell {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 24px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .logo-block h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .logo-block h1 span {
+      color: var(--accent);
+    }
+
+    .logo-block p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* STATS ROW */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border2);
+    }
+
+    .stat-card .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-card .value.positive {
+      color: var(--accent);
+    }
+
+    .stat-card .value.negative {
+      color: var(--red);
+    }
+
+    .stat-card .value.neutral {
+      color: var(--amber);
+    }
+
+    .stat-card .sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* CHART AREA */
+    .chart-wrap {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 20px 16px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* BOTTOM ROW — log entry panel */
+    .bottom-grid {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .chart-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .range-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .range-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+
+    .range-btn:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    .range-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .chart-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scale-mode-group { display: flex; gap: 4px; }
+
+    /* INDEX MODE SLIDER */
+    .index-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .index-slider-wrap.hidden { display: none; }
+
+    .index-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 130px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--border2);
+      outline: none;
+      cursor: pointer;
+    }
+    .index-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .index-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .index-slider::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+    }
+
+    .index-slider-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      min-width: 38px;
+      letter-spacing: 0.02em;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+      margin: 2px 0;
+    }
+
+    /* EXTERNAL TOOLTIP */
+    .ext-tooltip {
+      position: absolute;
+      pointer-events: auto;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.12s;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 10px 30px 10px 12px;
+      white-space: nowrap;
+    }
+
+    .tooltip-edit-btn {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: color 0.1s, background 0.1s;
+    }
+    .tooltip-edit-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+
+    .ext-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--border2);
+    }
+
+    .ext-tooltip::before {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid var(--bg3);
+      z-index: 1;
+    }
+
+    .ext-tooltip-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+      letter-spacing: 0.04em;
+    }
+
+    .ext-tooltip-body {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* STYLE PICKER */
+    .style-picker {
+      position: relative;
+    }
+
+    .style-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 4px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 88px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .style-dropdown.hidden {
+      display: none;
+    }
+
+    .style-option {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: left;
+      letter-spacing: 0.05em;
+      transition: all 0.1s;
+      white-space: nowrap;
+    }
+
+    .style-option:hover {
+      background: var(--bg3);
+      color: var(--text);
+    }
+
+    .style-option.active {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* CUSTOM RANGE PRESETS */
+    .range-custom-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .range-del {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 14px;
+      height: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 50%;
+      color: var(--muted);
+      font-size: 0.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .range-custom-wrap:hover .range-del {
+      opacity: 1;
+    }
+
+    .range-del:hover {
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    .range-add-form {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .range-add-form.hidden {
+      display: none;
+    }
+
+    .range-add-input {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 5px 8px;
+      width: 52px;
+      outline: none;
+      -webkit-appearance: none;
+      transition: border-color 0.15s;
+    }
+
+    .range-add-input:focus {
+      border-color: var(--accent);
+    }
+
+    .range-add-input::placeholder {
+      color: var(--muted);
+    }
+
+    .chart-canvas-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      cursor: pointer;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    .no-data-msg {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* PANELS */
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    /* ENTRY EDIT MODAL */
+    .entry-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .entry-modal-overlay.hidden { display: none; }
+
+    .entry-modal {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 24px;
+      width: 300px;
+      max-width: 90vw;
+    }
+
+    .entry-modal-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn-danger {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--red);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-danger:hover { border-color: var(--red); background: rgba(248,113,113,0.07); }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+
+    .panel-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .field input::placeholder {
+      color: var(--muted);
+    }
+
+    .btn-add {
+      width: 100%;
+      background: var(--accent);
+      color: #0b1a11;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 11px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    .btn-add:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-add:active {
+      transform: translateY(0);
+    }
+
+    .feedback {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 16px;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feedback.show {
+      opacity: 1;
+    }
+
+    .feedback.err {
+      color: var(--red);
+    }
+
+    /* IMPORT/EXPORT */
+    .io-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-io {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 8px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .btn-io:hover {
+      border-color: var(--border2);
+      color: var(--text);
+      background: var(--bg2);
+    }
+
+
+    /* GOAL LINE */
+    .goal-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .goal-row label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .goal-row input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      padding: 6px 10px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .goal-row input:focus {
+      border-color: var(--accent);
+    }
+
+    .goal-row .btn-io {
+      flex: none;
+      padding: 6px 12px;
+      font-size: 0.62rem;
+    }
+
+    /* DATE PICKER */
+    .date-picker-wrap {
+      position: relative;
+    }
+
+    .date-input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .date-text-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .date-text-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .date-text-input::placeholder {
+      color: var(--muted);
+    }
+
+    .date-cal-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: var(--muted);
+      padding: 0 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .date-cal-btn:hover,
+    .date-cal-btn.open {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .date-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 14px;
+      z-index: 100;
+      width: 244px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .date-dropdown.hidden {
+      display: none;
+    }
+
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .cal-nav {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .cal-nav:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .cal-month-year {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 4px;
+    }
+
+    .cal-weekdays span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 3px 0;
+    }
+
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: none;
+      color: var(--text);
+      transition: all 0.1s;
+    }
+
+    .cal-day:hover {
+      background: var(--bg3);
+      border-color: var(--border2);
+    }
+
+    .cal-day.other-month {
+      color: var(--muted);
+      opacity: 0.35;
+    }
+
+    .cal-day.today {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .cal-day.selected {
+      background: var(--accent);
+      color: #0b1a11;
+      font-weight: 600;
+      border-color: var(--accent);
+    }
+
+    .cal-day.selected:hover {
+      opacity: 0.9;
+    }
+
+    /* hidden file input */
+    #import-file {
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
-<div class="shell">
+  <div class="shell">
 
-  <header>
-    <div class="logo-block">
-      <h1>Weight<span>.</span></h1>
-      <p>Body mass over time — to scale</p>
-    </div>
-  </header>
+    <header>
+      <div class="logo-block">
+        <h1>Weight<span>.</span></h1>
+        <p>Body mass over time — to scale</p>
+      </div>
+    </header>
 
-  <!-- STATS -->
-  <div class="stats-row" id="stats-row">
-    <div class="stat-card">
-      <div class="label">Starting</div>
-      <div class="value" id="stat-start">—</div>
-      <div class="sub" id="stat-start-date">no data</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Current</div>
-      <div class="value" id="stat-current">—</div>
-      <div class="sub" id="stat-current-date">no data</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Total Lost</div>
-      <div class="value positive" id="stat-lost">—</div>
-      <div class="sub" id="stat-days">0 days</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Weekly Rate</div>
-      <div class="value" id="stat-rate">—</div>
-      <div class="sub">kg / week avg</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Goal Progress</div>
-      <div class="value" id="stat-goal-pct">—</div>
-      <div class="sub" id="stat-goal-rem">set a goal below</div>
-    </div>
-  </div>
-
-  <!-- CHART -->
-  <div class="chart-wrap">
-    <div class="chart-header">
-      <span class="chart-title">Body Weight</span>
-      <div class="chart-controls">
-        <div class="style-picker" id="style-picker">
-          <button class="range-btn" id="style-trigger" type="button">Smooth ▾</button>
-          <div class="style-dropdown hidden" id="style-dropdown">
-            <button class="style-option active" data-style="smooth" type="button">Smooth</button>
-            <button class="style-option" data-style="linear" type="button">Linear</button>
-            <button class="style-option" data-style="stepped" type="button">Stepped</button>
-          </div>
-        </div>
-        <div class="range-btns" id="range-btns"></div>
-        <button class="range-btn" id="range-add-btn" type="button" title="Add custom range">+</button>
-        <form class="range-add-form hidden" id="range-add-form">
-          <input class="range-add-input" id="range-add-input" type="number" placeholder="days" min="1" max="3650" autocomplete="off">
-          <button class="range-btn" type="submit">✓</button>
-          <button class="range-btn" type="button" id="range-add-cancel">✕</button>
-        </form>
+    <!-- STATS -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="label">Starting</div>
+        <div class="value" id="stat-start">—</div>
+        <div class="sub" id="stat-start-date">no data</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Current</div>
+        <div class="value" id="stat-current">—</div>
+        <div class="sub" id="stat-current-date">no data</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Lost</div>
+        <div class="value positive" id="stat-lost">—</div>
+        <div class="sub" id="stat-days">0 days</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Weekly Rate</div>
+        <div class="value" id="stat-rate">—</div>
+        <div class="sub">kg / week avg</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Goal Progress</div>
+        <div class="value" id="stat-goal-pct">—</div>
+        <div class="sub" id="stat-goal-rem">set a goal below</div>
       </div>
     </div>
-    <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
-    <div class="chart-canvas-wrap">
-      <canvas id="chart"></canvas>
+
+    <!-- CHART -->
+    <div class="chart-wrap">
+      <div class="chart-header">
+        <span class="chart-title">Body Weight</span>
+        <div class="chart-controls">
+          <div class="style-picker" id="style-picker">
+            <button class="range-btn" id="style-trigger" type="button">Smooth ▾</button>
+            <div class="style-dropdown hidden" id="style-dropdown">
+              <button class="style-option active" data-style="smooth" type="button">Smooth</button>
+              <button class="style-option" data-style="linear" type="button">Linear</button>
+              <button class="style-option" data-style="stepped" type="button">Stepped</button>
+            </div>
+          </div>
+          <div class="ctrl-sep"></div>
+          <div class="scale-mode-group" id="scale-mode-btns">
+            <button class="range-btn active" data-scale="time" type="button">Time</button>
+            <button class="range-btn" data-scale="index" type="button">Index</button>
+          </div>
+          <div class="ctrl-sep" id="range-sep"></div>
+          <div id="range-controls" style="display:flex;align-items:center;gap:8px;">
+            <div class="range-btns" id="range-btns"></div>
+            <button class="range-btn" id="range-add-btn" type="button" title="Add custom range">+</button>
+            <form class="range-add-form hidden" id="range-add-form">
+              <input class="range-add-input" id="range-add-input" type="number" placeholder="days" min="1" max="3650"
+                autocomplete="off">
+              <button class="range-btn" type="submit">✓</button>
+              <button class="range-btn" type="button" id="range-add-cancel">✕</button>
+            </form>
+          </div>
+          <div class="index-slider-wrap hidden" id="index-slider-wrap">
+            <input type="range" class="index-slider" id="index-slider" min="2" max="100" value="100">
+            <span class="index-slider-label" id="index-slider-label">All</span>
+          </div>
+        </div>
+      </div>
+      <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
+      <div class="chart-canvas-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-grid">
+
+      <!-- ADD ENTRY -->
+      <div class="panel">
+        <div class="panel-title">Log Entry</div>
+
+        <div class="field">
+          <label>Date</label>
+          <div class="date-picker-wrap">
+            <div class="date-input-row">
+              <input type="text" class="date-text-input" id="date-text-input" placeholder="DD/MM/YYYY" maxlength="10"
+                autocomplete="off">
+              <button class="date-cal-btn" id="date-trigger" type="button">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="14" height="12" rx="2" />
+                  <line x1="1" y1="7" x2="15" y2="7" />
+                  <line x1="5" y1="1" x2="5" y2="5" />
+                  <line x1="11" y1="1" x2="11" y2="5" />
+                </svg>
+              </button>
+            </div>
+            <div class="date-dropdown hidden" id="date-dropdown">
+              <div class="cal-header">
+                <button class="cal-nav" id="cal-prev" type="button">‹</button>
+                <span class="cal-month-year" id="cal-month-year"></span>
+                <button class="cal-nav" id="cal-next" type="button">›</button>
+              </div>
+              <div class="cal-weekdays">
+                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+              </div>
+              <div class="cal-days" id="cal-days"></div>
+            </div>
+            <input type="hidden" id="inp-date">
+          </div>
+        </div>
+        <div class="field">
+          <label>Weight (kg)</label>
+          <input type="number" id="inp-weight" step="0.1" min="30" max="300" placeholder="e.g. 82.4">
+        </div>
+
+        <button class="btn-add" id="btn-add">Add Entry</button>
+        <div class="feedback" id="feedback"></div>
+
+        <!-- GOAL -->
+        <div class="goal-row">
+          <label>Goal</label>
+          <input type="number" id="inp-goal" step="0.1" min="30" max="300" placeholder="target kg">
+          <button class="btn-io" id="btn-goal">Set</button>
+        </div>
+
+        <!-- IMPORT/EXPORT -->
+        <div class="io-row">
+          <button class="btn-io" id="btn-export">↓ Export CSV</button>
+          <button class="btn-io" id="btn-import-trigger">↑ Import CSV</button>
+          <input type="file" id="import-file" accept=".csv">
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- BOTTOM ROW -->
-  <div class="bottom-grid">
-
-    <!-- ADD ENTRY -->
-    <div class="panel">
-      <div class="panel-title">Log Entry</div>
-
+  <!-- ENTRY EDIT MODAL -->
+  <div class="entry-modal-overlay hidden" id="entry-modal-overlay">
+    <div class="entry-modal">
+      <div class="entry-modal-title">Edit Entry</div>
       <div class="field">
-        <label>Date</label>
-        <div class="date-picker-wrap">
-          <div class="date-input-row">
-            <input type="text" class="date-text-input" id="date-text-input" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
-            <button class="date-cal-btn" id="date-trigger" type="button">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="1" y="3" width="14" height="12" rx="2"/>
-                <line x1="1" y1="7" x2="15" y2="7"/>
-                <line x1="5" y1="1" x2="5" y2="5"/>
-                <line x1="11" y1="1" x2="11" y2="5"/>
-              </svg>
-            </button>
-          </div>
-          <div class="date-dropdown hidden" id="date-dropdown">
-            <div class="cal-header">
-              <button class="cal-nav" id="cal-prev" type="button">‹</button>
-              <span class="cal-month-year" id="cal-month-year"></span>
-              <button class="cal-nav" id="cal-next" type="button">›</button>
-            </div>
-            <div class="cal-weekdays">
-              <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-            </div>
-            <div class="cal-days" id="cal-days"></div>
-          </div>
-          <input type="hidden" id="inp-date">
-        </div>
+        <label>Date (DD/MM/YYYY)</label>
+        <input type="text" id="modal-date" placeholder="DD/MM/YYYY" maxlength="10">
       </div>
       <div class="field">
         <label>Weight (kg)</label>
-        <input type="number" id="inp-weight" step="0.1" min="30" max="300" placeholder="e.g. 82.4">
+        <input type="number" id="modal-weight" step="0.1" min="30" max="300" placeholder="e.g. 82.4">
       </div>
-
-      <button class="btn-add" id="btn-add">Add Entry</button>
-      <div class="feedback" id="feedback"></div>
-
-      <!-- GOAL -->
-      <div class="goal-row">
-        <label>Goal</label>
-        <input type="number" id="inp-goal" step="0.1" min="30" max="300" placeholder="target kg">
-        <button class="btn-io" id="btn-goal">Set</button>
-      </div>
-
-      <!-- IMPORT/EXPORT -->
-      <div class="io-row">
-        <button class="btn-io" id="btn-export">↓ Export CSV</button>
-        <button class="btn-io" id="btn-import-trigger">↑ Import CSV</button>
-        <input type="file" id="import-file" accept=".csv">
+      <div class="modal-btn-row">
+        <button class="btn-add" id="modal-save" style="flex:1">Save</button>
+        <button class="btn-danger" id="modal-delete">Delete</button>
+        <button class="btn-ghost" id="modal-cancel">Cancel</button>
       </div>
     </div>
-
-    <!-- LOG TABLE -->
-    <div class="panel history-panel">
-      <div class="panel-title">History</div>
-      <div class="log-wrap">
-        <div class="log-empty" id="log-empty">No entries yet.</div>
-        <table id="log-table" style="display:none">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Weight</th>
-              <th>Change</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="log-body"></tbody>
-        </table>
-      </div>
-    </div>
-
   </div>
-</div>
 
-<script>
-// ─── FIREBASE ────────────────────────────────────────────────────────────────
-const app = firebase.initializeApp({
-  apiKey: "AIzaSyCnVzzlhT5UB2_UlW-2m-i48OAJV_dyVRU",
-  authDomain: "weighttracker-3ab18.firebaseapp.com",
-  projectId: "weighttracker-3ab18",
-  storageBucket: "weighttracker-3ab18.firebasestorage.app",
-  messagingSenderId: "129982293138",
-  appId: "1:129982293138:web:3410a924e576e31b05324b"
-});
-const db = firebase.firestore();
-const docRef = db.collection('tracker').doc('data');
+  <script>
+    // ─── FIREBASE ────────────────────────────────────────────────────────────────
+    const app = firebase.initializeApp({
+      apiKey: "AIzaSyCnVzzlhT5UB2_UlW-2m-i48OAJV_dyVRU",
+      authDomain: "weighttracker-3ab18.firebaseapp.com",
+      projectId: "weighttracker-3ab18",
+      storageBucket: "weighttracker-3ab18.firebasestorage.app",
+      messagingSenderId: "129982293138",
+      appId: "1:129982293138:web:3410a924e576e31b05324b"
+    });
+    const db = firebase.firestore();
+    const docRef = db.collection('tracker').doc('data');
 
-// In-memory state kept in sync via onSnapshot
-let _entries = [];
-let _goal = null;
+    // In-memory state kept in sync via onSnapshot
+    let _entries = [];
+    let _goal = null;
 
-async function save(entries) {
-  _entries = entries;
-  await docRef.set({ entries, goal: _goal }, { merge: true });
-}
+    async function save(entries) {
+      _entries = entries;
+      refresh(); // optimistic — update UI immediately, Firestore confirms in background
+      docRef.set({ entries, goal: _goal }, { merge: true });
+    }
 
-async function saveGoal(g) {
-  _goal = g;
-  await docRef.set({ goal: g }, { merge: true });
-}
+    async function saveGoal(g) {
+      _goal = g;
+      await docRef.set({ goal: g }, { merge: true });
+    }
 
-function sortedEntries(entries) {
-  return [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
-}
+    function sortedEntries(entries) {
+      return [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
 
-// ─── CHART ───────────────────────────────────────────────────────────────────
-let chart = null;
-let activeRange = 'all';
-let activeLineStyle = 'smooth';
-let panMin = null;   // ms timestamp, null when 'all'
-let panMax = null;   // ms timestamp
-let _visibleCount = 1; // entries visible in current window (for pointRadius density)
+    // ─── CHART ───────────────────────────────────────────────────────────────────
+    let chart = null;
+    let activeRange = 'all';
+    let activeLineStyle = 'smooth';
+    let panMin = null;         // ms timestamp, null when 'all'
+    let panMax = null;         // ms timestamp
+    let panIndexMin = null;    // entry index, null when 'all' (index mode)
+    let panIndexMax = null;    // entry index
+    let _visibleCount = 1;     // entries visible in current window (for pointRadius density)
+    let activeScaleMode = 'time'; // 'time' | 'index'
+    let _ordinalVisible = [];  // current entries in index mode (for tick/tooltip callbacks)
 
-function filterByRange(entries, range) {
-  if (range === 'all' || entries.length === 0) return entries;
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - parseInt(range));
-  return entries.filter(e => new Date(e.date) >= cutoff);
-}
+    function filterByRange(entries, range) {
+      if (range === 'all' || entries.length === 0) return entries;
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - parseInt(range));
+      return entries.filter(e => new Date(e.date) >= cutoff);
+    }
 
-function initPan(entries, range) {
-  if (range === 'all' || !entries.length) { panMin = null; panMax = null; return; }
-  const sorted = sortedEntries(entries);
-  const days = parseInt(range);
-  const latestMs = Math.max(Date.now(), new Date(sorted[sorted.length - 1].date).getTime());
-  panMax = latestMs;
-  panMin = latestMs - days * 86400000;
-}
+    function initPan(entries, range) {
+      if (range === 'all' || !entries.length) { panMin = null; panMax = null; return; }
+      const sorted = sortedEntries(entries);
+      const days = parseInt(range);
+      const lastMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
+      const todayMs = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+      panMax = Math.max(lastMs, todayMs);
+      panMin = panMax - days * 86400000;
+    }
 
-function getWindowEntries(entries) {
-  if (panMin === null) return entries;
-  return entries.filter(e => {
-    const t = new Date(e.date).getTime();
-    return t >= panMin && t <= panMax;
-  });
-}
+    function getWindowEntries(entries) {
+      if (panMin === null) return entries;
+      return entries.filter(e => {
+        const t = new Date(e.date + 'T00:00:00').getTime();
+        return t >= panMin && t <= panMax;
+      });
+    }
 
-// Tight y bounds for the visible entries, including goal if set
-function getYBounds(visibleEntries) {
-  if (!visibleEntries.length) return {};
-  const ws = visibleEntries.map(e => e.weight);
-  if (_goal != null) ws.push(_goal);
-  const lo = Math.min(...ws), hi = Math.max(...ws);
-  const pad = Math.max((hi - lo) * 0.12, 1.5);
-  return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
-}
+    function initPanIndex(entries, range) {
+      if (range === 'all' || !entries.length) { panIndexMin = null; panIndexMax = null; return; }
+      const sorted = sortedEntries(entries);
+      const cutoff = Date.now() - parseInt(range) * 86400000;
+      let first = sorted.findIndex(e => new Date(e.date).getTime() >= cutoff);
+      if (first < 0) first = 0;
+      panIndexMin = first;
+      panIndexMax = sorted.length - 1;
+    }
 
-function applyPanToChart() {
-  if (!chart) return;
-  const sorted = sortedEntries(_entries);
-  const visible = getWindowEntries(sorted);
-  _visibleCount = Math.max(1, visible.length);
-  chart.data.datasets[1].data = computeTrend(visible);
-  const x = chart.options.scales.x;
-  if (panMin !== null) {
-    x.min = panMin; // numeric ms — avoids date-string parsing on every frame
-    x.max = panMax;
-  } else {
-    delete x.min; delete x.max;
-  }
-  Object.assign(chart.options.scales.y, getYBounds(visible));
-  chart.update('none');
-}
+    function getIndexWindowEntries(entries) {
+      if (panIndexMin === null) return entries;
+      return entries.slice(panIndexMin, panIndexMax + 1);
+    }
 
-// ─── EXTERNAL TOOLTIP ────────────────────────────────────────────────────────
-let _extTooltipEl = null;
+    // Tight y bounds for the visible entries, including goal if set
+    function getYBounds(visibleEntries) {
+      if (!visibleEntries.length) return {};
+      const ws = visibleEntries.map(e => e.weight);
+      if (_goal != null) ws.push(_goal);
+      const lo = Math.min(...ws), hi = Math.max(...ws);
+      const pad = Math.max((hi - lo) * 0.12, 1.5);
+      return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
+    }
 
-function externalTooltipHandler({ chart, tooltip }) {
-  if (!_extTooltipEl) {
-    _extTooltipEl = document.createElement('div');
-    _extTooltipEl.className = 'ext-tooltip';
-    document.querySelector('.chart-canvas-wrap').appendChild(_extTooltipEl);
-  }
-  const el = _extTooltipEl;
+    function getCalendarTicks(minMs, maxMs) {
+      const spanDays = (maxMs - minMs) / 86400000;
+      const ticks = [];
+      if (spanDays <= 12) {
+        const step = spanDays <= 6 ? 1 : 2;
+        const d = new Date(minMs); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1);
+        while (d.getTime() <= maxMs) { ticks.push(d.getTime()); d.setDate(d.getDate() + step); }
+      } else if (spanDays <= 50) {
+        const d = new Date(minMs); d.setHours(0,0,0,0);
+        const dow = d.getDay(); // 0=Sun,1=Mon
+        const daysToNextMon = dow === 1 ? 0 : dow === 0 ? 1 : 8 - dow;
+        d.setDate(d.getDate() + daysToNextMon);
+        while (d.getTime() <= maxMs) { ticks.push(d.getTime()); d.setDate(d.getDate() + 7); }
+      } else {
+        const spanMonths = spanDays / 30.44;
+        let step;
+        if (spanMonths <= 9) step = 1;
+        else if (spanMonths <= 18) step = 2;
+        else if (spanMonths <= 27) step = 3;
+        else if (spanMonths <= 54) step = 6;
+        else step = Math.ceil(spanMonths / 84) * 12;
+        const d = new Date(minMs); d.setHours(0,0,0,0); d.setDate(1);
+        d.setMonth(d.getMonth() + 1);
+        while (d.getTime() <= maxMs) { ticks.push(d.getTime()); d.setMonth(d.getMonth() + step); }
+      }
+      return ticks;
+    }
 
-  if (tooltip.opacity === 0) { el.style.opacity = '0'; return; }
+    function applyPanToChart() {
+      if (!chart) return;
+      const sorted = sortedEntries(_entries);
+      const visible = getWindowEntries(sorted);
+      _visibleCount = Math.max(1, visible.length);
+      chart.data.datasets[1].data = computeTrend(visible);
+      const x = chart.options.scales.x;
+      if (panMin !== null) {
+        x.min = panMin; // numeric ms — avoids date-string parsing on every frame
+        x.max = panMax;
+      } else {
+        delete x.min; delete x.max;
+      }
+      Object.assign(chart.options.scales.y, getYBounds(visible));
+      chart.update('none');
+    }
 
-  const title = tooltip.title?.[0] ?? '';
-  const lines = (tooltip.body ?? []).flatMap(b => b.lines).filter(Boolean);
+    function applyIndexPanToChart() {
+      if (!chart) return;
+      const sorted = sortedEntries(_entries);
+      const xMin = panIndexMin !== null ? panIndexMin - 0.5 : -0.5;
+      const xMax = panIndexMin !== null ? panIndexMax + 0.5 : sorted.length - 0.5;
+      const idxMin = Math.max(0, Math.floor(panIndexMin !== null ? panIndexMin : 0));
+      const idxMax = Math.min(sorted.length - 1, Math.ceil(panIndexMin !== null ? panIndexMax : sorted.length - 1));
+      const visible = sorted.slice(idxMin, idxMax + 1);
+      _visibleCount = Math.max(1, visible.length);
+      chart.data.datasets[1].data = computeTrendOrdinal(visible, idxMin);
+      const goalDs = chart.data.datasets[2];
+      if (goalDs) {
+        goalDs.data = _goal != null && sorted.length >= 2
+          ? [{ x: xMin, y: _goal }, { x: xMax, y: _goal }] : [];
+      }
+      chart.options.scales.x.min = xMin;
+      chart.options.scales.x.max = xMax;
+      Object.assign(chart.options.scales.y, getYBounds(visible));
+      chart.update('none');
+    }
 
-  el.innerHTML = [
-    title ? `<div class="ext-tooltip-title">${title}</div>` : '',
-    ...lines.map(l => `<div class="ext-tooltip-body">${l.trim()}</div>`),
-  ].join('');
+    // ─── EXTERNAL TOOLTIP ────────────────────────────────────────────────────────
+    let _extTooltipEl = null;
+    let _tooltipEntryDate = null;
+    let _tooltipPinned = false;
+    let _tooltipHideTimer = null;
 
-  // Measure before positioning
-  el.style.left = '0'; el.style.top = '0'; el.style.opacity = '0';
-  const w = el.offsetWidth;
-  const h = el.offsetHeight;
+    function externalTooltipHandler({ chart, tooltip }) {
+      if (!_extTooltipEl) {
+        _extTooltipEl = document.createElement('div');
+        _extTooltipEl.className = 'ext-tooltip';
+        _extTooltipEl.innerHTML =
+          `<button class="tooltip-edit-btn">···</button>` +
+          `<div class="ext-tooltip-title"></div>` +
+          `<div class="ext-tooltip-bodies"></div>`;
+        document.querySelector('.chart-canvas-wrap').appendChild(_extTooltipEl);
 
-  el.style.left = (tooltip.caretX - w / 2) + 'px';
-  el.style.top  = (tooltip.caretY - h - 22) + 'px';
-  el.style.opacity = '1';
-}
+        _extTooltipEl.addEventListener('mouseenter', () => {
+          _tooltipPinned = true;
+          clearTimeout(_tooltipHideTimer);
+        });
+        _extTooltipEl.addEventListener('mouseleave', () => {
+          _tooltipPinned = false;
+          _extTooltipEl.style.opacity = '0';
+        });
+        _extTooltipEl.querySelector('.tooltip-edit-btn').addEventListener('click', () => {
+          openEntryModal(_tooltipEntryDate);
+        });
+      }
 
-function buildChart(entries, goal) {
-  const canvas = document.getElementById('chart');
-  const noData = document.getElementById('no-data-msg');
+      const el = _extTooltipEl;
+      if (tooltip.opacity === 0) {
+        clearTimeout(_tooltipHideTimer);
+        _tooltipHideTimer = setTimeout(() => { if (!_tooltipPinned) el.style.opacity = '0'; }, 120);
+        return;
+      }
 
-  if (entries.length === 0) {
-    canvas.style.display = 'none';
-    noData.style.display = 'block';
-    if (chart) { chart.destroy(); chart = null; }
-    return;
-  }
+      // Extract the date of the hovered data point
+      const dp = tooltip.dataPoints?.find(p => p.dataset.label === 'Weight (kg)');
+      if (dp) {
+        if (activeScaleMode === 'index') {
+          _tooltipEntryDate = _ordinalVisible[Math.round(dp.parsed.x)]?.date ?? null;
+        } else {
+          const ms = dp.raw.x;
+          _tooltipEntryDate = _entries.find(e => new Date(e.date + 'T00:00:00').getTime() === ms)?.date ?? null;
+        }
+      }
 
-  canvas.style.display = 'block';
-  noData.style.display = 'none';
+      const title = tooltip.title?.[0] ?? '';
+      const lines = (tooltip.body ?? []).flatMap(b => b.lines).filter(Boolean);
+      el.querySelector('.ext-tooltip-title').textContent = title;
+      el.querySelector('.ext-tooltip-bodies').innerHTML =
+        lines.map(l => `<div class="ext-tooltip-body">${l.trim()}</div>`).join('');
 
-  // All entries go into the dataset so panning can reveal them.
-  // Visible window is controlled by x-axis min/max.
-  const data = entries.map(e => ({ x: e.date, y: e.weight }));
-  const visible = getWindowEntries(entries);
-  _visibleCount = Math.max(1, visible.length);
+      el.style.left = '0'; el.style.top = '0'; el.style.opacity = '0';
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      el.style.left = (tooltip.caretX - w / 2) + 'px';
+      el.style.top  = (tooltip.caretY - h - 22) + 'px';
+      el.style.opacity = '1';
+    }
 
-  // Span in days for autoUnit (use pan window or full range)
-  const spanDays = panMin !== null
-    ? (panMax - panMin) / 86400000
-    : entries.length < 2 ? 1
-    : (new Date(entries[entries.length - 1].date) - new Date(entries[0].date)) / 86400000;
-  const timeUnit = spanDays <= 60 ? 'day' : spanDays <= 365 ? 'week' : 'month';
+    function buildChart(entries, goal) {
+      const canvas = document.getElementById('chart');
+      const noData = document.getElementById('no-data-msg');
 
-  // Line style props
-  const lsProps = activeLineStyle === 'stepped'
-    ? { tension: 0, stepped: 'before' }
-    : activeLineStyle === 'linear'
-    ? { tension: 0, stepped: false }
-    : { tension: 0.35, stepped: false };
+      if (entries.length === 0) {
+        canvas.style.display = 'none';
+        noData.style.display = 'block';
+        if (chart) { chart.destroy(); chart = null; }
+        return;
+      }
 
-  // Trend computed from visible window only
-  const trendData = computeTrend(visible);
+      canvas.style.display = 'block';
+      noData.style.display = 'none';
 
-  // Goal line spans full entry range so panning doesn't break it
-  const goalDataset = goal && entries.length >= 2 ? [{
-    label: 'Goal',
-    data: [{ x: entries[0].date, y: goal }, { x: entries[entries.length - 1].date, y: goal }],
-    borderColor: 'rgba(251,191,36,0.5)',
-    borderDash: [6, 4],
-    borderWidth: 1.5,
-    pointRadius: 0,
-    tension: 0,
-    fill: false,
-  }] : [];
+      // ── Shared: line style ──────────────────────────────────────────────────
+      const lsProps = activeLineStyle === 'stepped'
+        ? { tension: 0, stepped: 'before' }
+        : activeLineStyle === 'linear'
+        ? { tension: 0, stepped: false }
+        : { tension: 0.35, stepped: false };
 
-  const datasets = [
-    {
-      label: 'Weight (kg)',
-      data,
-      borderColor: '#4ade80',
-      backgroundColor: (ctx) => {
+      // ── Shared: background gradient ─────────────────────────────────────────
+      const backgroundColor = (ctx) => {
         const c = ctx.chart;
         const { ctx: cx, chartArea } = c;
         if (!chartArea) return 'transparent';
@@ -1051,9 +1312,10 @@ function buildChart(entries, goal) {
         g.addColorStop(0, 'rgba(74,222,128,0.18)');
         g.addColorStop(1, 'rgba(74,222,128,0)');
         return g;
-      },
-      borderWidth: 2,
-      pointRadius: (ctx) => {
+      };
+
+      // ── Shared: density-adaptive point radius (reads module-level _visibleCount) ──
+      const pointRadius = (ctx) => {
         const { chartArea } = ctx.chart;
         if (!chartArea) return 3;
         const pxPt = (chartArea.right - chartArea.left) / _visibleCount;
@@ -1062,683 +1324,933 @@ function buildChart(entries, goal) {
         if (pxPt >= 3)  return 2;
         if (pxPt >= 1.5) return 1;
         return 0;
-      },
-      pointBackgroundColor: '#4ade80',
-      pointBorderColor: '#0b0c0e',
-      pointBorderWidth: 1.5,
-      pointHoverRadius: 6,
-      ...lsProps,
-      fill: true,
-    },
-    {
-      label: 'Trend',
-      data: trendData,
-      borderColor: 'rgba(255,255,255,0.18)',
-      borderDash: [4, 4],
-      borderWidth: 1.5,
-      pointRadius: 0,
-      tension: 0,
-      fill: false,
-    },
-    ...goalDataset,
-  ];
+      };
 
-  // x-axis scale bounds from pan window (numeric ms — no string parsing overhead)
-  const xOpts = panMin !== null ? { min: panMin, max: panMax } : {};
-  const yOpts = getYBounds(visible);
+      // ── Shared: tooltip label callback ──────────────────────────────────────
+      const labelCb = (item) => {
+        if (item.dataset.label === 'Trend') return null;
+        if (item.dataset.label === 'Goal') return `Goal  ${item.parsed.y.toFixed(1)} kg`;
+        return item.parsed.y.toFixed(1) + ' kg';
+      };
 
-  if (chart) {
-    chart.data.datasets = datasets;
-    Object.assign(chart.options.scales.x, xOpts);
-    Object.assign(chart.options.scales.y, yOpts);
-    chart.update('none');
-    return;
-  }
+      let datasets, xScale, yOpts, titleCb;
 
-  chart = new Chart(canvas, {
-    type: 'line',
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          enabled: false,
-          external: externalTooltipHandler,
-          callbacks: {
-            title: (items) => {
-              const d = new Date(items[0].parsed.x);
-              return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-            },
-            label: (item) => {
-              if (item.dataset.label === 'Trend') return null;
-              if (item.dataset.label === 'Goal') return `Goal  ${item.parsed.y.toFixed(1)} kg`;
-              return item.parsed.y.toFixed(1) + ' kg';
-            },
-          },
-          filter: (item) => item.dataset.label !== 'Trend',
-        },
-      },
-      scales: {
-        x: {
-          type: 'time',
-          time: { unit: timeUnit, tooltipFormat: 'dd MMM yyyy' },
-          adapters: { date: {} },
+      if (activeScaleMode === 'index') {
+        // ── INDEX MODE: all entries in dataset at global index; x.min/max controls window ──
+        _ordinalVisible = entries; // full array — tick/tooltip callback looks up by global index
+        const allData = entries.map((e, i) => ({ x: i, y: e.weight }));
+
+        const xMin = panIndexMin !== null ? panIndexMin - 0.5 : -0.5;
+        const xMax = panIndexMin !== null ? panIndexMax + 0.5 : entries.length - 0.5;
+        const idxMin = Math.max(0, Math.floor(panIndexMin !== null ? panIndexMin : 0));
+        const idxMax = Math.min(entries.length - 1, Math.ceil(panIndexMin !== null ? panIndexMax : entries.length - 1));
+        const visible = entries.slice(idxMin, idxMax + 1);
+        _visibleCount = Math.max(1, visible.length);
+
+        const trendData = computeTrendOrdinal(visible, idxMin);
+        const goalPts = goal && entries.length >= 2
+          ? [{ x: xMin, y: goal }, { x: xMax, y: goal }] : [];
+
+        datasets = [
+          { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
+          ...(goalPts.length ? [{ label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.5)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false }] : []),
+        ];
+
+        xScale = {
+          type: 'linear',
+          min: xMin,
+          max: xMax,
           grid: { color: '#1a1c22', drawBorder: false },
           ticks: {
             color: '#5a5f70',
             font: { family: 'JetBrains Mono', size: 10 },
             maxRotation: 0,
-            maxTicksLimit: 8,
+            callback: (val) => {
+              const i = Math.round(val);
+              const e = _ordinalVisible[i];
+              return e ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+            },
+          },
+          afterBuildTicks(scale) {
+            const lo = Math.ceil(scale.min);
+            const hi = Math.floor(scale.max);
+            const range = hi - lo;
+            if (range <= 0) { scale.ticks = lo <= hi ? [{ value: lo }] : []; return; }
+            const step = Math.max(1, Math.ceil(range / 7));
+            const out = [];
+            for (let v = lo; v <= hi; v += step) out.push({ value: v });
+            scale.ticks = out;
           },
           border: { display: false },
-          ...xOpts,
-        },
-        y: {
-          ...yOpts,
+        };
+
+        titleCb = (items) => {
+          const e = _ordinalVisible[Math.round(items[0].parsed.x)];
+          return e ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        };
+
+        yOpts = getYBounds(visible);
+
+        if (chart) {
+          chart.data.datasets[1].data = trendData;
+          if (chart.data.datasets[2]) chart.data.datasets[2].data = goalPts;
+          chart.options.scales.x.min = xMin;
+          chart.options.scales.x.max = xMax;
+          Object.assign(chart.options.scales.y, yOpts);
+          chart.update('none');
+          return;
+        }
+
+      } else {
+        // ── TIME MODE: linear scale with ms timestamps — no date adapter overhead during pan ──
+        // All entries in dataset; x-axis min/max controls the visible window.
+        const data = entries.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
+        const visible = getWindowEntries(entries);
+        _visibleCount = Math.max(1, visible.length);
+
+        const trendData = computeTrend(visible);
+        const goalDataset = goal && entries.length >= 2 ? [{
+          label: 'Goal',
+          data: [{ x: data[0].x, y: goal }, { x: data[data.length - 1].x, y: goal }],
+          borderColor: 'rgba(251,191,36,0.5)', borderDash: [6, 4], borderWidth: 1.5,
+          pointRadius: 0, tension: 0, fill: false,
+        }] : [];
+
+        datasets = [
+          { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(255,255,255,0.18)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
+          ...goalDataset,
+        ];
+
+        const xWin = panMin !== null ? { min: panMin, max: panMax } : {};
+        xScale = {
+          type: 'linear',
           grid: { color: '#1a1c22', drawBorder: false },
           ticks: {
             color: '#5a5f70',
             font: { family: 'JetBrains Mono', size: 10 },
-            callback: v => v + ' kg',
-            maxTicksLimit: 6,
+            maxRotation: 0,
+            callback: (val, index, allTicks) => {
+              const d = new Date(val);
+              const spanMs = allTicks.length > 1 ? allTicks[allTicks.length - 1].value - allTicks[0].value : 0;
+              const spanDays = spanMs / 86400000;
+              if (spanDays > 300) {
+                // monthly or yearly ticks — show "Jan" or "Jan 2024"
+                const prev = allTicks[index - 1];
+                const showYear = !prev || new Date(prev.value).getFullYear() !== d.getFullYear();
+                return showYear
+                  ? d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+                  : d.toLocaleDateString('en-GB', { month: 'short' });
+              }
+              if (spanDays > 50) {
+                // weekly ticks
+                return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+              }
+              // daily ticks
+              return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+            },
+          },
+          afterBuildTicks(scale) {
+            if (scale.min == null || scale.max == null) return;
+            const ts = getCalendarTicks(scale.min, scale.max);
+            scale.ticks = ts.map(t => ({ value: t }));
           },
           border: { display: false },
+          ...xWin,
+        };
+
+        titleCb = (items) => new Date(items[0].parsed.x).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        yOpts = getYBounds(visible);
+
+        if (chart) {
+          chart.data.datasets[1].data = trendData;
+          if (chart.data.datasets[2]) chart.data.datasets[2].data = goalDataset[0]?.data ?? [];
+          if (panMin !== null) { chart.options.scales.x.min = panMin; chart.options.scales.x.max = panMax; }
+          Object.assign(chart.options.scales.y, yOpts);
+          chart.update('none');
+          return;
+        }
+      }
+
+      chart = new Chart(canvas, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'nearest', intersect: true },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: false,
+              external: externalTooltipHandler,
+              callbacks: { title: titleCb, label: labelCb },
+              filter: (item) => item.dataset.label !== 'Trend',
+            },
+          },
+          scales: {
+            x: xScale,
+            y: {
+              ...yOpts,
+              grid: { color: '#1a1c22', drawBorder: false },
+              ticks: { color: '#5a5f70', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + ' kg', maxTicksLimit: 6 },
+              border: { display: false },
+            },
+          },
         },
-      },
-    },
-  });
-}
-
-
-function computeTrend(entries) {
-  if (entries.length < 2) return [];
-  const xs = entries.map(e => new Date(e.date).getTime());
-  const ys = entries.map(e => e.weight);
-  const n = xs.length;
-  const meanX = xs.reduce((a, b) => a + b, 0) / n;
-  const meanY = ys.reduce((a, b) => a + b, 0) / n;
-  const num = xs.reduce((sum, x, i) => sum + (x - meanX) * (ys[i] - meanY), 0);
-  const den = xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0);
-  const slope = den === 0 ? 0 : num / den;
-  const intercept = meanY - slope * meanX;
-  return [
-    { x: entries[0].date, y: parseFloat((slope * xs[0] + intercept).toFixed(2)) },
-    { x: entries[entries.length - 1].date, y: parseFloat((slope * xs[n - 1] + intercept).toFixed(2)) },
-  ];
-}
-
-// ─── STATS ───────────────────────────────────────────────────────────────────
-function updateStats(entries, goal) {
-  const s = sortedEntries(entries);
-  const fmt = w => w != null ? w.toFixed(1) + ' kg' : '—';
-  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-
-  const first = s[0];
-  const last  = s[s.length - 1];
-
-  document.getElementById('stat-start').textContent = first ? fmt(first.weight) : '—';
-  document.getElementById('stat-start-date').textContent = first ? fmtDate(first.date) : 'no data';
-
-  document.getElementById('stat-current').textContent = last ? fmt(last.weight) : '—';
-  document.getElementById('stat-current-date').textContent = last ? fmtDate(last.date) : 'no data';
-
-  if (first && last && s.length > 1) {
-    const lost = first.weight - last.weight;
-    const lostEl = document.getElementById('stat-lost');
-    lostEl.textContent = (lost >= 0 ? '−' : '+') + Math.abs(lost).toFixed(1) + ' kg';
-    lostEl.className = 'value ' + (lost >= 0 ? 'positive' : 'negative');
-
-    const days = Math.max(1, (new Date(last.date) - new Date(first.date)) / 86400000);
-    document.getElementById('stat-days').textContent = Math.round(days) + ' days';
-
-    const weeklyRate = (lost / days) * 7;
-    const rateEl = document.getElementById('stat-rate');
-    rateEl.textContent = Math.abs(weeklyRate).toFixed(2);
-    rateEl.className = 'value ' + (weeklyRate >= 0 ? 'positive' : 'negative');
-  } else {
-    document.getElementById('stat-lost').textContent = '—';
-    document.getElementById('stat-lost').className = 'value positive';
-    document.getElementById('stat-days').textContent = '0 days';
-    document.getElementById('stat-rate').textContent = '—';
-    document.getElementById('stat-rate').className = 'value';
-  }
-
-  // Goal
-  if (goal != null && first && last) {
-    const total = first.weight - goal;
-    const done  = first.weight - last.weight;
-    const pct   = total <= 0 ? 100 : Math.min(100, Math.max(0, (done / total) * 100));
-    const rem   = last.weight - goal;
-    const pctEl = document.getElementById('stat-goal-pct');
-    pctEl.textContent = pct.toFixed(0) + '%';
-    pctEl.className = pct >= 100 ? 'value positive' : 'value neutral';
-    document.getElementById('stat-goal-rem').textContent = rem > 0 ? rem.toFixed(1) + ' kg to go' : 'goal reached!';
-  } else {
-    document.getElementById('stat-goal-pct').textContent = '—';
-    document.getElementById('stat-goal-pct').className = 'value';
-    document.getElementById('stat-goal-rem').textContent = 'set a goal below';
-  }
-}
-
-// ─── TABLE ───────────────────────────────────────────────────────────────────
-function renderTable(entries) {
-  const s = sortedEntries(entries).reverse(); // newest first
-  const tbody = document.getElementById('log-body');
-  const empty = document.getElementById('log-empty');
-  const table = document.getElementById('log-table');
-
-  if (s.length === 0) {
-    empty.style.display = 'block';
-    table.style.display = 'none';
-    return;
-  }
-
-  empty.style.display = 'none';
-  table.style.display = 'table';
-
-  const allAsc = sortedEntries(entries);
-  tbody.innerHTML = s.map((e, i) => {
-    const idx = allAsc.findIndex(x => x.date === e.date);
-    const prev = allAsc[idx - 1];
-    let delta = '';
-    if (prev) {
-      const diff = e.weight - prev.weight;
-      const sign = diff < 0 ? '▼ ' : diff > 0 ? '▲ ' : '';
-      const cls  = diff < 0 ? 'delta-pos' : diff > 0 ? 'delta-neg' : 'delta-nil';
-      delta = `<span class="${cls}">${sign}${Math.abs(diff).toFixed(1)}</span>`;
-    } else {
-      delta = `<span class="delta-nil">—</span>`;
+      });
     }
-    const d = new Date(e.date);
-    const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-    return `<tr>
-      <td class="td-date">${dateStr}</td>
-      <td class="td-weight">${e.weight.toFixed(1)} kg</td>
-      <td class="td-delta">${delta}</td>
-      <td class="td-actions"><button class="btn-del" data-date="${e.date}">del</button></td>
-    </tr>`;
-  }).join('');
 
-  tbody.querySelectorAll('.btn-del').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const entries = _entries.filter(e => e.date !== btn.dataset.date);
-      await save(entries);
+
+    function computeTrend(entries) {
+      if (entries.length < 2) return [];
+      const xs = entries.map(e => new Date(e.date).getTime());
+      const ys = entries.map(e => e.weight);
+      const n = xs.length;
+      const meanX = xs.reduce((a, b) => a + b, 0) / n;
+      const meanY = ys.reduce((a, b) => a + b, 0) / n;
+      const num = xs.reduce((sum, x, i) => sum + (x - meanX) * (ys[i] - meanY), 0);
+      const den = xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0);
+      const slope = den === 0 ? 0 : num / den;
+      const intercept = meanY - slope * meanX;
+      return [
+        { x: xs[0], y: parseFloat((slope * xs[0] + intercept).toFixed(2)) },
+        { x: xs[n - 1], y: parseFloat((slope * xs[n - 1] + intercept).toFixed(2)) },
+      ];
+    }
+
+    function computeTrendOrdinal(entries, offset = 0) {
+      if (entries.length < 2) return [];
+      const n = entries.length;
+      const ys = entries.map(e => e.weight);
+      const meanX = (n - 1) / 2;
+      const meanY = ys.reduce((a, b) => a + b, 0) / n;
+      const num = entries.reduce((sum, _, i) => sum + (i - meanX) * (ys[i] - meanY), 0);
+      const den = entries.reduce((sum, _, i) => sum + (i - meanX) ** 2, 0);
+      const slope = den === 0 ? 0 : num / den;
+      const intercept = meanY - slope * meanX;
+      return [
+        { x: offset, y: parseFloat(intercept.toFixed(2)) },
+        { x: offset + n - 1, y: parseFloat((slope * (n - 1) + intercept).toFixed(2)) },
+      ];
+    }
+
+    // ─── STATS ───────────────────────────────────────────────────────────────────
+    function updateStats(entries, goal) {
+      const s = sortedEntries(entries);
+      const fmt = w => w != null ? w.toFixed(1) + ' kg' : '—';
+      const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+      const first = s[0];
+      const last = s[s.length - 1];
+
+      document.getElementById('stat-start').textContent = first ? fmt(first.weight) : '—';
+      document.getElementById('stat-start-date').textContent = first ? fmtDate(first.date) : 'no data';
+
+      document.getElementById('stat-current').textContent = last ? fmt(last.weight) : '—';
+      document.getElementById('stat-current-date').textContent = last ? fmtDate(last.date) : 'no data';
+
+      if (first && last && s.length > 1) {
+        const lost = first.weight - last.weight;
+        const lostEl = document.getElementById('stat-lost');
+        lostEl.textContent = (lost >= 0 ? '−' : '+') + Math.abs(lost).toFixed(1) + ' kg';
+        lostEl.className = 'value ' + (lost >= 0 ? 'positive' : 'negative');
+
+        const days = Math.max(1, (new Date(last.date) - new Date(first.date)) / 86400000);
+        document.getElementById('stat-days').textContent = Math.round(days) + ' days';
+
+        const weeklyRate = (lost / days) * 7;
+        const rateEl = document.getElementById('stat-rate');
+        rateEl.textContent = Math.abs(weeklyRate).toFixed(2);
+        rateEl.className = 'value ' + (weeklyRate >= 0 ? 'positive' : 'negative');
+      } else {
+        document.getElementById('stat-lost').textContent = '—';
+        document.getElementById('stat-lost').className = 'value positive';
+        document.getElementById('stat-days').textContent = '0 days';
+        document.getElementById('stat-rate').textContent = '—';
+        document.getElementById('stat-rate').className = 'value';
+      }
+
+      // Goal
+      if (goal != null && first && last) {
+        const total = first.weight - goal;
+        const done = first.weight - last.weight;
+        const pct = total <= 0 ? 100 : Math.min(100, Math.max(0, (done / total) * 100));
+        const rem = last.weight - goal;
+        const pctEl = document.getElementById('stat-goal-pct');
+        pctEl.textContent = pct.toFixed(0) + '%';
+        pctEl.className = pct >= 100 ? 'value positive' : 'value neutral';
+        document.getElementById('stat-goal-rem').textContent = rem > 0 ? rem.toFixed(1) + ' kg to go' : 'goal reached!';
+      } else {
+        document.getElementById('stat-goal-pct').textContent = '—';
+        document.getElementById('stat-goal-pct').className = 'value';
+        document.getElementById('stat-goal-rem').textContent = 'set a goal below';
+      }
+    }
+
+    // ─── ENTRY EDIT MODAL ────────────────────────────────────────────────────────
+    let _editingEntryDate = null;
+
+    function openEntryModal(date) {
+      if (!date) return;
+      const entry = _entries.find(e => e.date === date);
+      if (!entry) return;
+      _editingEntryDate = date;
+      if (_extTooltipEl) _extTooltipEl.style.opacity = '0';
+
+      const d = new Date(date + 'T00:00:00');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      document.getElementById('modal-date').value = `${dd}/${mm}/${yyyy}`;
+      document.getElementById('modal-weight').value = entry.weight.toFixed(1);
+      document.getElementById('entry-modal-overlay').classList.remove('hidden');
+      document.getElementById('modal-weight').focus();
+    }
+
+    function closeEntryModal() {
+      document.getElementById('entry-modal-overlay').classList.add('hidden');
+      _editingEntryDate = null;
+    }
+
+    document.getElementById('modal-save').addEventListener('click', () => {
+      const dateStr = document.getElementById('modal-date').value.trim();
+      const weightVal = parseFloat(document.getElementById('modal-weight').value);
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return;
+      const isoDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate) || isNaN(weightVal) || weightVal < 30 || weightVal > 300) return;
+      const entries = _entries.filter(e => e.date !== _editingEntryDate);
+      entries.push({ date: isoDate, weight: weightVal });
+      closeEntryModal();
+      save(entries);
     });
-  });
-}
 
-// ─── REFRESH ─────────────────────────────────────────────────────────────────
-function refresh() {
-  const sorted = sortedEntries(_entries);
-  updateStats(sorted, _goal);
-  buildChart(sorted, _goal);
-  renderTable(_entries);
-}
+    document.getElementById('modal-delete').addEventListener('click', () => {
+      if (!_editingEntryDate) return;
+      const entries = _entries.filter(e => e.date !== _editingEntryDate);
+      closeEntryModal();
+      save(entries);
+    });
 
-// ─── STYLE PICKER ─────────────────────────────────────────────────────────────
-const styleTrigger = document.getElementById('style-trigger');
-const styleDropdown = document.getElementById('style-dropdown');
+    document.getElementById('modal-cancel').addEventListener('click', closeEntryModal);
 
-function applyLineStyle() {
-  if (!chart) return;
-  const ds = chart.data.datasets[0];
-  if (activeLineStyle === 'smooth')  { ds.tension = 0.35; ds.stepped = false; }
-  if (activeLineStyle === 'linear')  { ds.tension = 0;    ds.stepped = false; }
-  if (activeLineStyle === 'stepped') { ds.tension = 0;    ds.stepped = 'before'; }
-  chart.update();
-}
+    document.getElementById('entry-modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeEntryModal();
+    });
 
-styleTrigger.addEventListener('click', e => {
-  e.stopPropagation();
-  styleDropdown.classList.toggle('hidden');
-});
-
-styleDropdown.addEventListener('click', e => {
-  const opt = e.target.closest('.style-option');
-  if (!opt) return;
-  activeLineStyle = opt.dataset.style;
-  styleDropdown.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
-  opt.classList.add('active');
-  styleTrigger.textContent = opt.textContent + ' ▾';
-  styleDropdown.classList.add('hidden');
-  applyLineStyle();
-});
-
-document.addEventListener('click', () => styleDropdown.classList.add('hidden'));
-
-// ─── RANGE PRESETS ────────────────────────────────────────────────────────────
-const DEFAULT_RANGES = [
-  { label: '1M', days: 30 },
-  { label: '3M', days: 90 },
-  { label: '6M', days: 180 },
-  { label: 'All', days: null },
-];
-
-function loadCustomRanges() {
-  try { return JSON.parse(localStorage.getItem('wt-custom-ranges') || '[]'); } catch { return []; }
-}
-function saveCustomRanges(r) { localStorage.setItem('wt-custom-ranges', JSON.stringify(r)); }
-
-function formatDays(d) {
-  if (d % 365 === 0) return `${d / 365}Y`;
-  if (d % 30  === 0) return `${d / 30}M`;
-  if (d % 7   === 0) return `${d / 7}W`;
-  return `${d}D`;
-}
-
-function renderRangeBtns() {
-  const container = document.getElementById('range-btns');
-  const customs = loadCustomRanges();
-  const all = [
-    ...DEFAULT_RANGES.map(r => ({ ...r, custom: false })),
-    ...customs.map(r => ({ ...r, custom: true })),
-  ];
-  container.innerHTML = all.map(r => {
-    const val = r.days === null ? 'all' : String(r.days);
-    const active = String(activeRange) === val ? ' active' : '';
-    if (r.custom) {
-      return `<div class="range-custom-wrap">` +
-        `<button class="range-btn${active}" data-range="${r.days}" type="button">${r.label}</button>` +
-        `<button class="range-del" data-range="${r.days}" type="button">×</button>` +
-        `</div>`;
+    // ─── REFRESH ─────────────────────────────────────────────────────────────────
+    function refresh() {
+      const sorted = sortedEntries(_entries);
+      updateStats(sorted, _goal);
+      buildChart(sorted, _goal);
     }
-    return `<button class="range-btn${active}" data-range="${val}" type="button">${r.label}</button>`;
-  }).join('');
-}
 
-renderRangeBtns();
+    // ─── STYLE PICKER ─────────────────────────────────────────────────────────────
+    const styleTrigger = document.getElementById('style-trigger');
+    const styleDropdown = document.getElementById('style-dropdown');
 
-document.getElementById('range-btns').addEventListener('click', e => {
-  const del = e.target.closest('.range-del');
-  if (del) {
-    e.stopPropagation();
-    const days = parseInt(del.dataset.range);
-    const wasActive = String(activeRange) === String(days);
-    saveCustomRanges(loadCustomRanges().filter(c => c.days !== days));
-    if (wasActive) { activeRange = 'all'; initPan(_entries, 'all'); }
+    function applyLineStyle() {
+      if (!chart) return;
+      const ds = chart.data.datasets[0];
+      if (activeLineStyle === 'smooth') { ds.tension = 0.35; ds.stepped = false; }
+      if (activeLineStyle === 'linear') { ds.tension = 0; ds.stepped = false; }
+      if (activeLineStyle === 'stepped') { ds.tension = 0; ds.stepped = 'before'; }
+      chart.update();
+    }
+
+    styleTrigger.addEventListener('click', e => {
+      e.stopPropagation();
+      styleDropdown.classList.toggle('hidden');
+    });
+
+    styleDropdown.addEventListener('click', e => {
+      const opt = e.target.closest('.style-option');
+      if (!opt) return;
+      activeLineStyle = opt.dataset.style;
+      localStorage.setItem('wt-line-style', activeLineStyle);
+      styleDropdown.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      styleTrigger.textContent = opt.textContent + ' ▾';
+      styleDropdown.classList.add('hidden');
+      applyLineStyle();
+    });
+
+    document.addEventListener('click', () => styleDropdown.classList.add('hidden'));
+
+    // ─── RANGE PRESETS ────────────────────────────────────────────────────────────
+    // Defaults are always present on load. User-added extras persist in localStorage.
+    // Deleting a default hides it for the session; it comes back on reload.
+    const _DEFAULT_RANGES = [{ label: '1M', days: 30 }, { label: '3M', days: 90 }, { label: '6M', days: 180 }];
+    const _hiddenDefaults = new Set(); // defaults hidden this session
+
+    function loadCustomRanges() {
+      let extras = [];
+      try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch {}
+      const active = _DEFAULT_RANGES.filter(d => !_hiddenDefaults.has(d.days));
+      const all = [...active, ...extras.filter(r => !active.find(d => d.days === r.days))];
+      return all.sort((a, b) => a.days - b.days);
+    }
+
+    function formatDays(d) {
+      if (d % 365 === 0) return `${d / 365}Y`;
+      if (d % 30  === 0) return `${d / 30}M`;
+      if (d % 7   === 0) return `${d / 7}W`;
+      return `${d}D`;
+    }
+
+    function renderRangeBtns() {
+      const container = document.getElementById('range-btns');
+      const presets = loadCustomRanges(); // all deletable (sorted ascending)
+      const allActive = activeRange === 'all' ? ' active' : '';
+      container.innerHTML =
+        presets.map(r => {
+          const active = String(activeRange) === String(r.days) ? ' active' : '';
+          return `<div class="range-custom-wrap">` +
+            `<button class="range-btn${active}" data-range="${r.days}" type="button">${r.label}</button>` +
+            `<button class="range-del" data-range="${r.days}" type="button">×</button>` +
+            `</div>`;
+        }).join('') +
+        `<button class="range-btn${allActive}" data-range="all" type="button">All</button>`;
+    }
+
     renderRangeBtns();
-    if (wasActive) { if (chart) { chart.destroy(); chart = null; } refresh(); }
-    return;
-  }
-  const btn = e.target.closest('.range-btn');
-  if (!btn) return;
-  activeRange = btn.dataset.range;
-  initPan(_entries, activeRange);
-  renderRangeBtns();
-  if (chart) { chart.destroy(); chart = null; }
-  refresh();
-});
 
-// + button / add form
-const rangeAddBtn    = document.getElementById('range-add-btn');
-const rangeAddForm   = document.getElementById('range-add-form');
-const rangeAddInput  = document.getElementById('range-add-input');
-const rangeAddCancel = document.getElementById('range-add-cancel');
+    document.getElementById('range-btns').addEventListener('click', e => {
+      const del = e.target.closest('.range-del');
+      if (del) {
+        e.stopPropagation();
+        const days = parseInt(del.dataset.range);
+        const wasActive = String(activeRange) === String(days);
+        if (_DEFAULT_RANGES.some(d => d.days === days)) {
+          _hiddenDefaults.add(days);
+        } else {
+          let extras = [];
+          try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch {}
+          localStorage.setItem('wt-custom-ranges', JSON.stringify(extras.filter(r => r.days !== days)));
+        }
+        if (wasActive) { activeRange = 'all'; initPan(_entries, 'all'); initPanIndex(sortedEntries(_entries), 'all'); }
+        renderRangeBtns();
+        if (wasActive) { if (chart) { chart.destroy(); chart = null; } refresh(); }
+        return;
+      }
+      const btn = e.target.closest('.range-btn');
+      if (!btn) return;
+      activeRange = btn.dataset.range;
+      localStorage.setItem('wt-range', activeRange);
+      initPan(_entries, activeRange);
+      initPanIndex(sortedEntries(_entries), activeRange);
+      renderRangeBtns();
+      if (chart) { chart.destroy(); chart = null; }
+      refresh();
+    });
 
-rangeAddBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  rangeAddForm.classList.toggle('hidden');
-  if (!rangeAddForm.classList.contains('hidden')) { rangeAddInput.value = ''; rangeAddInput.focus(); }
-});
+    // + button / add form
+    const rangeAddBtn = document.getElementById('range-add-btn');
+    const rangeAddForm = document.getElementById('range-add-form');
+    const rangeAddInput = document.getElementById('range-add-input');
+    const rangeAddCancel = document.getElementById('range-add-cancel');
 
-rangeAddCancel.addEventListener('click', () => rangeAddForm.classList.add('hidden'));
+    rangeAddBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      rangeAddForm.classList.toggle('hidden');
+      if (!rangeAddForm.classList.contains('hidden')) { rangeAddInput.value = ''; rangeAddInput.focus(); }
+    });
 
-rangeAddForm.addEventListener('submit', e => {
-  e.preventDefault();
-  const days = parseInt(rangeAddInput.value);
-  if (!days || days < 1 || days > 3650) return;
-  const customs = loadCustomRanges();
-  if (!customs.find(c => c.days === days)) {
-    customs.push({ label: formatDays(days), days });
-    saveCustomRanges(customs);
-  }
-  rangeAddForm.classList.add('hidden');
-  renderRangeBtns();
-});
+    rangeAddCancel.addEventListener('click', () => rangeAddForm.classList.add('hidden'));
 
-// ─── ADD ENTRY ────────────────────────────────────────────────────────────────
-document.getElementById('btn-add').addEventListener('click', async () => {
-  const dateVal   = document.getElementById('inp-date').value;
-  const weightVal = parseFloat(document.getElementById('inp-weight').value);
+    rangeAddForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const days = parseInt(rangeAddInput.value);
+      if (!days || days < 1 || days > 3650) return;
+      if (!_DEFAULT_RANGES.find(d => d.days === days)) {
+        let extras = [];
+        try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch {}
+        if (!extras.find(r => r.days === days)) {
+          extras.push({ label: formatDays(days), days });
+          localStorage.setItem('wt-custom-ranges', JSON.stringify(extras));
+        }
+      } else {
+        _hiddenDefaults.delete(days); // re-show a hidden default
+      }
+      rangeAddForm.classList.add('hidden');
+      renderRangeBtns();
+    });
 
-  if (!dateVal) return showFeedback('Please pick a date', true);
-  if (isNaN(weightVal) || weightVal < 30 || weightVal > 300) return showFeedback('Enter a valid weight (30–300 kg)', true);
+    // ─── INDEX SLIDER ─────────────────────────────────────────────────────────────
+    const indexSlider = document.getElementById('index-slider');
+    const indexSliderLabel = document.getElementById('index-slider-label');
 
-  const entries = [..._entries];
-  const existing = entries.find(e => e.date === dateVal);
-  if (existing) {
-    existing.weight = weightVal;
-    showFeedback('Entry updated');
-  } else {
-    entries.push({ date: dateVal, weight: weightVal });
-    showFeedback('Entry added');
-  }
-  await save(entries);
-  document.getElementById('inp-weight').value = '';
-});
+    function syncRangeSliderVisibility() {
+      const isIndex = activeScaleMode === 'index';
+      document.getElementById('range-controls').style.display = isIndex ? 'none' : 'flex';
+      document.getElementById('range-sep').style.display = isIndex && _entries.length === 0 ? 'none' : '';
+      document.getElementById('index-slider-wrap').classList.toggle('hidden', !isIndex);
+    }
 
-// Allow Enter key on weight input
-document.getElementById('inp-weight').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btn-add').click();
-});
+    function syncIndexSliderToState() {
+      const n = sortedEntries(_entries).length;
+      indexSlider.max = Math.max(2, n);
+      if (panIndexMin === null) {
+        indexSlider.value = indexSlider.max;
+        indexSliderLabel.textContent = 'All';
+      } else {
+        const win = panIndexMax - panIndexMin + 1;
+        indexSlider.value = win;
+        indexSliderLabel.textContent = win + ' pts';
+      }
+    }
 
-function showFeedback(msg, isErr = false) {
-  const fb = document.getElementById('feedback');
-  fb.textContent = msg;
-  fb.className = 'feedback show' + (isErr ? ' err' : '');
-  setTimeout(() => fb.classList.remove('show'), 2500);
-}
+    indexSlider.addEventListener('input', () => {
+      const n = sortedEntries(_entries).length;
+      const val = parseInt(indexSlider.value);
+      if (val >= n) {
+        panIndexMin = null;
+        panIndexMax = null;
+        indexSliderLabel.textContent = 'All';
+      } else {
+        indexSliderLabel.textContent = val + ' pts';
+        // Anchor to current right edge (latest entries), or n-1 if showing all
+        const rightEdge = panIndexMax !== null ? panIndexMax : n - 1;
+        panIndexMax = Math.min(n - 1, rightEdge);
+        panIndexMin = Math.max(0, panIndexMax - val + 1);
+        // If clamped at left edge, push max right
+        if (panIndexMin === 0) panIndexMax = Math.min(n - 1, val - 1);
+      }
+      if (chart) applyIndexPanToChart();
+    });
 
-// ─── GOAL ────────────────────────────────────────────────────────────────────
-document.getElementById('btn-goal').addEventListener('click', async () => {
-  const g = parseFloat(document.getElementById('inp-goal').value);
-  if (isNaN(g) || g < 30 || g > 300) return showFeedback('Enter a valid goal weight', true);
-  await saveGoal(g);
-  showFeedback('Goal set to ' + g.toFixed(1) + ' kg');
-});
+    // ─── SCALE MODE ───────────────────────────────────────────────────────────────
+    document.getElementById('scale-mode-btns').addEventListener('click', e => {
+      const btn = e.target.closest('[data-scale]');
+      if (!btn) return;
+      const newMode = btn.dataset.scale;
+      if (newMode === activeScaleMode) return;
+      activeScaleMode = newMode;
+      localStorage.setItem('wt-scale-mode', activeScaleMode);
+      document.querySelectorAll('#scale-mode-btns [data-scale]').forEach(b =>
+        b.classList.toggle('active', b === btn)
+      );
+      if (newMode === 'index') {
+        panIndexMin = null; panIndexMax = null; // start at "All" when switching in
+        syncIndexSliderToState();
+      } else {
+        initPan(_entries, activeRange);
+      }
+      syncRangeSliderVisibility();
+      if (chart) { chart.destroy(); chart = null; }
+      refresh();
+    });
 
-// ─── EXPORT ───────────────────────────────────────────────────────────────────
-document.getElementById('btn-export').addEventListener('click', () => {
-  if (_entries.length === 0) return showFeedback('Nothing to export', true);
-  const entries = sortedEntries(_entries);
-  const csv = 'date,weight_kg\n' + entries.map(e => `${e.date},${e.weight}`).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = 'weight-log.csv'; a.click();
-  URL.revokeObjectURL(url);
-  showFeedback('Exported!');
-});
+    // ─── CHART CLICK → EDIT ENTRY ────────────────────────────────────────────────
+    document.getElementById('chart').addEventListener('click', e => {
+      if (!chart) return;
+      const points = chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
+      if (!points.length) return;
+      const hit = points.find(p => chart.data.datasets[p.datasetIndex]?.label === 'Weight (kg)');
+      if (!hit) return;
+      let date;
+      if (activeScaleMode === 'index') {
+        date = _ordinalVisible[hit.index]?.date;
+      } else {
+        const ms = chart.data.datasets[hit.datasetIndex].data[hit.index]?.x;
+        date = _entries.find(e => new Date(e.date + 'T00:00:00').getTime() === ms)?.date;
+      }
+      if (date) openEntryModal(date);
+    });
 
-// ─── IMPORT ───────────────────────────────────────────────────────────────────
-// Parses a single CSV line, respecting quoted fields (handles embedded commas)
-function parseCSVLine(line) {
-  const fields = [];
-  let cur = '', inQuotes = false;
-  for (const ch of line) {
-    if (ch === '"') { inQuotes = !inQuotes; }
-    else if (ch === ',' && !inQuotes) { fields.push(cur.trim()); cur = ''; }
-    else { cur += ch; }
-  }
-  fields.push(cur.trim());
-  return fields;
-}
+    // ─── ADD ENTRY ────────────────────────────────────────────────────────────────
+    document.getElementById('btn-add').addEventListener('click', async () => {
+      const dateVal = document.getElementById('inp-date').value;
+      const weightVal = parseFloat(document.getElementById('inp-weight').value);
 
-// Parses a RENPHO data row into { date: 'YYYY-MM-DD', weight: number } or null.
-// Handles both quoted datetime ("04/02/2026, 07:50:53") and unquoted (split into two fields).
-function parseRENPHORow(fields) {
-  const raw = fields[0].trim();
-  const dateOnly = /^(\d{2})\/(\d{2})\/(\d{4})$/;       // unquoted: just date in fields[0]
-  const dateStart = /^(\d{2})\/(\d{2})\/(\d{4})/;        // quoted or other: datetime starts with date
+      if (!dateVal) return showFeedback('Please pick a date', true);
+      if (isNaN(weightVal) || weightVal < 30 || weightVal > 300) return showFeedback('Enter a valid weight (30–300 kg)', true);
 
-  let dateStr, weight;
+      const entries = [..._entries];
+      const existing = entries.find(e => e.date === dateVal);
+      if (existing) {
+        existing.weight = weightVal;
+        showFeedback('Entry updated');
+      } else {
+        entries.push({ date: dateVal, weight: weightVal });
+        showFeedback('Entry added');
+      }
+      await save(entries);
+      document.getElementById('inp-weight').value = '';
+    });
 
-  if (dateOnly.test(raw)) {
-    // Unquoted datetime was split by the embedded comma:
-    // fields[0] = "04/02/2026", fields[1] = "07:50:53", fields[2] = weight
-    const [, mm, dd, yyyy] = raw.match(dateOnly);
-    dateStr = `${yyyy}-${mm}-${dd}`;
-    weight = parseFloat(fields[2]);
-  } else {
-    // Quoted datetime in fields[0]: "04/02/2026, 07:50:53"
-    const m = raw.match(dateStart);
-    if (!m) return null;
-    const [, mm, dd, yyyy] = m;
-    dateStr = `${yyyy}-${mm}-${dd}`;
-    weight = parseFloat(fields[1]);
-  }
+    // Allow Enter key on weight input
+    document.getElementById('inp-weight').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-add').click();
+    });
 
-  return (dateStr && !isNaN(weight)) ? { date: dateStr, weight } : null;
-}
+    function showFeedback(msg, isErr = false) {
+      const fb = document.getElementById('feedback');
+      fb.textContent = msg;
+      fb.className = 'feedback show' + (isErr ? ' err' : '');
+      setTimeout(() => fb.classList.remove('show'), 2500);
+    }
 
-document.getElementById('btn-import-trigger').addEventListener('click', () => {
-  document.getElementById('import-file').click();
-});
+    // ─── GOAL ────────────────────────────────────────────────────────────────────
+    document.getElementById('btn-goal').addEventListener('click', async () => {
+      const g = parseFloat(document.getElementById('inp-goal').value);
+      if (isNaN(g) || g < 30 || g > 300) return showFeedback('Enter a valid goal weight', true);
+      await saveGoal(g);
+      showFeedback('Goal set to ' + g.toFixed(1) + ' kg');
+    });
 
-document.getElementById('import-file').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const lines = ev.target.result
-      .split('\n')
-      .map(l => l.trim().replace(/\r$/, ''))
-      .filter(Boolean);
+    // ─── EXPORT ───────────────────────────────────────────────────────────────────
+    document.getElementById('btn-export').addEventListener('click', () => {
+      if (_entries.length === 0) return showFeedback('Nothing to export', true);
+      const entries = sortedEntries(_entries);
+      const csv = 'date,weight_kg\n' + entries.map(e => `${e.date},${e.weight}`).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'weight-log.csv'; a.click();
+      URL.revokeObjectURL(url);
+      showFeedback('Exported!');
+    });
 
-    if (lines.length < 2) return showFeedback('File appears empty', true);
+    // ─── IMPORT ───────────────────────────────────────────────────────────────────
+    // Parses a single CSV line, respecting quoted fields (handles embedded commas)
+    function parseCSVLine(line) {
+      const fields = [];
+      let cur = '', inQuotes = false;
+      for (const ch of line) {
+        if (ch === '"') { inQuotes = !inQuotes; }
+        else if (ch === ',' && !inQuotes) { fields.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      fields.push(cur.trim());
+      return fields;
+    }
 
-    const header = parseCSVLine(lines[0]);
-    const isRENPHO = header.some(h => /time of measurement/i.test(h));
-    const isOwn    = header[0].toLowerCase() === 'date';
-
-    if (!isRENPHO && !isOwn) return showFeedback('Unrecognised CSV format', true);
-
-    let count = 0, skipped = 0;
-    const entries = [..._entries];
-
-    lines.slice(1).forEach(line => {
-      const fields = parseCSVLine(line);
-      if (fields.length < 2) return;
+    // Parses a RENPHO data row into { date: 'YYYY-MM-DD', weight: number } or null.
+    // Handles both quoted datetime ("04/02/2026, 07:50:53") and unquoted (split into two fields).
+    function parseRENPHORow(fields) {
+      const raw = fields[0].trim();
+      const dateOnly = /^(\d{2})\/(\d{2})\/(\d{4})$/;       // unquoted: just date in fields[0]
+      const dateStart = /^(\d{2})\/(\d{2})\/(\d{4})/;        // quoted or other: datetime starts with date
 
       let dateStr, weight;
 
-      if (isRENPHO) {
-        const row = parseRENPHORow(fields);
-        if (!row) { skipped++; return; }
-        ({ date: dateStr, weight } = row);
+      if (dateOnly.test(raw)) {
+        // Unquoted datetime was split by the embedded comma:
+        // fields[0] = "04/02/2026", fields[1] = "07:50:53", fields[2] = weight
+        const [, mm, dd, yyyy] = raw.match(dateOnly);
+        dateStr = `${yyyy}-${mm}-${dd}`;
+        weight = parseFloat(fields[2]);
       } else {
-        // Own format: date (YYYY-MM-DD), weight_kg
-        dateStr = fields[0];
-        weight  = parseFloat(fields[1]);
+        // Quoted datetime in fields[0]: "04/02/2026, 07:50:53"
+        const m = raw.match(dateStart);
+        if (!m) return null;
+        const [, mm, dd, yyyy] = m;
+        dateStr = `${yyyy}-${mm}-${dd}`;
+        weight = parseFloat(fields[1]);
       }
 
-      // Validate
-      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) { skipped++; return; }
-      if (isNaN(weight) || weight < 20 || weight > 500)      { skipped++; return; }
+      return (dateStr && !isNaN(weight)) ? { date: dateStr, weight } : null;
+    }
 
-      const existing = entries.find(e => e.date === dateStr);
-      if (existing) existing.weight = weight;
-      else entries.push({ date: dateStr, weight });
-      count++;
+    document.getElementById('btn-import-trigger').addEventListener('click', () => {
+      document.getElementById('import-file').click();
     });
 
-    if (count === 0) return showFeedback('No valid entries found', true);
-    await save(entries);
-    showFeedback(skipped > 0 ? `Imported ${count} (${skipped} skipped)` : `Imported ${count} entries`);
-    e.target.value = '';
-  };
-  reader.readAsText(file);
-});
+    document.getElementById('import-file').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const lines = ev.target.result
+          .split('\n')
+          .map(l => l.trim().replace(/\r$/, ''))
+          .filter(Boolean);
 
-// ─── DATE PICKER ─────────────────────────────────────────────────────────────
-const pad = n => String(n).padStart(2, '0');
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        if (lines.length < 2) return showFeedback('File appears empty', true);
 
-function dateToStr(d) {
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-}
+        const header = parseCSVLine(lines[0]);
+        const isRENPHO = header.some(h => /time of measurement/i.test(h));
+        const isOwn = header[0].toLowerCase() === 'date';
 
-const _today = new Date();
-const todayStr = dateToStr(_today);
+        if (!isRENPHO && !isOwn) return showFeedback('Unrecognised CSV format', true);
 
-const hiddenDate = document.getElementById('inp-date');
-const dateTextInput = document.getElementById('date-text-input');
-const dateTrigger = document.getElementById('date-trigger');
-const dateDropdown = document.getElementById('date-dropdown');
-const calDays = document.getElementById('cal-days');
-const calMonthYear = document.getElementById('cal-month-year');
+        let count = 0, skipped = 0;
+        const entries = [..._entries];
 
-function parseDateInput(str) {
-  str = str.trim();
-  const m = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
-  if (m) {
-    let [, d, mo, y] = m;
-    if (y.length === 2) y = '20' + y;
-    const date = new Date(+y, +mo - 1, +d);
-    if (!isNaN(date) && date.getDate() === +d && date.getMonth() === +mo - 1)
-      return dateToStr(date);
-  }
-  return null;
-}
+        lines.slice(1).forEach(line => {
+          const fields = parseCSVLine(line);
+          if (fields.length < 2) return;
 
-function syncTextInput() {
-  const sel = hiddenDate.value;
-  if (sel) {
-    const d = new Date(sel + 'T00:00:00');
-    dateTextInput.value = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
-  }
-}
+          let dateStr, weight;
 
-dateTextInput.addEventListener('blur', () => {
-  const parsed = parseDateInput(dateTextInput.value);
-  if (parsed) {
-    hiddenDate.value = parsed;
-    const d = new Date(parsed + 'T00:00:00');
-    calViewYear = d.getFullYear();
-    calViewMonth = d.getMonth();
-  }
-  syncTextInput(); // reformat or revert to last valid
-});
+          if (isRENPHO) {
+            const row = parseRENPHORow(fields);
+            if (!row) { skipped++; return; }
+            ({ date: dateStr, weight } = row);
+          } else {
+            // Own format: date (YYYY-MM-DD), weight_kg
+            dateStr = fields[0];
+            weight = parseFloat(fields[1]);
+          }
 
-dateTextInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') dateTextInput.blur();
-});
+          // Validate
+          if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) { skipped++; return; }
+          if (isNaN(weight) || weight < 20 || weight > 500) { skipped++; return; }
 
-let calViewYear = _today.getFullYear();
-let calViewMonth = _today.getMonth();
+          const existing = entries.find(e => e.date === dateStr);
+          if (existing) existing.weight = weight;
+          else entries.push({ date: dateStr, weight });
+          count++;
+        });
 
-hiddenDate.value = todayStr;
+        if (count === 0) return showFeedback('No valid entries found', true);
+        await save(entries);
+        showFeedback(skipped > 0 ? `Imported ${count} (${skipped} skipped)` : `Imported ${count} entries`);
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
 
-function renderCalendar() {
-  calMonthYear.textContent = `${MONTHS[calViewMonth]} ${calViewYear}`;
+    // ─── DATE PICKER ─────────────────────────────────────────────────────────────
+    const pad = n => String(n).padStart(2, '0');
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const selected = hiddenDate.value;
-  const firstDow = (new Date(calViewYear, calViewMonth, 1).getDay() + 6) % 7; // Mon=0
-  const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
-  const daysInPrev  = new Date(calViewYear, calViewMonth, 0).getDate();
-  const totalCells  = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+    function dateToStr(d) {
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
 
-  let html = '';
+    const _today = new Date();
+    const todayStr = dateToStr(_today);
 
-  for (let i = firstDow - 1; i >= 0; i--) {
-    const d = new Date(calViewYear, calViewMonth - 1, daysInPrev - i);
-    html += `<button class="cal-day other-month" data-date="${dateToStr(d)}" type="button">${daysInPrev - i}</button>`;
-  }
+    const hiddenDate = document.getElementById('inp-date');
+    const dateTextInput = document.getElementById('date-text-input');
+    const dateTrigger = document.getElementById('date-trigger');
+    const dateDropdown = document.getElementById('date-dropdown');
+    const calDays = document.getElementById('cal-days');
+    const calMonthYear = document.getElementById('cal-month-year');
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const str = `${calViewYear}-${pad(calViewMonth+1)}-${pad(day)}`;
-    let cls = 'cal-day';
-    if (str === todayStr) cls += ' today';
-    if (str === selected) cls += ' selected';
-    html += `<button class="${cls}" data-date="${str}" type="button">${day}</button>`;
-  }
+    function parseDateInput(str) {
+      str = str.trim();
+      const m = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+      if (m) {
+        let [, d, mo, y] = m;
+        if (y.length === 2) y = '20' + y;
+        const date = new Date(+y, +mo - 1, +d);
+        if (!isNaN(date) && date.getDate() === +d && date.getMonth() === +mo - 1)
+          return dateToStr(date);
+      }
+      return null;
+    }
 
-  const trailing = totalCells - firstDow - daysInMonth;
-  for (let day = 1; day <= trailing; day++) {
-    const d = new Date(calViewYear, calViewMonth + 1, day);
-    html += `<button class="cal-day other-month" data-date="${dateToStr(d)}" type="button">${day}</button>`;
-  }
+    function syncTextInput() {
+      const sel = hiddenDate.value;
+      if (sel) {
+        const d = new Date(sel + 'T00:00:00');
+        dateTextInput.value = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+      }
+    }
 
-  calDays.innerHTML = html;
+    dateTextInput.addEventListener('blur', () => {
+      const parsed = parseDateInput(dateTextInput.value);
+      if (parsed) {
+        hiddenDate.value = parsed;
+        const d = new Date(parsed + 'T00:00:00');
+        calViewYear = d.getFullYear();
+        calViewMonth = d.getMonth();
+      }
+      syncTextInput(); // reformat or revert to last valid
+    });
 
-  syncTextInput();
-}
+    dateTextInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') dateTextInput.blur();
+    });
 
-function openCalendar() {
-  const sel = hiddenDate.value;
-  if (sel) {
-    const d = new Date(sel + 'T00:00:00');
-    calViewYear = d.getFullYear();
-    calViewMonth = d.getMonth();
-  }
-  renderCalendar();
-  dateDropdown.classList.remove('hidden');
-  dateTrigger.classList.add('open');
-}
+    let calViewYear = _today.getFullYear();
+    let calViewMonth = _today.getMonth();
 
-function closeCalendar() {
-  dateDropdown.classList.add('hidden');
-  dateTrigger.classList.remove('open');
-}
+    hiddenDate.value = todayStr;
 
-dateTrigger.addEventListener('click', e => {
-  e.stopPropagation();
-  dateDropdown.classList.contains('hidden') ? openCalendar() : closeCalendar();
-});
+    function renderCalendar() {
+      calMonthYear.textContent = `${MONTHS[calViewMonth]} ${calViewYear}`;
 
-document.getElementById('cal-prev').addEventListener('click', e => {
-  e.stopPropagation();
-  calViewMonth--;
-  if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
-  renderCalendar();
-});
+      const selected = hiddenDate.value;
+      const firstDow = (new Date(calViewYear, calViewMonth, 1).getDay() + 6) % 7; // Mon=0
+      const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+      const daysInPrev = new Date(calViewYear, calViewMonth, 0).getDate();
+      const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
 
-document.getElementById('cal-next').addEventListener('click', e => {
-  e.stopPropagation();
-  calViewMonth++;
-  if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
-  renderCalendar();
-});
+      let html = '';
 
-calDays.addEventListener('click', e => {
-  const btn = e.target.closest('.cal-day');
-  if (!btn) return;
-  hiddenDate.value = btn.dataset.date;
-  const d = new Date(btn.dataset.date + 'T00:00:00');
-  calViewYear = d.getFullYear();
-  calViewMonth = d.getMonth();
-  closeCalendar();
-  renderCalendar();
-});
+      for (let i = firstDow - 1; i >= 0; i--) {
+        const d = new Date(calViewYear, calViewMonth - 1, daysInPrev - i);
+        html += `<button class="cal-day other-month" data-date="${dateToStr(d)}" type="button">${daysInPrev - i}</button>`;
+      }
 
-document.addEventListener('click', e => {
-  if (!document.querySelector('.date-picker-wrap').contains(e.target)) closeCalendar();
-});
+      for (let day = 1; day <= daysInMonth; day++) {
+        const str = `${calViewYear}-${pad(calViewMonth + 1)}-${pad(day)}`;
+        let cls = 'cal-day';
+        if (str === todayStr) cls += ' today';
+        if (str === selected) cls += ' selected';
+        html += `<button class="${cls}" data-date="${str}" type="button">${day}</button>`;
+      }
 
-renderCalendar();
-syncTextInput();
+      const trailing = totalCells - firstDow - daysInMonth;
+      for (let day = 1; day <= trailing; day++) {
+        const d = new Date(calViewYear, calViewMonth + 1, day);
+        html += `<button class="cal-day other-month" data-date="${dateToStr(d)}" type="button">${day}</button>`;
+      }
 
-// ─── PAN (2-finger swipe) ─────────────────────────────────────────────────────
-let _panRAF = null;
-const _panSorted = () => sortedEntries(_entries); // cached lazily per frame
+      calDays.innerHTML = html;
 
-document.getElementById('chart').addEventListener('wheel', e => {
-  if (activeRange === 'all' || !chart || panMin === null) return;
-  if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // ignore vertical scroll
-  e.preventDefault();
+      syncTextInput();
+    }
 
-  // Accumulate pan state every event (high frequency) …
-  const { chartArea } = chart;
-  const msPerPx = (panMax - panMin) / (chartArea.right - chartArea.left);
+    function openCalendar() {
+      const sel = hiddenDate.value;
+      if (sel) {
+        const d = new Date(sel + 'T00:00:00');
+        calViewYear = d.getFullYear();
+        calViewMonth = d.getMonth();
+      }
+      renderCalendar();
+      dateDropdown.classList.remove('hidden');
+      dateTrigger.classList.add('open');
+    }
 
-  const sorted = _panSorted();
-  const dataMinMs = new Date(sorted[0].date).getTime();
-  const dataMaxMs = new Date(sorted[sorted.length - 1].date).getTime();
+    function closeCalendar() {
+      dateDropdown.classList.add('hidden');
+      dateTrigger.classList.remove('open');
+    }
 
-  let newMin = panMin + e.deltaX * msPerPx;
-  let newMax = panMax + e.deltaX * msPerPx;
-  if (newMin < dataMinMs) { newMax += dataMinMs - newMin; newMin = dataMinMs; }
-  if (newMax > dataMaxMs) { newMin -= newMax - dataMaxMs; newMax = dataMaxMs; }
-  panMin = Math.max(newMin, dataMinMs);
-  panMax = Math.min(newMax, dataMaxMs);
+    dateTrigger.addEventListener('click', e => {
+      e.stopPropagation();
+      dateDropdown.classList.contains('hidden') ? openCalendar() : closeCalendar();
+    });
 
-  // … but only redraw once per animation frame
-  if (_panRAF) return;
-  _panRAF = requestAnimationFrame(() => { _panRAF = null; applyPanToChart(); });
-}, { passive: false });
+    document.getElementById('cal-prev').addEventListener('click', e => {
+      e.stopPropagation();
+      calViewMonth--;
+      if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+      renderCalendar();
+    });
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-// Live sync — fires immediately on load, then on every remote change
-docRef.onSnapshot(snap => {
-  const data = snap.exists ? snap.data() : {};
-  _entries = data.entries || [];
-  _goal = data.goal ?? null;
-  if (_goal != null) document.getElementById('inp-goal').value = _goal;
-  refresh();
-});
-</script>
+    document.getElementById('cal-next').addEventListener('click', e => {
+      e.stopPropagation();
+      calViewMonth++;
+      if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+      renderCalendar();
+    });
+
+    calDays.addEventListener('click', e => {
+      const btn = e.target.closest('.cal-day');
+      if (!btn) return;
+      hiddenDate.value = btn.dataset.date;
+      const d = new Date(btn.dataset.date + 'T00:00:00');
+      calViewYear = d.getFullYear();
+      calViewMonth = d.getMonth();
+      closeCalendar();
+      renderCalendar();
+    });
+
+    document.addEventListener('click', e => {
+      if (!document.querySelector('.date-picker-wrap').contains(e.target)) closeCalendar();
+    });
+
+    renderCalendar();
+    syncTextInput();
+
+    // ─── PAN (2-finger swipe) ─────────────────────────────────────────────────────
+    let _panRAF = null;
+    const _panSorted = () => sortedEntries(_entries); // cached lazily per frame
+
+    document.getElementById('chart').addEventListener('wheel', e => {
+      if (activeRange === 'all' || !chart) return;
+      if (activeScaleMode === 'time' && panMin === null) return;
+      if (activeScaleMode === 'index' && panIndexMin === null) return;
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // ignore vertical scroll
+      e.preventDefault();
+
+      if (activeScaleMode === 'index') {
+        const { chartArea } = chart;
+        const idxPerPx = (panIndexMax - panIndexMin) / (chartArea.right - chartArea.left);
+        const sorted = _panSorted();
+        const n = sorted.length;
+        let newMin = panIndexMin + e.deltaX * idxPerPx;
+        let newMax = panIndexMax + e.deltaX * idxPerPx;
+        if (newMin < 0) { newMax -= newMin; newMin = 0; }
+        if (newMax > n - 1) { newMin -= newMax - (n - 1); newMax = n - 1; }
+        panIndexMin = Math.max(0, newMin);
+        panIndexMax = Math.min(n - 1, newMax);
+        if (_panRAF) return;
+        _panRAF = requestAnimationFrame(() => { _panRAF = null; applyIndexPanToChart(); });
+        return;
+      }
+
+      // ── time mode ──
+      const { chartArea } = chart;
+      const msPerPx = (panMax - panMin) / (chartArea.right - chartArea.left);
+      const sorted = _panSorted();
+      const dataMinMs = new Date(sorted[0].date).getTime();
+      const dataMaxMs = new Date(sorted[sorted.length - 1].date).getTime();
+      let newMin = panMin + e.deltaX * msPerPx;
+      let newMax = panMax + e.deltaX * msPerPx;
+      if (newMin < dataMinMs) { newMax += dataMinMs - newMin; newMin = dataMinMs; }
+      if (newMax > dataMaxMs) { newMin -= newMax - dataMaxMs; newMax = dataMaxMs; }
+      panMin = Math.max(newMin, dataMinMs);
+      panMax = Math.min(newMax, dataMaxMs);
+      if (_panRAF) return;
+      _panRAF = requestAnimationFrame(() => { _panRAF = null; applyPanToChart(); });
+    }, { passive: false });
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────────
+    // Live sync — fires immediately on load, then on every remote change
+    // ─── RESTORE PERSISTED UI STATE ──────────────────────────────────────────────
+    (function restoreUIState() {
+      const savedRange = localStorage.getItem('wt-range');
+      if (savedRange) activeRange = savedRange;
+
+      const savedMode = localStorage.getItem('wt-scale-mode');
+      if (savedMode === 'time' || savedMode === 'index') {
+        activeScaleMode = savedMode;
+        document.querySelectorAll('#scale-mode-btns [data-scale]').forEach(b =>
+          b.classList.toggle('active', b.dataset.scale === activeScaleMode)
+        );
+      }
+
+      const savedStyle = localStorage.getItem('wt-line-style');
+      if (savedStyle === 'smooth' || savedStyle === 'linear' || savedStyle === 'stepped') {
+        activeLineStyle = savedStyle;
+        const opt = document.querySelector(`.style-option[data-style="${activeLineStyle}"]`);
+        if (opt) {
+          document.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
+          opt.classList.add('active');
+          document.getElementById('style-trigger').textContent = opt.textContent + ' ▾';
+        }
+      }
+
+      renderRangeBtns(); // reflect restored activeRange
+      syncRangeSliderVisibility();
+    })();
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────────
+    let _panInitialized = false;
+    docRef.onSnapshot(snap => {
+      const data = snap.exists ? snap.data() : {};
+      _entries = data.entries || [];
+      _goal = data.goal ?? null;
+      if (_goal != null) document.getElementById('inp-goal').value = _goal;
+      if (!_panInitialized) {
+        _panInitialized = true;
+        if (activeScaleMode === 'time' && activeRange !== 'all') initPan(_entries, activeRange);
+      }
+      if (activeScaleMode === 'index') syncIndexSliderToState();
+      refresh();
+    });
+  </script>
 </body>
+
 </html>
