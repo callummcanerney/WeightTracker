@@ -1,19 +1,28 @@
 # Weight Tracker — Claude Code Context
 
 ## What this project is
-A personal weight loss tracking app for Callum. Single HTML file, no build step, no npm. Currently runs as a local `file://` in Arc browser on Mac.
+A personal weight loss tracking app for Callum. Single HTML file, no build step, no npm. Currently runs as a local `file://` in Arc browser on Mac — GitHub Pages deployment is the immediate next step.
 
 ## Current state
-- Single file: `Weight Tracker Claude.html`
-- Data stored in `localStorage` (Mac only, not synced)
+- Single file: `Tracker.html`
+- Data stored in **Firebase Firestore** (project: `weighttracker-3ab18`) — localStorage has been replaced
+- Firestore data confirmed working on Mac (entries persist across refreshes)
+- GitHub repo: `callummcanerney/WeightTracker` — exists, but GitHub Pages not yet enabled
+- iPhone cannot access the app yet (no public URL)
 - Charts via Chart.js + chartjs-adapter-date-fns (CDN)
 - Fonts: Syne + JetBrains Mono (Google Fonts CDN)
 - Dark theme, green accent (`#4ade80`), minimal aesthetic
 
-## Planned next steps (in order)
-1. **Firebase Firestore** — swap localStorage for Firestore so data syncs live across all devices
-2. **GitHub Pages** — deploy the HTML file so it's accessible via a real URL on both Mac and iPhone
-3. **Responsive design** — different layouts for desktop (Mac) and mobile (iPhone), both using the same HTML file via CSS media queries
+## Firestore security rules
+Open (`allow read, write: if true`) — no expiry. Acceptable for personal weight data with no auth requirement.
+
+## Completed steps
+1. ~~**Firebase Firestore**~~ — done, integrated and working
+2. ~~**GitHub Pages**~~ — live at `https://callummcanerney.github.io/WeightTracker/Tracker.html`
+3. ~~**Firestore security rules**~~ — set to open with no expiry, published
+
+## Remaining steps (in order)
+4. **Responsive design** — different layouts for desktop (Mac) and mobile (iPhone), both using the same HTML file via CSS media queries
 
 ## Architecture decisions
 - **Stay single-file HTML** — no Vite, no React, no npm. CDN scripts only. This keeps zero startup overhead (just open the URL) and easy deployment via git push.
@@ -36,7 +45,7 @@ A personal weight loss tracking app for Callum. Single HTML file, no build step,
 - Red: `#f87171`, Amber: `#fbbf24`
 - Font: Syne (UI), JetBrains Mono (labels/numbers)
 
-## Dev workflow (once GitHub Pages is set up)
-1. Edit `Weight Tracker Claude.html` locally
+## Dev workflow
+1. Edit `Tracker.html` locally
 2. `git add . && git commit -m "..." && git push`
 3. GitHub Pages republishes in ~30s — both Mac and iPhone see update on refresh

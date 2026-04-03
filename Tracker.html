@@ -33,30 +33,34 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Syne', sans-serif;
-    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
     font-size: 15px;
     line-height: 1.5;
   }
 
-  /* LAYOUT */
+  /* LAYOUT — full-viewport dashboard */
   .shell {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 48px 32px 80px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 24px;
+    gap: 12px;
+    overflow: hidden;
   }
 
   /* HEADER */
   header {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 40px;
+    flex-shrink: 0;
     gap: 20px;
     flex-wrap: wrap;
   }
 
   .logo-block h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: -0.04em;
     line-height: 1;
@@ -69,9 +73,9 @@
 
   .logo-block p {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--muted);
-    margin-top: 6px;
+    margin-top: 4px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -79,16 +83,16 @@
   /* STATS ROW */
   .stats-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 28px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    flex-shrink: 0;
   }
 
   .stat-card {
     background: var(--bg2);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 16px 20px;
+    padding: 12px 16px;
     transition: border-color 0.2s;
   }
 
@@ -96,15 +100,15 @@
 
   .stat-card .label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .stat-card .value {
-    font-size: 1.6rem;
+    font-size: 1.35rem;
     font-weight: 700;
     letter-spacing: -0.03em;
     color: var(--text);
@@ -117,26 +121,38 @@
 
   .stat-card .sub {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: var(--muted);
-    margin-top: 5px;
+    margin-top: 4px;
   }
 
   /* CHART AREA */
   .chart-wrap {
+    flex: 1;
     background: var(--bg2);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 28px 28px 20px;
-    margin-bottom: 28px;
-    position: relative;
+    padding: 20px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* BOTTOM ROW — log entry + history side by side */
+  .bottom-grid {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 14px;
+    align-items: stretch;
   }
 
   .chart-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
   }
 
   .chart-title {
@@ -168,6 +184,12 @@
   .range-btn:hover { border-color: var(--border2); color: var(--text); }
   .range-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+  .chart-canvas-wrap {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+  }
+
   canvas { display: block; }
 
   .no-data-msg {
@@ -180,47 +202,44 @@
     letter-spacing: 0.05em;
   }
 
-  /* BOTTOM GRID */
-  .bottom-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 20px;
-    align-items: start;
-  }
-
-  @media (max-width: 700px) {
-    .bottom-grid { grid-template-columns: 1fr; }
-  }
-
-  /* ADD PANEL */
+  /* PANELS */
   .panel {
     background: var(--bg2);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 24px;
+    padding: 18px 20px;
+  }
+
+  .panel.history-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .panel-title {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 18px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
   }
 
   .field {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
   .field label {
     display: block;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 7px;
+    margin-bottom: 6px;
   }
 
   .field input {
@@ -231,7 +250,7 @@
     color: var(--text);
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.9rem;
-    padding: 10px 14px;
+    padding: 9px 12px;
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
     -webkit-appearance: none;
@@ -254,7 +273,7 @@
     font-size: 0.9rem;
     font-weight: 700;
     letter-spacing: 0.02em;
-    padding: 12px;
+    padding: 11px;
     cursor: pointer;
     transition: opacity 0.15s, transform 0.1s;
     margin-top: 4px;
@@ -267,8 +286,8 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.68rem;
     text-align: center;
-    margin-top: 10px;
-    min-height: 18px;
+    margin-top: 8px;
+    min-height: 16px;
     color: var(--accent);
     opacity: 0;
     transition: opacity 0.3s;
@@ -281,8 +300,8 @@
   .io-row {
     display: flex;
     gap: 8px;
-    margin-top: 16px;
-    padding-top: 16px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid var(--border);
   }
 
@@ -292,10 +311,10 @@
     border: 1px solid var(--border2);
     color: var(--muted);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 9px 10px;
+    padding: 8px 10px;
     border-radius: 7px;
     cursor: pointer;
     transition: all 0.15s;
@@ -306,8 +325,9 @@
 
   /* LOG TABLE */
   .log-wrap {
-    max-height: 360px;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0;
   }
 
   .log-wrap::-webkit-scrollbar { width: 4px; }
@@ -352,12 +372,12 @@
   tbody tr:hover { background: var(--bg3); }
 
   tbody td {
-    padding: 11px 10px;
+    padding: 9px 10px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 
-  .td-date { color: var(--muted); font-size: 0.72rem; }
+  .td-date { color: var(--muted); font-size: 0.7rem; }
 
   .td-weight {
     font-weight: 500;
@@ -365,7 +385,7 @@
   }
 
   .td-delta {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
 
   .delta-pos { color: var(--accent); }
@@ -379,8 +399,8 @@
     border: 1px solid transparent;
     color: var(--muted);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    padding: 4px 8px;
+    font-size: 0.62rem;
+    padding: 3px 7px;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.15s;
@@ -394,14 +414,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 14px;
-    padding-top: 14px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid var(--border);
   }
 
   .goal-row label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
@@ -416,7 +436,7 @@
     color: var(--text);
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82rem;
-    padding: 7px 10px;
+    padding: 6px 10px;
     outline: none;
     transition: border-color 0.15s;
   }
@@ -425,9 +445,146 @@
 
   .goal-row .btn-io {
     flex: none;
-    padding: 7px 14px;
+    padding: 6px 12px;
     font-size: 0.62rem;
   }
+
+  /* DATE PICKER */
+  .date-picker-wrap { position: relative; }
+
+  .date-input-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .date-text-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .date-text-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .date-text-input::placeholder { color: var(--muted); }
+
+  .date-cal-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted);
+    padding: 0 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .date-cal-btn:hover, .date-cal-btn.open {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .date-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px;
+    z-index: 100;
+    width: 244px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  .date-dropdown.hidden { display: none; }
+
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .cal-nav {
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .cal-nav:hover { border-color: var(--accent); color: var(--accent); }
+
+  .cal-month-year {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 4px;
+  }
+
+  .cal-weekdays span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 0;
+  }
+
+  .cal-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: none;
+    color: var(--text);
+    transition: all 0.1s;
+  }
+
+  .cal-day:hover { background: var(--bg3); border-color: var(--border2); }
+  .cal-day.other-month { color: var(--muted); opacity: 0.35; }
+  .cal-day.today { border-color: var(--accent); color: var(--accent); }
+  .cal-day.selected { background: var(--accent); color: #0b1a11; font-weight: 600; border-color: var(--accent); }
+  .cal-day.selected:hover { opacity: 0.9; }
 
   /* hidden file input */
   #import-file { display: none; }
@@ -484,10 +641,12 @@
       </div>
     </div>
     <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
-    <canvas id="chart" height="300"></canvas>
+    <div class="chart-canvas-wrap">
+      <canvas id="chart"></canvas>
+    </div>
   </div>
 
-  <!-- BOTTOM GRID -->
+  <!-- BOTTOM ROW -->
   <div class="bottom-grid">
 
     <!-- ADD ENTRY -->
@@ -496,7 +655,31 @@
 
       <div class="field">
         <label>Date</label>
-        <input type="date" id="inp-date">
+        <div class="date-picker-wrap">
+          <div class="date-input-row">
+            <input type="text" class="date-text-input" id="date-text-input" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
+            <button class="date-cal-btn" id="date-trigger" type="button">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="14" height="12" rx="2"/>
+                <line x1="1" y1="7" x2="15" y2="7"/>
+                <line x1="5" y1="1" x2="5" y2="5"/>
+                <line x1="11" y1="1" x2="11" y2="5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="date-dropdown hidden" id="date-dropdown">
+            <div class="cal-header">
+              <button class="cal-nav" id="cal-prev" type="button">‹</button>
+              <span class="cal-month-year" id="cal-month-year"></span>
+              <button class="cal-nav" id="cal-next" type="button">›</button>
+            </div>
+            <div class="cal-weekdays">
+              <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+            </div>
+            <div class="cal-days" id="cal-days"></div>
+          </div>
+          <input type="hidden" id="inp-date">
+        </div>
       </div>
       <div class="field">
         <label>Weight (kg)</label>
@@ -522,7 +705,7 @@
     </div>
 
     <!-- LOG TABLE -->
-    <div class="panel">
+    <div class="panel history-panel">
       <div class="panel-title">History</div>
       <div class="log-wrap">
         <div class="log-empty" id="log-empty">No entries yet.</div>
@@ -588,6 +771,7 @@ function filterByRange(entries, range) {
 function buildChart(entries, goal) {
   const canvas = document.getElementById('chart');
   const noData = document.getElementById('no-data-msg');
+  const canvasWrap = document.querySelector('.chart-canvas-wrap');
   const filtered = filterByRange(entries, activeRange);
 
   if (entries.length === 0) {
@@ -666,7 +850,7 @@ function buildChart(entries, goal) {
     data: { datasets },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
@@ -909,8 +1093,8 @@ document.getElementById('btn-goal').addEventListener('click', async () => {
 
 // ─── EXPORT ───────────────────────────────────────────────────────────────────
 document.getElementById('btn-export').addEventListener('click', () => {
-  const entries = sortedEntries(load());
-  if (entries.length === 0) return showFeedback('Nothing to export', true);
+  if (_entries.length === 0) return showFeedback('Nothing to export', true);
+  const entries = sortedEntries(_entries);
   const csv = 'date,weight_kg\n' + entries.map(e => `${e.date},${e.weight}`).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url  = URL.createObjectURL(blob);
@@ -950,13 +1134,155 @@ document.getElementById('import-file').addEventListener('change', (e) => {
   reader.readAsText(file);
 });
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-// Default date to today
-const today = new Date();
+// ─── DATE PICKER ─────────────────────────────────────────────────────────────
 const pad = n => String(n).padStart(2, '0');
-document.getElementById('inp-date').value =
-  `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+function dateToStr(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+const _today = new Date();
+const todayStr = dateToStr(_today);
+
+const hiddenDate = document.getElementById('inp-date');
+const dateTextInput = document.getElementById('date-text-input');
+const dateTrigger = document.getElementById('date-trigger');
+const dateDropdown = document.getElementById('date-dropdown');
+const calDays = document.getElementById('cal-days');
+const calMonthYear = document.getElementById('cal-month-year');
+
+function parseDateInput(str) {
+  str = str.trim();
+  const m = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  if (m) {
+    let [, d, mo, y] = m;
+    if (y.length === 2) y = '20' + y;
+    const date = new Date(+y, +mo - 1, +d);
+    if (!isNaN(date) && date.getDate() === +d && date.getMonth() === +mo - 1)
+      return dateToStr(date);
+  }
+  return null;
+}
+
+function syncTextInput() {
+  const sel = hiddenDate.value;
+  if (sel) {
+    const d = new Date(sel + 'T00:00:00');
+    dateTextInput.value = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+  }
+}
+
+dateTextInput.addEventListener('blur', () => {
+  const parsed = parseDateInput(dateTextInput.value);
+  if (parsed) {
+    hiddenDate.value = parsed;
+    const d = new Date(parsed + 'T00:00:00');
+    calViewYear = d.getFullYear();
+    calViewMonth = d.getMonth();
+  }
+  syncTextInput(); // reformat or revert to last valid
+});
+
+dateTextInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') dateTextInput.blur();
+});
+
+let calViewYear = _today.getFullYear();
+let calViewMonth = _today.getMonth();
+
+hiddenDate.value = todayStr;
+
+function renderCalendar() {
+  calMonthYear.textContent = `${MONTHS[calViewMonth]} ${calViewYear}`;
+
+  const selected = hiddenDate.value;
+  const firstDow = (new Date(calViewYear, calViewMonth, 1).getDay() + 6) % 7; // Mon=0
+  const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+  const daysInPrev  = new Date(calViewYear, calViewMonth, 0).getDate();
+  const totalCells  = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+
+  let html = '';
+
+  for (let i = firstDow - 1; i >= 0; i--) {
+    const d = new Date(calViewYear, calViewMonth - 1, daysInPrev - i);
+    html += `<button class="cal-day other-month" data-date="${dateToStr(d)}" type="button">${daysInPrev - i}</button>`;
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const str = `${calViewYear}-${pad(calViewMonth+1)}-${pad(day)}`;
+    let cls = 'cal-day';
+    if (str === todayStr) cls += ' today';
+    if (str === selected) cls += ' selected';
+    html += `<button class="${cls}" data-date="${str}" type="button">${day}</button>`;
+  }
+
+  const trailing = totalCells - firstDow - daysInMonth;
+  for (let day = 1; day <= trailing; day++) {
+    const d = new Date(calViewYear, calViewMonth + 1, day);
+    html += `<button class="cal-day other-month" data-date="${dateToStr(d)}" type="button">${day}</button>`;
+  }
+
+  calDays.innerHTML = html;
+
+  syncTextInput();
+}
+
+function openCalendar() {
+  const sel = hiddenDate.value;
+  if (sel) {
+    const d = new Date(sel + 'T00:00:00');
+    calViewYear = d.getFullYear();
+    calViewMonth = d.getMonth();
+  }
+  renderCalendar();
+  dateDropdown.classList.remove('hidden');
+  dateTrigger.classList.add('open');
+}
+
+function closeCalendar() {
+  dateDropdown.classList.add('hidden');
+  dateTrigger.classList.remove('open');
+}
+
+dateTrigger.addEventListener('click', e => {
+  e.stopPropagation();
+  dateDropdown.classList.contains('hidden') ? openCalendar() : closeCalendar();
+});
+
+document.getElementById('cal-prev').addEventListener('click', e => {
+  e.stopPropagation();
+  calViewMonth--;
+  if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+  renderCalendar();
+});
+
+document.getElementById('cal-next').addEventListener('click', e => {
+  e.stopPropagation();
+  calViewMonth++;
+  if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+  renderCalendar();
+});
+
+calDays.addEventListener('click', e => {
+  const btn = e.target.closest('.cal-day');
+  if (!btn) return;
+  hiddenDate.value = btn.dataset.date;
+  const d = new Date(btn.dataset.date + 'T00:00:00');
+  calViewYear = d.getFullYear();
+  calViewMonth = d.getMonth();
+  closeCalendar();
+  renderCalendar();
+});
+
+document.addEventListener('click', e => {
+  if (!document.querySelector('.date-picker-wrap').contains(e.target)) closeCalendar();
+});
+
+renderCalendar();
+syncTextInput();
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 // Live sync — fires immediately on load, then on every remote change
 docRef.onSnapshot(snap => {
   const data = snap.exists ? snap.data() : {};
