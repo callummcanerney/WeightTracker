@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weight Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b0c0e'/><polyline points='4,8 11,13 17,11 23,18 28,24' fill='none' stroke='%234ade80' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='4' cy='8' r='2' fill='%234ade80'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap"
@@ -650,79 +651,6 @@
       color: var(--red);
     }
 
-    /* IMPORT/EXPORT */
-    .io-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-
-    .btn-io {
-      flex: 1;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 8px 10px;
-      border-radius: 7px;
-      cursor: pointer;
-      transition: all 0.15s;
-      text-align: center;
-    }
-
-    .btn-io:hover {
-      border-color: var(--border2);
-      color: var(--text);
-      background: var(--bg2);
-    }
-
-
-    /* GOAL LINE */
-    .goal-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-
-    .goal-row label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .goal-row input {
-      flex: 1;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      border-radius: 7px;
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem;
-      padding: 6px 10px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .goal-row input:focus {
-      border-color: var(--accent);
-    }
-
-    .goal-row .btn-io {
-      flex: none;
-      padding: 6px 12px;
-      font-size: 0.62rem;
-    }
 
     /* DATE PICKER */
     .date-picker-wrap {
@@ -895,6 +823,81 @@
     #import-file {
       display: none;
     }
+
+    /* HAMBURGER MENU */
+    .menu-wrap {
+      position: relative;
+    }
+
+    .menu-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.15s;
+    }
+    .menu-btn span {
+      display: block;
+      width: 17px;
+      height: 2px;
+      background: var(--muted);
+      border-radius: 1px;
+      transition: background 0.15s;
+    }
+    .menu-btn:hover { border-color: var(--border2); }
+    .menu-btn:hover span { background: var(--text); }
+    .menu-btn.open { border-color: var(--accent); }
+    .menu-btn.open span { background: var(--accent); }
+
+    .menu-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 4px;
+      z-index: 200;
+      min-width: 168px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+    }
+    .menu-dropdown.hidden { display: none; }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 9px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.1s, color 0.1s;
+      white-space: nowrap;
+    }
+    .menu-item:hover { background: var(--bg3); color: var(--text); }
+    .menu-item-icon {
+      font-size: 0.9rem;
+      font-family: 'JetBrains Mono', monospace;
+      opacity: 0.75;
+      width: 16px;
+      text-align: center;
+    }
+    .menu-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
   </style>
 </head>
 
@@ -905,6 +908,23 @@
       <div class="logo-block">
         <h1>Weight<span>.</span></h1>
         <p>Body mass over time — to scale</p>
+      </div>
+      <div class="menu-wrap" id="menu-wrap">
+        <button class="menu-btn" id="menu-btn" type="button" title="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="menu-dropdown hidden" id="menu-dropdown">
+          <button class="menu-item" id="menu-goal" type="button">
+            <span class="menu-item-icon">◎</span> Set Goal
+          </button>
+          <div class="menu-sep"></div>
+          <button class="menu-item" id="menu-export" type="button">
+            <span class="menu-item-icon">↓</span> Export CSV
+          </button>
+          <button class="menu-item" id="menu-import" type="button">
+            <span class="menu-item-icon">↑</span> Import CSV
+          </button>
+        </div>
       </div>
     </header>
 
@@ -952,8 +972,8 @@
           </div>
           <div class="ctrl-sep"></div>
           <div class="scale-mode-group" id="scale-mode-btns">
-            <button class="range-btn active" data-scale="time" type="button">Time</button>
-            <button class="range-btn" data-scale="index" type="button">Index</button>
+            <button class="range-btn active" data-scale="time" type="button">Date</button>
+            <button class="range-btn" data-scale="index" type="button">Step</button>
           </div>
           <div class="ctrl-sep" id="range-sep"></div>
           <div id="range-controls" style="display:flex;align-items:center;gap:8px;">
@@ -1022,22 +1042,26 @@
 
         <button class="btn-add" id="btn-add">Add Entry</button>
         <div class="feedback" id="feedback"></div>
-
-        <!-- GOAL -->
-        <div class="goal-row">
-          <label>Goal</label>
-          <input type="number" id="inp-goal" step="0.1" min="30" max="300" placeholder="target kg">
-          <button class="btn-io" id="btn-goal">Set</button>
-        </div>
-
-        <!-- IMPORT/EXPORT -->
-        <div class="io-row">
-          <button class="btn-io" id="btn-export">↓ Export CSV</button>
-          <button class="btn-io" id="btn-import-trigger">↑ Import CSV</button>
-          <input type="file" id="import-file" accept=".csv">
-        </div>
       </div>
 
+      <input type="file" id="import-file" accept=".csv">
+
+    </div>
+  </div>
+
+  <!-- GOAL MODAL -->
+  <div class="entry-modal-overlay hidden" id="goal-modal-overlay">
+    <div class="entry-modal">
+      <div class="entry-modal-title">Set Goal Weight</div>
+      <div class="field">
+        <label>Target Weight (kg)</label>
+        <input type="number" id="goal-modal-inp" step="0.1" min="30" max="300" placeholder="e.g. 75.0">
+      </div>
+      <div class="modal-btn-row">
+        <button class="btn-add" id="goal-modal-save" style="flex:1">Set Goal</button>
+        <button class="btn-ghost" id="goal-modal-cancel">Cancel</button>
+      </div>
+      <div class="feedback" id="goal-feedback"></div>
     </div>
   </div>
 
@@ -1742,6 +1766,7 @@
       localStorage.setItem('wt-range', activeRange);
       initPan(_entries, activeRange);
       initPanIndex(sortedEntries(_entries), activeRange);
+      syncSliderToState();
       renderRangeBtns();
       if (chart) { chart.destroy(); chart = null; }
       refresh();
@@ -1786,40 +1811,80 @@
     function syncRangeSliderVisibility() {
       const isIndex = activeScaleMode === 'index';
       document.getElementById('range-controls').style.display = isIndex ? 'none' : 'flex';
-      document.getElementById('range-sep').style.display = isIndex && _entries.length === 0 ? 'none' : '';
-      document.getElementById('index-slider-wrap').classList.toggle('hidden', !isIndex);
+      document.getElementById('range-sep').style.display = 'none'; // slider always present; sep not needed
+      document.getElementById('index-slider-wrap').classList.remove('hidden'); // visible in both modes
     }
 
-    function syncIndexSliderToState() {
-      const n = sortedEntries(_entries).length;
-      indexSlider.max = Math.max(2, n);
-      if (panIndexMin === null) {
-        indexSlider.value = indexSlider.max;
-        indexSliderLabel.textContent = 'All';
+    function syncSliderToState() {
+      if (activeScaleMode === 'index') {
+        const n = sortedEntries(_entries).length;
+        indexSlider.min = 2;
+        indexSlider.max = Math.max(2, n);
+        if (panIndexMin === null) {
+          indexSlider.value = indexSlider.max;
+          indexSliderLabel.textContent = 'All';
+        } else {
+          const win = panIndexMax - panIndexMin + 1;
+          indexSlider.value = win;
+          indexSliderLabel.textContent = win + ' pts';
+        }
       } else {
-        const win = panIndexMax - panIndexMin + 1;
-        indexSlider.value = win;
-        indexSliderLabel.textContent = win + ' pts';
+        // time mode: slider controls day span
+        const sorted = sortedEntries(_entries);
+        if (!sorted.length) { indexSlider.min = 7; indexSlider.max = 7; indexSliderLabel.textContent = 'All'; return; }
+        const totalMinMs = new Date(sorted[0].date + 'T00:00:00').getTime();
+        const totalMaxMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
+        const totalDays = Math.max(7, Math.ceil((totalMaxMs - totalMinMs) / 86400000));
+        indexSlider.min = Math.min(7, totalDays);
+        indexSlider.max = totalDays;
+        if (panMin === null) {
+          indexSlider.value = totalDays;
+          indexSliderLabel.textContent = 'All';
+        } else {
+          const spanDays = Math.max(1, Math.round((panMax - panMin) / 86400000));
+          indexSlider.value = spanDays;
+          indexSliderLabel.textContent = formatDays(spanDays);
+        }
       }
     }
 
     indexSlider.addEventListener('input', () => {
-      const n = sortedEntries(_entries).length;
-      const val = parseInt(indexSlider.value);
-      if (val >= n) {
-        panIndexMin = null;
-        panIndexMax = null;
-        indexSliderLabel.textContent = 'All';
+      if (activeScaleMode === 'index') {
+        const n = sortedEntries(_entries).length;
+        const val = parseInt(indexSlider.value);
+        if (val >= n) {
+          panIndexMin = null;
+          panIndexMax = null;
+          indexSliderLabel.textContent = 'All';
+        } else {
+          indexSliderLabel.textContent = val + ' pts';
+          const rightEdge = panIndexMax !== null ? panIndexMax : n - 1;
+          panIndexMax = Math.min(n - 1, rightEdge);
+          panIndexMin = Math.max(0, panIndexMax - val + 1);
+          if (panIndexMin === 0) panIndexMax = Math.min(n - 1, val - 1);
+        }
+        if (chart) applyIndexPanToChart();
       } else {
-        indexSliderLabel.textContent = val + ' pts';
-        // Anchor to current right edge (latest entries), or n-1 if showing all
-        const rightEdge = panIndexMax !== null ? panIndexMax : n - 1;
-        panIndexMax = Math.min(n - 1, rightEdge);
-        panIndexMin = Math.max(0, panIndexMax - val + 1);
-        // If clamped at left edge, push max right
-        if (panIndexMin === 0) panIndexMax = Math.min(n - 1, val - 1);
+        // time mode: slider controls visible day span
+        const sorted = sortedEntries(_entries);
+        if (!sorted.length) return;
+        const totalMinMs = new Date(sorted[0].date + 'T00:00:00').getTime();
+        const totalMaxMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
+        const totalDays = Math.ceil((totalMaxMs - totalMinMs) / 86400000);
+        const val = parseInt(indexSlider.value);
+        if (val >= totalDays) {
+          panMin = null; panMax = null;
+          indexSliderLabel.textContent = 'All';
+        } else {
+          const spanMs = val * 86400000;
+          const rightMs = panMax !== null ? panMax : totalMaxMs;
+          panMax = rightMs;
+          panMin = Math.max(totalMinMs, panMax - spanMs);
+          if (panMin === totalMinMs) panMax = Math.min(totalMaxMs, totalMinMs + spanMs);
+          indexSliderLabel.textContent = formatDays(val);
+        }
+        if (chart) applyPanToChart();
       }
-      if (chart) applyIndexPanToChart();
     });
 
     // ─── SCALE MODE ───────────────────────────────────────────────────────────────
@@ -1835,10 +1900,10 @@
       );
       if (newMode === 'index') {
         panIndexMin = null; panIndexMax = null; // start at "All" when switching in
-        syncIndexSliderToState();
       } else {
         initPan(_entries, activeRange);
       }
+      syncSliderToState();
       syncRangeSliderVisibility();
       if (chart) { chart.destroy(); chart = null; }
       refresh();
@@ -1894,16 +1959,59 @@
       setTimeout(() => fb.classList.remove('show'), 2500);
     }
 
-    // ─── GOAL ────────────────────────────────────────────────────────────────────
-    document.getElementById('btn-goal').addEventListener('click', async () => {
-      const g = parseFloat(document.getElementById('inp-goal').value);
-      if (isNaN(g) || g < 30 || g > 300) return showFeedback('Enter a valid goal weight', true);
+    // ─── HAMBURGER MENU ──────────────────────────────────────────────────────────
+    const menuBtn = document.getElementById('menu-btn');
+    const menuDropdown = document.getElementById('menu-dropdown');
+
+    function openMenu() { menuDropdown.classList.remove('hidden'); menuBtn.classList.add('open'); }
+    function closeMenu() { menuDropdown.classList.add('hidden'); menuBtn.classList.remove('open'); }
+
+    menuBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      menuDropdown.classList.contains('hidden') ? openMenu() : closeMenu();
+    });
+
+    document.addEventListener('click', e => {
+      if (!document.getElementById('menu-wrap').contains(e.target)) closeMenu();
+    });
+
+    // ─── GOAL MODAL ──────────────────────────────────────────────────────────────
+    function openGoalModal() {
+      closeMenu();
+      document.getElementById('goal-modal-overlay').classList.remove('hidden');
+      document.getElementById('goal-modal-inp').focus();
+    }
+    function closeGoalModal() {
+      document.getElementById('goal-modal-overlay').classList.add('hidden');
+    }
+
+    document.getElementById('menu-goal').addEventListener('click', openGoalModal);
+    document.getElementById('goal-modal-cancel').addEventListener('click', closeGoalModal);
+    document.getElementById('goal-modal-overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('goal-modal-overlay')) closeGoalModal();
+    });
+
+    document.getElementById('goal-modal-save').addEventListener('click', async () => {
+      const g = parseFloat(document.getElementById('goal-modal-inp').value);
+      const fb = document.getElementById('goal-feedback');
+      if (isNaN(g) || g < 30 || g > 300) {
+        fb.textContent = 'Enter a valid weight (30–300 kg)';
+        fb.className = 'feedback show err';
+        setTimeout(() => fb.classList.remove('show'), 2500);
+        return;
+      }
       await saveGoal(g);
-      showFeedback('Goal set to ' + g.toFixed(1) + ' kg');
+      closeGoalModal();
+    });
+
+    document.getElementById('goal-modal-inp').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('goal-modal-save').click();
+      if (e.key === 'Escape') closeGoalModal();
     });
 
     // ─── EXPORT ───────────────────────────────────────────────────────────────────
-    document.getElementById('btn-export').addEventListener('click', () => {
+    function doExport() {
+      closeMenu();
       if (_entries.length === 0) return showFeedback('Nothing to export', true);
       const entries = sortedEntries(_entries);
       const csv = 'date,weight_kg\n' + entries.map(e => `${e.date},${e.weight}`).join('\n');
@@ -1913,7 +2021,8 @@
       a.href = url; a.download = 'weight-log.csv'; a.click();
       URL.revokeObjectURL(url);
       showFeedback('Exported!');
-    });
+    }
+    document.getElementById('menu-export').addEventListener('click', doExport);
 
     // ─── IMPORT ───────────────────────────────────────────────────────────────────
     // Parses a single CSV line, respecting quoted fields (handles embedded commas)
@@ -1956,7 +2065,8 @@
       return (dateStr && !isNaN(weight)) ? { date: dateStr, weight } : null;
     }
 
-    document.getElementById('btn-import-trigger').addEventListener('click', () => {
+    document.getElementById('menu-import').addEventListener('click', () => {
+      closeMenu();
       document.getElementById('import-file').click();
     });
 
@@ -2242,12 +2352,12 @@
       const data = snap.exists ? snap.data() : {};
       _entries = data.entries || [];
       _goal = data.goal ?? null;
-      if (_goal != null) document.getElementById('inp-goal').value = _goal;
+      if (_goal != null) document.getElementById('goal-modal-inp').value = _goal;
       if (!_panInitialized) {
         _panInitialized = true;
         if (activeScaleMode === 'time' && activeRange !== 'all') initPan(_entries, activeRange);
       }
-      if (activeScaleMode === 'index') syncIndexSliderToState();
+      syncSliderToState();
       refresh();
     });
   </script>
