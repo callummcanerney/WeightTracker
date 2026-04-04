@@ -1,0 +1,19 @@
+{
+  "name": "Weight Tracker",
+  "short_name": "Weight",
+  "description": "Personal weight loss tracking dashboard",
+  "start_url": "/WeightTracker/Tracker.html",
+  "scope": "/WeightTracker/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

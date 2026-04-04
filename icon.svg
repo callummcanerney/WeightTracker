@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="0" fill="#0b0c0e"/>
+  <!-- Downward trend line -->
+  <polyline points="72,168 172,210 252,190 342,268 440,352"
+    fill="none" stroke="#4ade80" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Start dot -->
+  <circle cx="72" cy="168" r="26" fill="#4ade80"/>
+  <!-- End dot -->
+  <circle cx="440" cy="352" r="26" fill="#4ade80"/>
+</svg>
