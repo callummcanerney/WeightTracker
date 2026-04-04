@@ -45,6 +45,7 @@
       font-family: 'Syne', sans-serif;
       height: 100%;
       overflow: hidden;
+      overscroll-behavior-x: none;
       font-size: 15px;
       line-height: 1.5;
     }
@@ -3110,11 +3111,11 @@
     const _panSorted = () => sortedEntries(_entries); // cached lazily per frame
 
     document.getElementById('chart').addEventListener('wheel', e => {
-      if (activeRange === 'all' || !chart) return;
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // vertical — let browser handle freely
+      e.preventDefault(); // must fire before any return to block back/forward navigation on HTTPS
+      if (!chart) return;
       if (activeScaleMode === 'time' && panMin === null) return;
       if (activeScaleMode === 'index' && panIndexMin === null) return;
-      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // ignore vertical scroll
-      e.preventDefault();
 
       if (activeScaleMode === 'index') {
         const { chartArea } = chart;
