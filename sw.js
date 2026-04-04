@@ -1,4 +1,4 @@
-const CACHE = 'weight-tracker-v1';
+const CACHE = 'weight-tracker-v2';
 
 // Assets to pre-cache on install
 const PRECACHE = [
@@ -26,14 +26,27 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Let Firebase/Firestore requests go straight to network (Firebase has its own offline cache)
+  // Let Firebase/Firestore requests go straight to network
   if (url.hostname.includes('firestore.googleapis.com') ||
       url.hostname.includes('firebase') ||
       url.hostname.includes('google.com')) {
     return;
   }
 
-  // For our own HTML and assets: cache-first, update in background
+  // HTML: network-first so updates are always picked up immediately
+  if (url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // CDN assets and other static files: cache-first
   if (url.pathname.startsWith('/WeightTracker/') ||
       url.hostname === 'fonts.googleapis.com' ||
       url.hostname === 'fonts.gstatic.com' ||
