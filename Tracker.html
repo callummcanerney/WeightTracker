@@ -1170,6 +1170,83 @@
       background: var(--border);
       margin: 4px 0;
     }
+
+    /* ── MOBILE TASKBAR (hidden on desktop) ─────────────────────────────── */
+    #mobile-taskbar { display: none; }
+    .mobile-menu-scale-item { display: none !important; }
+
+    @media (max-width: 430px) {
+      /* Shell — tighter padding, room for fixed taskbar at bottom */
+      .shell {
+        padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px calc(env(safe-area-inset-bottom, 0px) + 58px);
+        gap: 8px;
+      }
+
+      /* Hide desktop header entirely */
+      header { display: none; }
+
+      /* Compact stats row — all 6 fit in one narrow row */
+      .stats-row { gap: 4px; }
+      .stat-card { padding: 5px 4px; border-radius: 7px; }
+      .stat-card .label { font-size: 0.46rem; margin-bottom: 2px; letter-spacing: 0.04em; }
+      .stat-card .value { font-size: 0.85rem; }
+      .stat-card .sub   { font-size: 0.46rem; margin-top: 2px; }
+      .stat-card--ring  { padding: 2px; }
+      .stat-card--ring .value { font-size: 0.75rem; }
+      .goal-arc-container svg { width: 46px; height: 46px; }
+
+      /* Hide chart controls removed on mobile */
+      #style-picker   { display: none; }
+      #scale-picker   { display: none; }
+      #optimal-toggle { display: none; }
+
+      /* Show the mobile-only scale toggle in the menu */
+      .mobile-menu-scale-item { display: flex !important; }
+
+      /* Mobile taskbar */
+      #mobile-taskbar {
+        display: flex;
+        align-items: stretch;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(50px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: var(--bg2);
+        border-top: 1px solid var(--border);
+        z-index: 200;
+      }
+
+      .mobile-tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.5rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        padding: 6px 20px;
+        transition: color 0.15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-tab.open { color: var(--accent); }
+
+      /* Menu dropdown: open upward from taskbar */
+      #menu-dropdown:not(.hidden) {
+        position: fixed !important;
+        bottom: calc(50px + env(safe-area-inset-bottom, 0px) + 6px);
+        right: 12px;
+        top: auto;
+        left: auto;
+      }
+    }
   </style>
 </head>
 
@@ -1197,6 +1274,10 @@
           </button>
           <button class="menu-item" id="menu-import" type="button">
             <span class="menu-item-icon">↑</span> Import CSV
+          </button>
+          <div class="menu-sep mobile-menu-scale-item"></div>
+          <button class="menu-item mobile-menu-scale-item" id="menu-scale-toggle" type="button">
+            <span class="menu-item-icon">⊡</span> <span id="menu-scale-label">Scale: Date</span>
           </button>
         </div>
       </div>
@@ -3035,7 +3116,9 @@
     });
 
     document.addEventListener('click', e => {
-      if (!document.getElementById('menu-wrap').contains(e.target)) closeMenu();
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      if (!document.getElementById('menu-wrap').contains(e.target) &&
+          !(mobileBtn && mobileBtn.contains(e.target))) closeMenu();
     });
 
     // ─── GOAL MODAL ──────────────────────────────────────────────────────────────
@@ -3459,6 +3542,54 @@
       syncSliderLock();
     })();
 
+    // ─── MOBILE OVERRIDES ────────────────────────────────────────────────────────
+    const _isMobile = window.matchMedia('(max-width: 430px)').matches;
+    if (_isMobile) {
+      // Force projected + linear — override any stored preference
+      activeOptimal = true;
+      activeLineStyle = 'linear';
+      document.getElementById('optimal-toggle').classList.add('active');
+
+      // Wire mobile hamburger to the existing menu dropdown
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const _menuDropdown = document.getElementById('menu-dropdown');
+
+      mobileMenuBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = !_menuDropdown.classList.contains('hidden');
+        if (isOpen) {
+          _menuDropdown.classList.add('hidden');
+          mobileMenuBtn.classList.remove('open');
+        } else {
+          _menuDropdown.classList.remove('hidden');
+          mobileMenuBtn.classList.add('open');
+        }
+      });
+
+      // Close when clicking outside (override desktop handler for menu-wrap)
+      document.addEventListener('click', e => {
+        if (!mobileMenuBtn.contains(e.target) && !_menuDropdown.contains(e.target)) {
+          _menuDropdown.classList.add('hidden');
+          mobileMenuBtn.classList.remove('open');
+        }
+      }, true);
+
+      // Scale mode toggle in menu
+      const menuScaleToggle = document.getElementById('menu-scale-toggle');
+      const menuScaleLabel  = document.getElementById('menu-scale-label');
+      function updateScaleLabel() {
+        menuScaleLabel.textContent = 'Scale: ' + (activeScaleMode === 'time' ? 'Date' : 'Step');
+      }
+      updateScaleLabel();
+      menuScaleToggle.addEventListener('click', () => {
+        const newMode = activeScaleMode === 'time' ? 'index' : 'time';
+        document.querySelector(`#scale-dropdown [data-scale="${newMode}"]`).click();
+        updateScaleLabel();
+        _menuDropdown.classList.add('hidden');
+        mobileMenuBtn.classList.remove('open');
+      });
+    }
+
     // ─── INIT ─────────────────────────────────────────────────────────────────────
     let _panInitialized = false;
     docRef.onSnapshot(snap => {
@@ -3494,6 +3625,18 @@
       refresh();
     });
   </script>
+  <!-- MOBILE TASKBAR -->
+  <nav id="mobile-taskbar">
+    <button class="mobile-tab" id="mobile-menu-btn" type="button">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <line x1="0" y1="1" x2="16" y2="1"/>
+        <line x1="0" y1="6" x2="16" y2="6"/>
+        <line x1="0" y1="11" x2="16" y2="11"/>
+      </svg>
+      Menu
+    </button>
+  </nav>
+
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/WeightTracker/sw.js', { scope: '/WeightTracker/' });
