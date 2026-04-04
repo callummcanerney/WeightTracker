@@ -93,7 +93,7 @@
     /* STATS ROW */
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 10px;
       flex-shrink: 0;
     }
@@ -148,21 +148,21 @@
 
     /* CHART AREA */
     .chart-wrap {
-      flex: 1;
+      flex: 1 1 0;
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px 20px 16px;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      min-height: 220px;
     }
 
-    /* BOTTOM ROW — log entry panel */
+    /* BOTTOM ROW — log entry + insights */
     .bottom-grid {
       flex-shrink: 0;
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 240px 1fr;
       gap: 14px;
       align-items: stretch;
     }
@@ -205,6 +205,7 @@
       border-color: var(--border2);
       color: var(--text);
     }
+    .range-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 
     .range-btn.active {
       background: var(--accent-dim);
@@ -212,13 +213,10 @@
       color: var(--accent);
     }
 
-    .chart-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .scale-mode-group { display: flex; gap: 4px; }
+    /* Chart header three-zone layout */
+    .ctrl-left  { display: flex; align-items: center; gap: 8px; }
+    .ctrl-center { flex: 1; display: flex; justify-content: center; align-items: center; padding: 0 12px; }
+    .ctrl-right  { display: flex; align-items: center; gap: 8px; }
 
     /* INDEX MODE SLIDER */
     .index-slider-wrap {
@@ -256,6 +254,9 @@
       border: none;
       cursor: pointer;
     }
+
+    .index-slider:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+    .index-slider-label.locked { opacity: 0.3; }
 
     .index-slider-label {
       font-family: 'JetBrains Mono', monospace;
@@ -484,6 +485,153 @@
       letter-spacing: 0.05em;
     }
 
+    /* INSIGHTS PANEL */
+    .insights-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .insights-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: nowrap;
+      min-width: 0;
+    }
+    .streak-badge {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .streak-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .streak-num.zero { color: var(--muted); }
+    .streak-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .milestones {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      max-height: 38px;
+    }
+    .milestone-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+      background: rgba(74,222,128,0.07);
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 20px;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+    .insights-sep {
+      height: 1px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .insights-bottom {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+    .insights-col {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .insights-col:first-child { flex-shrink: 0; }
+    .insights-col:last-child  { flex: 1; }
+    .insights-vsep {
+      width: 1px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .insights-section-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.54rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    /* 30-day log calendar — GitHub-style compact dots */
+    .log-cal {
+      display: grid;
+      grid-template-columns: repeat(7, 14px);
+      gap: 2px;
+    }
+    .log-cal-head {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.48rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 14px;
+    }
+    .log-cal-cell {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.48rem;
+      color: var(--muted);
+      background: var(--bg3);
+    }
+    .log-cal-cell.logged {
+      background: rgba(74,222,128,0.22);
+      color: var(--accent);
+    }
+    .log-cal-cell.today { outline: 1px solid var(--border2); outline-offset: -1px; }
+    .log-cal-cell.empty { background: transparent; color: transparent; }
+
+    /* Weekly table */
+    .weekly-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+    }
+    .weekly-tbl thead th {
+      color: var(--muted);
+      font-weight: 400;
+      text-align: right;
+      padding: 0 4px 4px;
+      letter-spacing: 0.05em;
+    }
+    .weekly-tbl thead th:first-child { text-align: left; }
+    .weekly-tbl tbody tr { border-top: 1px solid var(--border); }
+    .weekly-tbl tbody td {
+      padding: 3px 4px;
+      color: var(--text);
+      text-align: right;
+    }
+    .weekly-tbl tbody td:first-child { text-align: left; color: var(--muted); }
+    .wk-pos { color: var(--accent); }
+    .wk-neg { color: var(--red); }
+    .wk-neu { color: var(--muted); }
+
     /* PANELS */
     .panel {
       background: var(--bg2);
@@ -491,6 +639,11 @@
       border-radius: 12px;
       padding: 18px 20px;
     }
+    .bottom-grid .panel { padding: 12px 14px; }
+    .bottom-grid .panel-title { margin-bottom: 8px; }
+    .bottom-grid .field { margin-bottom: 7px; }
+    .bottom-grid .field label { margin-bottom: 4px; }
+    .bottom-grid .field input { padding: 7px 10px; }
 
     /* ENTRY EDIT MODAL */
     .entry-modal-overlay {
@@ -1046,16 +1199,30 @@
         <div class="sub">kg / week avg</div>
       </div>
       <div class="stat-card">
+        <div class="label">Projected Date</div>
+        <div class="value" id="stat-goal-date">—</div>
+        <div class="sub" id="stat-goal-date-sub">set goal &amp; pace</div>
+      </div>
+      <div class="stat-card">
         <div class="label">Goal Progress</div>
         <div class="goal-arc-row">
           <svg width="44" height="44" viewBox="0 0 44 44" style="flex-shrink:0">
             <circle class="goal-arc-bg" cx="22" cy="22" r="18"/>
             <circle class="goal-arc-fill" id="goal-arc" cx="22" cy="22" r="18" transform="rotate(-90 22 22)"/>
+            <!-- 10% segment breakers (radial lines at 36° intervals, in bg panel color) -->
+            <line x1="30.8" y1="9.9"  x2="34.3" y2="5.0"  stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="36.3" y1="17.4" x2="42.0" y2="15.5" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="36.3" y1="26.6" x2="42.0" y2="28.5" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="30.8" y1="34.1" x2="34.3" y2="39.0" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="22.0" y1="37.0" x2="22.0" y2="43.0" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="13.2" y1="34.1" x2="9.7"  y2="39.0" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="7.7"  y1="26.6" x2="2.0"  y2="28.5" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="7.7"  y1="17.4" x2="2.0"  y2="15.5" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="13.2" y1="9.9"  x2="9.7"  y2="5.0"  stroke="var(--bg2)" stroke-width="1.5"/>
           </svg>
           <div>
             <div class="value" id="stat-goal-pct">—</div>
             <div class="sub" id="stat-goal-rem">set a goal in menu</div>
-            <div class="sub" id="stat-goal-date" style="margin-top:2px;color:var(--amber);"></div>
           </div>
         </div>
       </div>
@@ -1064,7 +1231,8 @@
     <!-- CHART -->
     <div class="chart-wrap">
       <div class="chart-header">
-        <div class="chart-controls">
+        <!-- Left: line style + scale mode dropdowns -->
+        <div class="ctrl-left">
           <div class="style-picker" id="style-picker">
             <button class="range-btn" id="style-trigger" type="button">Smooth ▾</button>
             <div class="style-dropdown hidden" id="style-dropdown">
@@ -1073,29 +1241,34 @@
               <button class="style-option" data-style="stepped" type="button">Stepped</button>
             </div>
           </div>
-          <div class="ctrl-sep"></div>
-          <button class="range-btn active" id="trend-toggle" type="button">LOBF</button>
-          <button class="range-btn active" id="optimal-toggle" type="button">Optimal</button>
-          <div class="ctrl-sep"></div>
-          <div class="scale-mode-group" id="scale-mode-btns">
-            <button class="range-btn active" data-scale="time" type="button">Date</button>
-            <button class="range-btn" data-scale="index" type="button">Step</button>
+          <div class="style-picker" id="scale-picker">
+            <button class="range-btn" id="scale-trigger" type="button">Date ▾</button>
+            <div class="style-dropdown hidden" id="scale-dropdown">
+              <button class="style-option active" data-scale="time" type="button">Date</button>
+              <button class="style-option" data-scale="index" type="button">Step</button>
+            </div>
           </div>
-          <div class="ctrl-sep" id="range-sep"></div>
-          <div id="range-controls" style="display:flex;align-items:center;gap:8px;">
+        </div>
+        <!-- Center: slider -->
+        <div class="ctrl-center">
+          <div id="range-controls" style="display:none;">
             <div class="range-btns" id="range-btns"></div>
             <button class="range-btn" id="range-add-btn" type="button" title="Add custom range">+</button>
             <form class="range-add-form hidden" id="range-add-form">
-              <input class="range-add-input" id="range-add-input" type="number" placeholder="days" min="1" max="3650"
-                autocomplete="off">
+              <input class="range-add-input" id="range-add-input" type="number" placeholder="days" min="1" max="3650" autocomplete="off">
               <button class="range-btn" type="submit">✓</button>
               <button class="range-btn" type="button" id="range-add-cancel">✕</button>
             </form>
           </div>
-          <div class="index-slider-wrap hidden" id="index-slider-wrap">
+          <div class="index-slider-wrap" id="index-slider-wrap">
             <input type="range" class="index-slider" id="index-slider" min="2" max="100" value="100">
             <span class="index-slider-label" id="index-slider-label">All</span>
           </div>
+        </div>
+        <!-- Right: Projected toggle -->
+        <div class="ctrl-right">
+          <div id="range-sep" style="display:none;"></div>
+          <button class="range-btn active" id="optimal-toggle" type="button">Projected</button>
         </div>
       </div>
       <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
@@ -1109,7 +1282,6 @@
 
       <!-- ADD ENTRY -->
       <div class="panel">
-        <div class="panel-title">Log Entry</div>
 
         <div class="field">
           <label>Date</label>
@@ -1157,6 +1329,31 @@
       </div>
 
       <input type="file" id="import-file" accept=".csv">
+
+      <!-- INSIGHTS PANEL -->
+      <div class="panel insights-panel" id="insights-panel">
+        <!-- Streak + milestones -->
+        <div class="insights-top">
+          <div class="streak-badge">
+            <span class="streak-num zero" id="streak-num">0</span>
+            <span class="streak-lbl">day streak</span>
+          </div>
+          <div class="milestones" id="milestones"></div>
+        </div>
+        <div class="insights-sep"></div>
+        <!-- Calendar and Weekly side by side -->
+        <div class="insights-bottom">
+          <div class="insights-col">
+            <div class="insights-section-lbl">30-day log</div>
+            <div class="log-cal" id="log-cal"></div>
+          </div>
+          <div class="insights-vsep"></div>
+          <div class="insights-col">
+            <div class="insights-section-lbl">Weekly</div>
+            <table class="weekly-tbl" id="weekly-tbl"></table>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -1298,6 +1495,8 @@
     let activeLineStyle = 'smooth';
     let activeTrend = true;
     let activeOptimal = true;
+    let _optSavedPanMin = null; // pan state saved before optimal snap
+    let _optSavedPanMax = null;
     let panMin = null;         // ms timestamp, null when 'all'
     let panMax = null;         // ms timestamp
     let panIndexMin = null;    // entry index, null when 'all' (index mode)
@@ -1551,7 +1750,7 @@
 
         datasets = [
           { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: true },
           { label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
         ];
 
@@ -1616,9 +1815,9 @@
 
         datasets = [
           { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: !activeTrend },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: true },
           { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
-          { label: 'Optimal', data: optData, borderColor: 'rgba(251,191,36,0.35)', borderDash: [3, 3], borderWidth: 1.5, pointRadius: 0, tension: 0.35, fill: false },
+          { label: 'Projected', data: optData, borderColor: 'rgba(167,139,250,0.85)', borderDash: [3, 3], borderWidth: 2, pointRadius: 0, tension: 0.35, fill: false },
         ];
 
         const xWin = panMin !== null ? { min: panMin, max: panMax } : {};
@@ -1686,7 +1885,7 @@
               enabled: false,
               external: externalTooltipHandler,
               callbacks: { title: titleCb, label: labelCb },
-              filter: (item) => item.dataset.label !== 'Trend' && item.dataset.label !== 'Optimal',
+              filter: (item) => item.dataset.label !== 'Trend' && item.dataset.label !== 'Projected',
             },
           },
           scales: {
@@ -1749,7 +1948,7 @@
       afterDraw(chart) {
         const { ctx, chartArea: { top, bottom, right }, scales: { x: xScale, y: yScale } } = chart;
         ctx.save();
-        ctx.font = '500 9px "JetBrains Mono", monospace';
+        ctx.font = '600 11px "JetBrains Mono", monospace';
 
         // Phase vertical line
         if (_phaseStart) {
@@ -1881,17 +2080,26 @@
         document.getElementById('stat-goal-rem').textContent = rem > 0 ? fmtWeight(rem) + ' kg to go' : 'goal reached!';
         arc.style.strokeDashoffset = (arcCircumference * (1 - Math.min(1, pct / 100))).toFixed(1);
         arc.style.stroke = pct >= 100 ? 'var(--accent)' : 'var(--amber)';
-        // Projected end date
-        const proj = projectedDateStr(goal, _targetLossRate);
-        const dateEl = document.getElementById('stat-goal-date');
-        dateEl.textContent = proj ? '≈ ' + proj : '';
       } else {
         document.getElementById('stat-goal-pct').textContent = '—';
         document.getElementById('stat-goal-pct').className = 'value';
         document.getElementById('stat-goal-rem').textContent = 'set a goal in menu';
-        document.getElementById('stat-goal-date').textContent = '';
         arc.style.strokeDashoffset = arcCircumference.toFixed(1);
         arc.style.stroke = 'var(--amber)';
+      }
+
+      // Goal Date stat card
+      const proj = projectedDateStr(goal, _targetLossRate);
+      const goalDateEl = document.getElementById('stat-goal-date');
+      const goalDateSub = document.getElementById('stat-goal-date-sub');
+      if (proj) {
+        goalDateEl.textContent = proj;
+        goalDateEl.className = 'value neutral';
+        goalDateSub.textContent = 'est. projected date';
+      } else {
+        goalDateEl.textContent = '—';
+        goalDateEl.className = 'value';
+        goalDateSub.textContent = 'set goal & pace';
       }
     }
 
@@ -1946,11 +2154,161 @@
       if (e.target === e.currentTarget) closeEntryModal();
     });
 
+    // ─── INSIGHTS ────────────────────────────────────────────────────────────────
+
+    function computeStreak(entries) {
+      if (!entries.length) return 0;
+      const loggedDates = new Set(entries.map(e => e.date));
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().slice(0, 10);
+      const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+      // Streak is active if today or yesterday was logged
+      const anchor = loggedDates.has(todayStr) ? today : loggedDates.has(yesterdayStr) ? yesterday : null;
+      if (!anchor) return 0;
+      let streak = 0;
+      const d = new Date(anchor);
+      while (loggedDates.has(d.toISOString().slice(0, 10))) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      }
+      return streak;
+    }
+
+    function computeMilestones(entries, goal) {
+      if (!entries.length) return [];
+      const s = sortedEntries(entries);
+      const totalLost = s[0].weight - s[s.length - 1].weight;
+      const streak = computeStreak(entries);
+      const pct = goal && s[0].weight > goal
+        ? Math.min(100, (totalLost / (s[0].weight - goal)) * 100) : 0;
+      const badges = [];
+      if (s.length >= 1)   badges.push('First log');
+      if (s.length >= 10)  badges.push('10 logged');
+      if (s.length >= 50)  badges.push('50 logged');
+      if (s.length >= 100) badges.push('100 logged');
+      if (totalLost >= 1)  badges.push('1 kg lost');
+      if (totalLost >= 5)  badges.push('5 kg lost');
+      if (totalLost >= 10) badges.push('10 kg lost');
+      if (totalLost >= 20) badges.push('20 kg lost');
+      if (pct >= 25)  badges.push('25% to goal');
+      if (pct >= 50)  badges.push('50% to goal');
+      if (pct >= 75)  badges.push('75% to goal');
+      if (pct >= 100) badges.push('Goal reached!');
+      if (streak >= 7)  badges.push('7-day streak');
+      if (streak >= 30) badges.push('30-day streak');
+      return badges;
+    }
+
+    function renderLogCalendar(entries) {
+      const loggedDates = new Set(entries.map(e => e.date));
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().slice(0, 10);
+      // Window: last 30 days ending today
+      const windowStart = new Date(today); windowStart.setDate(windowStart.getDate() - 29);
+      // Find Monday on or before windowStart
+      const gridStart = new Date(windowStart);
+      const dow = gridStart.getDay(); // 0=Sun
+      gridStart.setDate(gridStart.getDate() - (dow === 0 ? 6 : dow - 1));
+
+      const container = document.getElementById('log-cal');
+      container.innerHTML = '';
+      ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d => {
+        const h = document.createElement('div');
+        h.className = 'log-cal-head';
+        h.textContent = d;
+        container.appendChild(h);
+      });
+
+      const gridStartMs = gridStart.getTime();
+      const todayMs = today.getTime();
+      const windowStartMs = windowStart.getTime();
+      const totalCells = Math.ceil(((todayMs - gridStartMs) / 86400000 + 1) / 7) * 7;
+
+      for (let i = 0; i < totalCells; i++) {
+        const ms = gridStartMs + i * 86400000;
+        const d = new Date(ms);
+        const iso = d.toISOString().slice(0, 10);
+        const cell = document.createElement('div');
+        if (ms > todayMs || ms < windowStartMs) {
+          cell.className = 'log-cal-cell empty';
+        } else {
+          cell.className = 'log-cal-cell' + (loggedDates.has(iso) ? ' logged' : '');
+          if (iso === todayStr) cell.classList.add('today');
+          cell.textContent = d.getDate();
+        }
+        container.appendChild(cell);
+      }
+    }
+
+    function renderWeeklyTable(entries) {
+      const tbl = document.getElementById('weekly-tbl');
+      if (!entries.length) { tbl.innerHTML = ''; return; }
+      const s = sortedEntries(entries);
+
+      function getMondayStr(dateStr) {
+        const d = new Date(dateStr + 'T00:00:00');
+        const dow = d.getDay();
+        d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+        return d.toISOString().slice(0, 10);
+      }
+
+      const weekMap = new Map();
+      s.forEach(e => {
+        const mon = getMondayStr(e.date);
+        if (!weekMap.has(mon)) weekMap.set(mon, []);
+        weekMap.get(mon).push(e.weight);
+      });
+
+      const phaseMonday = _phaseStart ? getMondayStr(_phaseStart) : null;
+      const weeks = [...weekMap.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .filter(([mon]) => !phaseMonday || mon >= phaseMonday);
+
+      tbl.innerHTML = `<thead><tr>
+        <th>Week of</th><th>Avg</th><th>Δ</th><th>n</th>
+      </tr></thead><tbody></tbody>`;
+      const tbody = tbl.querySelector('tbody');
+
+      let prevAvg = null;
+      weeks.forEach(([monStr, weights]) => {
+        const avg = weights.reduce((a, b) => a + b, 0) / weights.length;
+        const delta = prevAvg !== null ? avg - prevAvg : null;
+        prevAvg = avg;
+        const label = new Date(monStr + 'T00:00:00')
+          .toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        let deltaHtml = '<span class="wk-neu">—</span>';
+        if (delta !== null) {
+          const sign = delta < 0 ? '−' : '+';
+          const cls = delta < 0 ? 'wk-pos' : delta > 0.001 ? 'wk-neg' : 'wk-neu';
+          deltaHtml = `<span class="${cls}">${sign}${Math.abs(delta).toFixed(2)}</span>`;
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${label}</td><td>${fmtWeight(avg)}</td><td>${deltaHtml}</td><td>${weights.length}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateInsights(entries) {
+      const streak = computeStreak(entries);
+      const streakEl = document.getElementById('streak-num');
+      streakEl.textContent = streak;
+      streakEl.className = 'streak-num' + (streak === 0 ? ' zero' : '');
+
+      const badges = computeMilestones(entries, _goal);
+      document.getElementById('milestones').innerHTML =
+        badges.map(b => `<span class="milestone-badge">${b}</span>`).join('');
+
+      renderLogCalendar(entries);
+      renderWeeklyTable(entries);
+    }
+
     // ─── REFRESH ─────────────────────────────────────────────────────────────────
     function refresh() {
       const sorted = sortedEntries(_entries);
       const phaseEntries = _phaseStart ? sorted.filter(e => e.date >= _phaseStart) : sorted;
       updateStats(phaseEntries, _goal);
+      updateInsights(sorted);
       buildChart(sorted, _goal);
     }
 
@@ -2093,7 +2451,14 @@
     function syncRangeSliderVisibility() {
       document.getElementById('range-controls').style.display = 'none';
       document.getElementById('range-sep').style.display = 'none';
-      document.getElementById('index-slider-wrap').classList.remove('hidden');
+    }
+
+    function syncSliderLock() {
+      const locked = activeOptimal && activeScaleMode === 'time';
+      indexSlider.disabled = locked;
+      indexSliderLabel.classList.toggle('locked', locked);
+      const st = document.getElementById('scale-trigger');
+      if (st) st.disabled = locked;
     }
 
     function syncSliderToState() {
@@ -2129,6 +2494,7 @@
           indexSliderLabel.textContent = formatDays(spanDays);
         }
       }
+      syncSliderLock();
     }
 
     indexSlider.addEventListener('input', () => {
@@ -2172,25 +2538,66 @@
       }
     });
 
-    // ─── TREND TOGGLE ────────────────────────────────────────────────────────────
-    document.getElementById('trend-toggle').addEventListener('click', () => {
-      activeTrend = !activeTrend;
-      localStorage.setItem('wt-trend', activeTrend);
-      document.getElementById('trend-toggle').classList.toggle('active', activeTrend);
-      if (chart) {
-        chart.data.datasets[1].hidden = !activeTrend;
-        chart.update('none');
-      }
-    });
-
     // ─── OPTIMAL TOGGLE ──────────────────────────────────────────────────────────
     document.getElementById('optimal-toggle').addEventListener('click', () => {
       activeOptimal = !activeOptimal;
       localStorage.setItem('wt-optimal', activeOptimal);
       document.getElementById('optimal-toggle').classList.toggle('active', activeOptimal);
-      // Rebuild so x-axis range recalculates (extends to targetMs or contracts back)
-      if (chart && activeScaleMode === 'time') { chart.destroy(); chart = null; }
-      refresh();
+
+      // If turning on while in index mode, switch to time mode first
+      let needsRebuild = false;
+      if (activeOptimal && activeScaleMode === 'index') {
+        activeScaleMode = 'time';
+        localStorage.setItem('wt-scale-mode', 'time');
+        document.querySelectorAll('#scale-dropdown [data-scale]').forEach(b =>
+          b.classList.toggle('active', b.dataset.scale === 'time')
+        );
+        const scaleTriggerEl = document.getElementById('scale-trigger');
+        if (scaleTriggerEl) scaleTriggerEl.textContent = 'Date ▾';
+        initPan(_entries, activeRange);
+        if (chart) { chart.destroy(); chart = null; }
+        needsRebuild = true;
+      }
+
+      const optCurve = activeOptimal ? computeOptimalCurve() : null;
+
+      if (activeOptimal && optCurve) {
+        // Save pan state, snap to phase start → projected end
+        _optSavedPanMin = panMin;
+        _optSavedPanMax = panMax;
+        const entries = sortedEntries(_entries);
+        const startDate = _phaseStart || entries[0].date;
+        panMin = new Date(startDate + 'T00:00:00').getTime();
+        panMax = optCurve.targetMs;
+      } else if (!activeOptimal) {
+        // Restore saved pan state
+        panMin = _optSavedPanMin;
+        panMax = _optSavedPanMax;
+      }
+
+      if (needsRebuild || !chart) {
+        refresh();
+      } else if (activeScaleMode === 'time') {
+        // In-place update
+        const entries = sortedEntries(_entries);
+        const data = entries.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
+        const goalEndX = optCurve ? Math.max(data[data.length - 1].x, optCurve.targetMs) : data[data.length - 1].x;
+        const goalData = _goal && data.length >= 2
+          ? [{ x: data[0].x, y: _goal }, { x: goalEndX, y: _goal }] : [];
+        chart.data.datasets[2].data = goalData;
+        chart.data.datasets[3].data = optCurve ? optCurve.points : [];
+        if (panMin !== null) {
+          chart.options.scales.x.min = panMin;
+          chart.options.scales.x.max = panMax;
+        } else {
+          delete chart.options.scales.x.min;
+          delete chart.options.scales.x.max;
+        }
+        const visible = getWindowEntries(entries);
+        chart.data.datasets[1].data = computeTrend(visible);
+        Object.assign(chart.options.scales.y, getYBounds(visible));
+        chart.update('none');
+      }
       syncSliderToState();
     });
 
@@ -2252,19 +2659,29 @@
       if (e.key === 'Escape') closePhaseModal();
     });
 
-    // ─── SCALE MODE ───────────────────────────────────────────────────────────────
-    document.getElementById('scale-mode-btns').addEventListener('click', e => {
+    // ─── SCALE MODE DROPDOWN ─────────────────────────────────────────────────────
+    const scaleTrigger = document.getElementById('scale-trigger');
+    const scaleDropdown = document.getElementById('scale-dropdown');
+
+    scaleTrigger.addEventListener('click', e => {
+      e.stopPropagation();
+      scaleDropdown.classList.toggle('hidden');
+    });
+
+    scaleDropdown.addEventListener('click', e => {
       const btn = e.target.closest('[data-scale]');
       if (!btn) return;
       const newMode = btn.dataset.scale;
+      scaleDropdown.classList.add('hidden');
       if (newMode === activeScaleMode) return;
       activeScaleMode = newMode;
       localStorage.setItem('wt-scale-mode', activeScaleMode);
-      document.querySelectorAll('#scale-mode-btns [data-scale]').forEach(b =>
+      document.querySelectorAll('#scale-dropdown [data-scale]').forEach(b =>
         b.classList.toggle('active', b === btn)
       );
+      scaleTrigger.textContent = btn.textContent + ' ▾';
       if (newMode === 'index') {
-        panIndexMin = null; panIndexMax = null; // start at "All" when switching in
+        panIndexMin = null; panIndexMax = null;
       } else {
         initPan(_entries, activeRange);
       }
@@ -2272,6 +2689,12 @@
       syncRangeSliderVisibility();
       if (chart) { chart.destroy(); chart = null; }
       refresh();
+    });
+
+    document.addEventListener('click', e => {
+      if (!document.getElementById('scale-picker').contains(e.target)) {
+        scaleDropdown.classList.add('hidden');
+      }
     });
 
     // ─── CHART CLICK → EDIT ENTRY ────────────────────────────────────────────────
@@ -2737,9 +3160,11 @@
       const savedMode = localStorage.getItem('wt-scale-mode');
       if (savedMode === 'time' || savedMode === 'index') {
         activeScaleMode = savedMode;
-        document.querySelectorAll('#scale-mode-btns [data-scale]').forEach(b =>
+        document.querySelectorAll('#scale-dropdown [data-scale]').forEach(b =>
           b.classList.toggle('active', b.dataset.scale === activeScaleMode)
         );
+        const activeScaleBtn = document.querySelector(`#scale-dropdown [data-scale="${activeScaleMode}"]`);
+        if (activeScaleBtn) scaleTrigger.textContent = activeScaleBtn.textContent + ' ▾';
       }
 
       const savedStyle = localStorage.getItem('wt-line-style');
@@ -2753,12 +3178,6 @@
         }
       }
 
-      const savedTrend = localStorage.getItem('wt-trend');
-      if (savedTrend !== null) {
-        activeTrend = savedTrend !== 'false';
-        document.getElementById('trend-toggle').classList.toggle('active', activeTrend);
-      }
-
       const savedOptimal = localStorage.getItem('wt-optimal');
       if (savedOptimal !== null) {
         activeOptimal = savedOptimal !== 'false';
@@ -2767,6 +3186,7 @@
 
       renderRangeBtns(); // reflect restored activeRange
       syncRangeSliderVisibility();
+      syncSliderLock();
     })();
 
     // ─── INIT ─────────────────────────────────────────────────────────────────────
