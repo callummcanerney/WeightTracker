@@ -103,9 +103,16 @@
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px 16px;
+      padding: 10px 14px;
       transition: border-color 0.2s;
     }
+    .stat-card--ring {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+    .stat-card--ring .value { font-size: 1rem; }
 
     .stat-card:hover {
       border-color: var(--border2);
@@ -163,7 +170,7 @@
     .bottom-grid {
       flex-shrink: 0;
       display: grid;
-      grid-template-columns: 200px auto 1fr;
+      grid-template-columns: 170px 200px 1fr;
       gap: 14px;
       align-items: stretch;
     }
@@ -259,6 +266,7 @@
     .index-slider:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
     .index-slider-label.locked { opacity: 0.3; }
 
+
     .index-slider-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.7rem;
@@ -277,14 +285,14 @@
     /* EXTERNAL TOOLTIP */
     .ext-tooltip {
       position: absolute;
-      pointer-events: auto;
+      pointer-events: none;
       z-index: 10;
       opacity: 0;
       transition: opacity 0.12s;
       background: var(--bg3);
       border: 1px solid var(--border2);
       border-radius: 8px;
-      padding: 10px 30px 10px 12px;
+      padding: 10px 12px;
       white-space: nowrap;
     }
 
@@ -469,7 +477,28 @@
       flex: 1;
       position: relative;
       min-height: 0;
-      cursor: pointer;
+      cursor: crosshair;
+    }
+
+    #chart-crosshair {
+      position: absolute;
+      pointer-events: none;
+      width: 1px;
+      background: rgba(255,255,255,0.18);
+      display: none;
+    }
+
+    #chart-hoverpoint {
+      position: absolute;
+      pointer-events: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #4ade80;
+      border: 2px solid #0b0c0e;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 2;
     }
 
     canvas {
@@ -531,8 +560,8 @@
     /* 30-day log calendar — GitHub-style compact dots */
     .log-cal {
       display: grid;
-      grid-template-columns: repeat(7, 14px);
-      gap: 2px;
+      grid-template-columns: repeat(7, 22px);
+      gap: 3px;
     }
     .log-cal-head {
       font-family: 'JetBrains Mono', monospace;
@@ -542,8 +571,8 @@
       line-height: 14px;
     }
     .log-cal-cell {
-      width: 14px;
-      height: 14px;
+      width: 22px;
+      height: 22px;
       border-radius: 3px;
       display: flex;
       align-items: center;
@@ -561,6 +590,19 @@
     .log-cal-cell.future { background: transparent; color: transparent; border: none; }
 
     /* Weekly table */
+    #weekly-panel {
+      height: 0;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .weekly-scroll {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      padding-right: 14px;
+    }
     .weekly-tbl {
       width: 100%;
       border-collapse: collapse;
@@ -595,6 +637,8 @@
       padding: 18px 20px;
     }
     .bottom-grid .panel { padding: 12px 14px; }
+    #log-entry-panel { height: 0; min-height: 100%; display: flex; flex-direction: column; }
+    #weight-field { margin-top: auto; }
     .bottom-grid .panel-title { margin-bottom: 8px; }
     .bottom-grid .field { margin-bottom: 7px; }
     .bottom-grid .field label { margin-bottom: 4px; }
@@ -706,7 +750,7 @@
       -webkit-appearance: none;
     }
 
-    .field input:focus {
+.field input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-dim);
     }
@@ -745,7 +789,7 @@
       font-size: 0.68rem;
       text-align: center;
       margin-top: 8px;
-      min-height: 16px;
+      min-height: 0;
       color: var(--accent);
       opacity: 0;
       transition: opacity 0.3s;
@@ -777,8 +821,8 @@
       border-radius: 8px;
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-      padding: 9px 12px;
+      font-size: 0.62rem;
+      padding: 9px 8px;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
       -webkit-appearance: none;
@@ -814,8 +858,8 @@
 
     .date-dropdown {
       position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
+      bottom: 0;
+      left: calc(100% + 8px);
       background: var(--bg2);
       border: 1px solid var(--border2);
       border-radius: 10px;
@@ -926,6 +970,12 @@
     .cal-day.selected:hover {
       opacity: 0.9;
     }
+    .cal-day.future-day {
+      color: var(--muted);
+      opacity: 0.2;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
 
     /* hidden file input */
     #import-file {
@@ -982,21 +1032,36 @@
     .num-up { border-bottom: 1px solid var(--border2); }
 
     /* GOAL ARC */
-    .goal-arc-row {
+    .goal-arc-container {
+      position: relative;
       display: flex;
-      align-items: center;
-      gap: 10px;
+      justify-content: center;
+      margin: 4px 0 2px;
     }
+    .goal-arc-pct {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .goal-arc-sign { font-size: 0.55em; opacity: 0.45; margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
     .goal-arc-bg { fill: none; stroke: var(--border2); stroke-width: 3; }
     .goal-arc-fill {
       fill: none;
       stroke: var(--amber);
       stroke-width: 3;
       stroke-linecap: round;
-      stroke-dasharray: 113.1;
-      stroke-dashoffset: 113.1;
+      stroke-dasharray: 188.5;
+      stroke-dashoffset: 188.5;
       transition: stroke-dashoffset 0.5s ease, stroke 0.4s;
     }
+
+    .stat-kg { font-size: 0.6em; opacity: 0.5; margin-left: 2px; vertical-align: baseline; }
+    .stat-year { font-size: 0.72em; opacity: 0.5; margin-left: 3px; vertical-align: baseline; }
 
     /* GOAL MODAL PROJECTION */
     .goal-proj-row {
@@ -1153,30 +1218,29 @@
         <div class="sub">kg / week avg</div>
       </div>
       <div class="stat-card">
-        <div class="label">Projected End Date</div>
+        <div class="label">Est End Date</div>
         <div class="value" id="stat-goal-date">—</div>
         <div class="sub" id="stat-goal-date-sub">set goal &amp; pace</div>
       </div>
-      <div class="stat-card">
-        <div class="label">Goal Progress</div>
-        <div class="goal-arc-row">
-          <svg width="44" height="44" viewBox="0 0 44 44" style="flex-shrink:0">
-            <circle class="goal-arc-bg" cx="22" cy="22" r="18"/>
-            <circle class="goal-arc-fill" id="goal-arc" cx="22" cy="22" r="18" transform="rotate(-90 22 22)"/>
-            <!-- 10% segment breakers (radial lines at 36° intervals, in bg panel color) -->
-            <line x1="30.8" y1="9.9"  x2="34.3" y2="5.0"  stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="36.3" y1="17.4" x2="42.0" y2="15.5" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="36.3" y1="26.6" x2="42.0" y2="28.5" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="30.8" y1="34.1" x2="34.3" y2="39.0" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="22.0" y1="37.0" x2="22.0" y2="43.0" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="13.2" y1="34.1" x2="9.7"  y2="39.0" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="7.7"  y1="26.6" x2="2.0"  y2="28.5" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="7.7"  y1="17.4" x2="2.0"  y2="15.5" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="13.2" y1="9.9"  x2="9.7"  y2="5.0"  stroke="var(--bg2)" stroke-width="1.5"/>
+      <div class="stat-card stat-card--ring">
+        <div class="goal-arc-container">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle class="goal-arc-bg" cx="36" cy="36" r="30"/>
+            <circle class="goal-arc-fill" id="goal-arc" cx="36" cy="36" r="30" transform="rotate(-90 36 36)"/>
+            <!-- 10% segment breakers scaled to r=30/72px -->
+            <line x1="50.8" y1="15.7" x2="56.6" y2="7.6"  stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="60.0" y1="28.3" x2="69.4" y2="25.1" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="60.0" y1="43.7" x2="69.4" y2="46.9" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="50.8" y1="56.2" x2="56.6" y2="64.6" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="36.0" y1="61.1" x2="36.0" y2="71.2" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="21.2" y1="56.2" x2="15.4" y2="64.6" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="12.0" y1="43.7" x2="2.6"  y2="46.9" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="12.0" y1="28.3" x2="2.6"  y2="25.1" stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="21.2" y1="15.7" x2="15.4" y2="7.6"  stroke="var(--bg2)" stroke-width="1.5"/>
           </svg>
-          <div>
+          <div class="goal-arc-pct">
             <div class="value" id="stat-goal-pct">—</div>
-            <div class="sub" id="stat-goal-rem">set a goal in menu</div>
+            <div class="goal-arc-sign" id="stat-goal-sign" style="display:none">%</div>
           </div>
         </div>
       </div>
@@ -1219,15 +1283,17 @@
             <span class="index-slider-label" id="index-slider-label">All</span>
           </div>
         </div>
-        <!-- Right: Projected toggle -->
+        <!-- Right: point size control (Projected only) + Projected toggle -->
         <div class="ctrl-right">
           <div id="range-sep" style="display:none;"></div>
-          <button class="range-btn active" id="optimal-toggle" type="button">Projected</button>
+<button class="range-btn active" id="optimal-toggle" type="button">Projected</button>
         </div>
       </div>
       <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
       <div class="chart-canvas-wrap">
         <canvas id="chart"></canvas>
+        <div id="chart-crosshair"></div>
+        <div id="chart-hoverpoint"></div>
       </div>
     </div>
 
@@ -1235,7 +1301,8 @@
     <div class="bottom-grid">
 
       <!-- ADD ENTRY -->
-      <div class="panel">
+      <div class="panel" id="log-entry-panel">
+        <div class="panel-title">Log Entry</div>
 
         <div class="field">
           <label>Date</label>
@@ -1267,10 +1334,10 @@
             <input type="hidden" id="inp-date">
           </div>
         </div>
-        <div class="field">
+        <div class="field" id="weight-field">
           <label>Weight (kg)</label>
           <div class="num-wrap">
-            <input type="number" id="inp-weight" step="0.05" min="30" max="300" placeholder="e.g. 82.4">
+            <input type="number" id="inp-weight" step="0.05" min="30" max="300" placeholder="kg">
             <div class="num-spin">
               <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
               <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
@@ -1278,8 +1345,8 @@
           </div>
         </div>
 
-        <button class="btn-add" id="btn-add">Add Entry</button>
         <div class="feedback" id="feedback"></div>
+        <button class="btn-add" id="btn-add">Add Entry</button>
       </div>
 
       <input type="file" id="import-file" accept=".csv">
@@ -1299,8 +1366,10 @@
 
       <!-- WEEKLY PANEL -->
       <div class="panel" id="weekly-panel">
-        <div class="panel-title">Weekly</div>
-        <table class="weekly-tbl" id="weekly-tbl"></table>
+        <div class="panel-title">Weekly Breakdown</div>
+        <div class="weekly-scroll">
+          <table class="weekly-tbl" id="weekly-tbl"></table>
+        </div>
       </div>
 
     </div>
@@ -1313,7 +1382,7 @@
       <div class="field">
         <label>Target Weight (kg)</label>
         <div class="num-wrap">
-          <input type="number" id="goal-modal-inp" step="0.05" min="30" max="300" placeholder="e.g. 75.0">
+          <input type="number" id="goal-modal-inp" step="0.05" min="30" max="300" placeholder="kg">
           <div class="num-spin">
             <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
             <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
@@ -1326,7 +1395,7 @@
           <div style="flex:1">
             <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Start</div>
             <div class="num-wrap">
-              <input type="number" id="goal-rate-start-inp" step="0.05" min="0.1" max="3" placeholder="e.g. 1.0">
+              <input type="number" id="goal-rate-start-inp" step="0.05" min="0.1" max="3" placeholder="%/wk">
               <div class="num-spin">
                 <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
                 <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
@@ -1360,11 +1429,20 @@
   <!-- PHASE MODAL -->
   <div class="entry-modal-overlay hidden" id="phase-modal-overlay">
     <div class="entry-modal">
-      <div class="entry-modal-title">Set Phase Start</div>
+      <div class="entry-modal-title">Set Phase</div>
       <div id="phase-active-row" class="hidden" style="display:none;align-items:center;gap:8px;margin-bottom:14px;padding:8px 10px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);border-radius:8px;">
         <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--amber);letter-spacing:0.06em;text-transform:uppercase;">Active</span>
-        <span id="phase-active-date" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text);flex:1;"></span>
+        <span id="phase-active-type" style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;"></span>
+        <span id="phase-active-date" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);flex:1;"></span>
         <button class="btn-ghost" id="phase-clear-btn" type="button" style="padding:4px 10px;font-size:0.72rem;">Clear</button>
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <div style="display:flex;gap:8px;">
+          <button class="range-btn active" id="phase-type-cut" data-phase-type="CUT" type="button">CUT</button>
+          <button class="range-btn" id="phase-type-bulk" data-phase-type="BULK" type="button">BULK</button>
+          <button class="range-btn" id="phase-type-maintain" data-phase-type="MAINTAIN" type="button">MAINTAIN</button>
+        </div>
       </div>
       <div class="field">
         <label>Start Date (DD/MM/YYYY)</label>
@@ -1383,13 +1461,12 @@
     <div class="entry-modal">
       <div class="entry-modal-title">Edit Entry</div>
       <div class="field">
-        <label>Date (DD/MM/YYYY)</label>
-        <input type="text" id="modal-date" placeholder="DD/MM/YYYY" maxlength="10">
+        <div id="modal-date" style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--muted);padding:2px 0 10px;letter-spacing:0.04em;"></div>
       </div>
       <div class="field">
         <label>Weight (kg)</label>
         <div class="num-wrap">
-          <input type="number" id="modal-weight" step="0.05" min="30" max="300" placeholder="e.g. 82.4">
+          <input type="number" id="modal-weight" step="0.05" min="30" max="300" placeholder="kg">
           <div class="num-spin">
             <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
             <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
@@ -1421,6 +1498,7 @@
     let _entries = [];
     let _goal = null;
     let _phaseStart = null;           // 'YYYY-MM-DD' | null
+    let _phaseType  = null;           // 'CUT' | 'BULK' | 'MAINTAIN' | null
     let _targetLossRateStart = null;  // % per week at phase start, e.g. 1.0
     let _targetLossRateEnd   = null;  // % per week at phase end (interpolated), e.g. 0.5
 
@@ -1438,16 +1516,18 @@
       docRef.set({ goal: g, targetLossRateStart: _targetLossRateStart, targetLossRateEnd: _targetLossRateEnd }, { merge: true });
     }
 
-    async function savePhaseStart(dateStr) {
+    async function savePhaseStart(dateStr, type) {
       _phaseStart = dateStr;
+      _phaseType  = type || null;
       refresh();
-      docRef.set({ phaseStart: dateStr }, { merge: true });
+      docRef.set({ phaseStart: dateStr, phaseType: type || null }, { merge: true });
     }
 
     async function clearPhaseStart() {
       _phaseStart = null;
+      _phaseType  = null;
       refresh();
-      docRef.set({ phaseStart: null }, { merge: true });
+      docRef.set({ phaseStart: null, phaseType: null }, { merge: true });
     }
 
     function sortedEntries(entries) {
@@ -1462,6 +1542,8 @@
     let activeOptimal = true;
     let _optSavedPanMin = null; // pan state saved before optimal snap
     let _optSavedPanMax = null;
+    const activePointSize = 3.4;
+    const activePointStyle = 'circle';
     let panMin = null;         // ms timestamp, null when 'all'
     let panMax = null;         // ms timestamp
     let panIndexMin = null;    // entry index, null when 'all' (index mode)
@@ -1558,13 +1640,25 @@
       const sorted = sortedEntries(_entries);
       const visible = getWindowEntries(sorted);
       _visibleCount = Math.max(1, visible.length);
+      const panSpanDays = panMin !== null ? (panMax - panMin) / 86400000
+        : sorted.length >= 2
+          ? (new Date(sorted[sorted.length-1].date+'T00:00:00').getTime() - new Date(sorted[0].date+'T00:00:00').getTime()) / 86400000
+          : 0;
+      const panSmoothed = adaptiveSmooth(sorted, activeOptimal ? 0 : panSpanDays);
+      chart.data.datasets[0].data = panSmoothed.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
       chart.data.datasets[1].data = computeTrend(visible);
       const x = chart.options.scales.x;
       if (panMin !== null) {
-        x.min = panMin; // numeric ms — avoids date-string parsing on every frame
+        x.min = panMin;
         x.max = panMax;
       } else {
-        delete x.min; delete x.max;
+        const optCurveAll = activeOptimal ? computeOptimalCurve() : null;
+        x.min = sorted.length ? new Date(sorted[0].date + 'T00:00:00').getTime() : 0;
+        x.max = sorted.length
+          ? optCurveAll
+            ? Math.max(new Date(sorted[sorted.length-1].date+'T00:00:00').getTime(), optCurveAll.targetMs)
+            : new Date(sorted[sorted.length-1].date+'T00:00:00').getTime()
+          : 0;
       }
       Object.assign(chart.options.scales.y, getYBounds(visible));
       chart.update('none');
@@ -1589,65 +1683,154 @@
       chart.update('none');
     }
 
-    // ─── EXTERNAL TOOLTIP ────────────────────────────────────────────────────────
+    // ─── CHART OVERLAY: TOOLTIP + CROSSHAIR ─────────────────────────────────────
     let _extTooltipEl = null;
+    let _crosshairEl = null;
     let _tooltipEntryDate = null;
-    let _tooltipPinned = false;
-    let _tooltipHideTimer = null;
 
-    function externalTooltipHandler({ chart, tooltip }) {
+    let _hoverpointEl = null;
+
+    function _ensureChartOverlays() {
       if (!_extTooltipEl) {
         _extTooltipEl = document.createElement('div');
         _extTooltipEl.className = 'ext-tooltip';
         _extTooltipEl.innerHTML =
-          `<button class="tooltip-edit-btn">···</button>` +
           `<div class="ext-tooltip-title"></div>` +
           `<div class="ext-tooltip-bodies"></div>`;
         document.querySelector('.chart-canvas-wrap').appendChild(_extTooltipEl);
-
-        _extTooltipEl.addEventListener('mouseenter', () => {
-          _tooltipPinned = true;
-          clearTimeout(_tooltipHideTimer);
-        });
-        _extTooltipEl.addEventListener('mouseleave', () => {
-          _tooltipPinned = false;
-          _extTooltipEl.style.opacity = '0';
-        });
-        _extTooltipEl.querySelector('.tooltip-edit-btn').addEventListener('click', () => {
-          openEntryModal(_tooltipEntryDate);
-        });
       }
+      if (!_crosshairEl)  _crosshairEl  = document.getElementById('chart-crosshair');
+      if (!_hoverpointEl) _hoverpointEl = document.getElementById('chart-hoverpoint');
+    }
 
-      const el = _extTooltipEl;
-      if (tooltip.opacity === 0) {
-        clearTimeout(_tooltipHideTimer);
-        _tooltipHideTimer = setTimeout(() => { if (!_tooltipPinned) el.style.opacity = '0'; }, 120);
-        return;
-      }
+    function _hideChartOverlays() {
+      if (_extTooltipEl)  _extTooltipEl.style.opacity = '0';
+      if (_crosshairEl)   _crosshairEl.style.display = 'none';
+      if (_hoverpointEl)  _hoverpointEl.style.display = 'none';
+      _tooltipEntryDate = null;
+    }
 
-      // Extract the date of the hovered data point
-      const dp = tooltip.dataPoints?.find(p => p.dataset.label === 'Weight (kg)');
-      if (dp) {
-        if (activeScaleMode === 'index') {
-          _tooltipEntryDate = _ordinalVisible[Math.round(dp.parsed.x)]?.date ?? null;
-        } else {
-          const ms = dp.raw.x;
-          _tooltipEntryDate = _entries.find(e => new Date(e.date + 'T00:00:00').getTime() === ms)?.date ?? null;
+    // Attached once; references chart/activeScaleMode via closure
+    (function attachChartHover() {
+      const canvas = document.getElementById('chart');
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (!chart) { _hideChartOverlays(); return; }
+        _ensureChartOverlays();
+
+        const rect = canvas.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+        const ca = chart.chartArea;
+        if (!ca || px < ca.left || px > ca.right || py < ca.top || py > ca.bottom) {
+          _hideChartOverlays(); return;
         }
-      }
 
-      const title = tooltip.title?.[0] ?? '';
-      const lines = (tooltip.body ?? []).flatMap(b => b.lines).filter(Boolean);
-      el.querySelector('.ext-tooltip-title').textContent = title;
-      el.querySelector('.ext-tooltip-bodies').innerHTML =
-        lines.map(l => `<div class="ext-tooltip-body">${l.trim()}</div>`).join('');
+        // Find nearest Weight point by x only
+        const wData = chart.data.datasets[0]?.data;
+        if (!wData || !wData.length) { _hideChartOverlays(); return; }
 
-      el.style.left = '0'; el.style.top = '0'; el.style.opacity = '0';
-      const w = el.offsetWidth;
-      const h = el.offsetHeight;
-      el.style.left = (tooltip.caretX - w / 2) + 'px';
-      el.style.top  = (tooltip.caretY - h - 22) + 'px';
-      el.style.opacity = '1';
+        const xVal = chart.scales.x.getValueForPixel(px);
+
+        // Only show tooltip within the data's x range
+        if (xVal < wData[0].x || xVal > wData[wData.length - 1].x) {
+          _hideChartOverlays(); return;
+        }
+
+        let nearIdx = 0, minD = Infinity;
+        for (let i = 0; i < wData.length; i++) {
+          const d = Math.abs(wData[i].x - xVal);
+          if (d < minD) { minD = d; nearIdx = i; }
+        }
+
+        const pt = wData[nearIdx];
+        const ptPx = chart.scales.x.getPixelForValue(pt.x);
+
+        // Crosshair + hover point
+        const ptPy = chart.scales.y.getPixelForValue(pt.y);
+        _crosshairEl.style.display = 'block';
+        _crosshairEl.style.left  = ptPx + 'px';
+        _crosshairEl.style.top   = ca.top + 'px';
+        _crosshairEl.style.height = (ca.bottom - ca.top) + 'px';
+        _hoverpointEl.style.display = 'block';
+        _hoverpointEl.style.left = ptPx + 'px';
+        _hoverpointEl.style.top  = ptPy + 'px';
+
+        // Actual (unsmoothed) entry data
+        let entryDate = null, actualWeight = pt.y;
+        if (activeScaleMode === 'index') {
+          const entry = _ordinalVisible[nearIdx];
+          if (entry) { entryDate = entry.date; actualWeight = entry.weight; }
+        } else {
+          const entry = _entries.find(en => new Date(en.date + 'T00:00:00').getTime() === pt.x);
+          if (entry) { entryDate = entry.date; actualWeight = entry.weight; }
+        }
+        _tooltipEntryDate = entryDate;
+
+        // Title
+        const title = entryDate
+          ? new Date(entryDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '';
+
+        // Weight line
+        const kgTag = `<span style="font-size:0.72em;opacity:0.5"> kg</span>`;
+        const weightStr = fmtWeight(actualWeight) + kgTag;
+        let bodiesHtml = activeOptimal
+          ? `<div class="ext-tooltip-body" style="font-size:0.95rem">${weightStr}</div>`
+          : `<div class="ext-tooltip-body">${weightStr}</div>`;
+
+        // Projected target
+        if (activeOptimal && activeScaleMode === 'time') {
+          const optCurve = computeOptimalCurve();
+          if (optCurve && optCurve.points.length >= 2) {
+            const pts = optCurve.points;
+            let lo = 0, hi = pts.length - 1;
+            while (lo < hi - 1) { const mid = (lo + hi) >> 1; if (pts[mid].x <= pt.x) lo = mid; else hi = mid; }
+            const p0 = pts[lo], p1 = pts[hi];
+            let tw;
+            if (pt.x <= pts[0].x) tw = pts[0].y;
+            else if (pt.x >= pts[pts.length - 1].x) tw = pts[pts.length - 1].y;
+            else { const t2 = (pt.x - p0.x) / (p1.x - p0.x); tw = p0.y + t2 * (p1.y - p0.y); }
+            const tRounded = (Math.round(tw / 0.05) * 0.05).toFixed(2);
+            bodiesHtml += `<div class="ext-tooltip-body" style="color:rgba(167,139,250,0.9);font-size:0.75rem">${tRounded}<span style="font-size:0.72em;opacity:0.5"> kg</span></div>`;
+          }
+        }
+
+        _extTooltipEl.querySelector('.ext-tooltip-title').textContent = title;
+        _extTooltipEl.querySelector('.ext-tooltip-bodies').innerHTML = bodiesHtml;
+
+        // Position: centered on crosshair x, above cursor, clamped within chart area
+        _extTooltipEl.style.left = '0'; _extTooltipEl.style.top = '0'; _extTooltipEl.style.opacity = '0';
+        const tw2 = _extTooltipEl.offsetWidth;
+        const th2 = _extTooltipEl.offsetHeight;
+        const tx = ptPx - tw2 / 2;
+        const ty = ptPy - th2 - 26;
+        _extTooltipEl.style.left = tx + 'px';
+        _extTooltipEl.style.top  = ty + 'px';
+        _extTooltipEl.style.opacity = '1';
+      });
+
+      canvas.addEventListener('mouseleave', _hideChartOverlays);
+    })();
+
+
+    function adaptiveSmooth(entries, spanDays) {
+      const sigma = spanDays / 200;
+      if (sigma < 1 || entries.length < 2) return entries;
+      const windowMs = sigma * 3 * 86400000;
+      const ts = entries.map(e => new Date(e.date + 'T00:00:00').getTime());
+      return entries.map((e, i) => {
+        const t0 = ts[i];
+        let wSum = 0, wtSum = 0;
+        for (let j = 0; j < entries.length; j++) {
+          const dt = ts[j] - t0;
+          if (Math.abs(dt) > windowMs) continue;
+          const w = Math.exp(-0.5 * (dt / (sigma * 86400000)) ** 2);
+          wSum += w * entries[j].weight;
+          wtSum += w;
+        }
+        return { date: e.date, weight: wtSum > 0 ? wSum / wtSum : e.weight };
+      });
     }
 
     function buildChart(entries, goal) {
@@ -1682,16 +1865,18 @@
         return g;
       };
 
-      // ── Shared: density-adaptive point radius (reads module-level _visibleCount) ──
+      // ── Shared: point radius — fixed when Projected; span-gated constant otherwise ──
       const pointRadius = (ctx) => {
-        const { chartArea } = ctx.chart;
-        if (!chartArea) return 3;
-        const pxPt = (chartArea.right - chartArea.left) / _visibleCount;
-        if (pxPt >= 10) return 4;
-        if (pxPt >= 6)  return 3;
-        if (pxPt >= 3)  return 2;
-        if (pxPt >= 1.5) return 1;
-        return 0;
+        if (activeOptimal) return activePointSize;
+        // Compute visible span in days from pan state or live scale
+        let spanDays;
+        if (panMin !== null) {
+          spanDays = (panMax - panMin) / 86400000;
+        } else {
+          const scale = ctx.chart.scales?.x;
+          spanDays = scale ? (scale.max - scale.min) / 86400000 : 999;
+        }
+        return spanDays <= 120 ? activePointSize : 0;
       };
 
       // ── Shared: tooltip label callback ──────────────────────────────────────
@@ -1720,9 +1905,9 @@
           ? [{ x: xMin, y: goal }, { x: xMax, y: goal }] : [];
 
         datasets = [
-          { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: true },
-          { label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
+          { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
+          { label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
         ];
 
         xScale = {
@@ -1773,7 +1958,12 @@
       } else {
         // ── TIME MODE: linear scale with ms timestamps — no date adapter overhead during pan ──
         // All entries in dataset; x-axis min/max controls the visible window.
-        const data = entries.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
+        const allSpanMs = entries.length >= 2
+          ? new Date(entries[entries.length-1].date+'T00:00:00').getTime() - new Date(entries[0].date+'T00:00:00').getTime()
+          : 0;
+        const visSpanDays = panMin !== null ? (panMax - panMin) / 86400000 : allSpanMs / 86400000;
+        const smoothedEntries = adaptiveSmooth(entries, activeOptimal ? 0 : visSpanDays);
+        const data = smoothedEntries.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
         const visible = getWindowEntries(entries);
         _visibleCount = Math.max(1, visible.length);
 
@@ -1785,13 +1975,13 @@
         const optData = optCurve ? optCurve.points : [];
 
         datasets = [
-          { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: true },
-          { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
-          { label: 'Projected', data: optData, borderColor: 'rgba(167,139,250,0.85)', borderDash: [3, 3], borderWidth: 2, pointRadius: 0, tension: 0, fill: false },
+          { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
+          { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
+          { label: 'Projected', data: optData, borderColor: 'rgba(167,139,250,0.85)', borderDash: [3, 3], borderWidth: 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
         ];
 
-        const xWin = panMin !== null ? { min: panMin, max: panMax } : {};
+        const xWin = { min: panMin !== null ? panMin : data[0].x, max: panMax !== null ? panMax : goalEndX };
         xScale = {
           type: 'linear',
           grid: { color: '#1a1c22', drawBorder: false },
@@ -1833,6 +2023,7 @@
         yOpts = getYBounds(visible);
 
         if (chart) {
+          chart.data.datasets[0].data = data;
           chart.data.datasets[1].data = trendData;
           chart.data.datasets[2].data = goalData;
           chart.data.datasets[3].data = optData;
@@ -1849,22 +2040,17 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: { mode: 'nearest', intersect: true },
+          events: ['click'],
           plugins: {
             legend: { display: false },
-            tooltip: {
-              enabled: false,
-              external: externalTooltipHandler,
-              callbacks: { title: titleCb, label: labelCb },
-              filter: (item) => item.dataset.label !== 'Trend' && item.dataset.label !== 'Projected',
-            },
+            tooltip: { enabled: false },
           },
           scales: {
             x: xScale,
             y: {
               ...yOpts,
               grid: { color: '#1a1c22', drawBorder: false },
-              ticks: { color: '#5a5f70', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + ' kg', maxTicksLimit: 6 },
+              ticks: { color: '#5a5f70', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + ' kg', maxTicksLimit: 10 },
               border: { display: false },
             },
           },
@@ -1941,8 +2127,10 @@
     function projectedDateStr(goalKg, rateStartPct, rateEndPct) {
       const pts = computeProjectedPoints(goalKg, rateStartPct, rateEndPct);
       if (!pts) return null;
-      return new Date(pts[pts.length - 1].ms)
-        .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const d = new Date(pts[pts.length - 1].ms);
+      const dayMonth = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+      const year = d.getFullYear();
+      return `${dayMonth}<span class="stat-year"> ${year}</span>`;
     }
 
     // ─── CHART ANNOTATIONS PLUGIN ────────────────────────────────────────────────
@@ -1973,7 +2161,12 @@
             ctx.moveTo(xPos, top); ctx.lineTo(xPos, bottom); ctx.stroke();
             ctx.setLineDash([]);
             ctx.fillStyle = 'rgba(251,191,36,0.75)';
-            ctx.fillText('PHASE', xPos + 5, top + 12);
+            const phaseLabel = _phaseType || 'PHASE';
+            const labelW = ctx.measureText(phaseLabel).width;
+            const labelX = (activeOptimal || xPos + 5 + labelW <= right)
+              ? xPos + 5
+              : xPos - labelW - 5;
+            ctx.fillText(phaseLabel, labelX, top + 12);
           }
         }
 
@@ -2048,17 +2241,17 @@
       const first = s[0];
       const last = s[s.length - 1];
 
-      document.getElementById('stat-start-label').textContent = _phaseStart ? 'Phase Start' : 'Starting';
-      document.getElementById('stat-start').textContent = first ? fmt(first.weight) : '—';
+      document.getElementById('stat-start-label').textContent = 'Start';
+      document.getElementById('stat-start').innerHTML = first ? fmtWeight(first.weight) + '<span class="stat-kg"> kg</span>' : '—';
       document.getElementById('stat-start-date').textContent = first ? fmtDate(first.date) : 'no data';
 
-      document.getElementById('stat-current').textContent = last ? fmt(last.weight) : '—';
+      document.getElementById('stat-current').innerHTML = last ? fmtWeight(last.weight) + '<span class="stat-kg"> kg</span>' : '—';
       document.getElementById('stat-current-date').textContent = last ? fmtDate(last.date) : 'no data';
 
       if (first && last && s.length > 1) {
         const lost = first.weight - last.weight;
         const lostEl = document.getElementById('stat-lost');
-        lostEl.textContent = (lost >= 0 ? '−' : '+') + fmtWeight(Math.abs(lost)) + ' kg';
+        lostEl.innerHTML = (lost >= 0 ? '−' : '+') + fmtWeight(Math.abs(lost)) + '<span class="stat-kg"> kg</span>';
         lostEl.className = 'value ' + (lost >= 0 ? 'positive' : 'negative');
 
         const days = Math.max(1, (new Date(last.date) - new Date(first.date)) / 86400000);
@@ -2066,7 +2259,7 @@
 
         const weeklyRate = (lost / days) * 7;
         const rateEl = document.getElementById('stat-rate');
-        rateEl.textContent = Math.abs(weeklyRate).toFixed(2);
+        rateEl.innerHTML = Math.abs(weeklyRate).toFixed(2) + '<span class="stat-kg"> kg</span>';
         rateEl.className = 'value ' + (weeklyRate >= 0 ? 'positive' : 'negative');
       } else {
         document.getElementById('stat-lost').textContent = '—';
@@ -2078,7 +2271,7 @@
 
       // Goal + arc
       const arc = document.getElementById('goal-arc');
-      const arcCircumference = 2 * Math.PI * 18; // 113.1
+      const arcCircumference = 2 * Math.PI * 30; // 188.5
       if (goal != null && first && last) {
         const smoothed = computeSmoothedWeight(s); // avg of last 4 entries for stable progress
         const total = first.weight - goal;
@@ -2086,15 +2279,15 @@
         const pct = total <= 0 ? 100 : Math.min(100, Math.max(0, (done / total) * 100));
         const rem = smoothed - goal;
         const pctEl = document.getElementById('stat-goal-pct');
-        pctEl.textContent = pct.toFixed(0) + '%';
+        pctEl.textContent = pct.toFixed(0);
         pctEl.className = pct >= 100 ? 'value positive' : 'value neutral';
-        document.getElementById('stat-goal-rem').textContent = '';
+        document.getElementById('stat-goal-sign').style.display = '';
         arc.style.strokeDashoffset = (arcCircumference * (1 - Math.min(1, pct / 100))).toFixed(1);
         arc.style.stroke = pct >= 100 ? 'var(--accent)' : 'var(--amber)';
       } else {
         document.getElementById('stat-goal-pct').textContent = '—';
         document.getElementById('stat-goal-pct').className = 'value';
-        document.getElementById('stat-goal-rem').textContent = '';
+        document.getElementById('stat-goal-sign').style.display = 'none';
         arc.style.strokeDashoffset = arcCircumference.toFixed(1);
         arc.style.stroke = 'var(--amber)';
       }
@@ -2104,7 +2297,7 @@
       const goalDateEl = document.getElementById('stat-goal-date');
       const goalDateSub = document.getElementById('stat-goal-date-sub');
       if (proj) {
-        goalDateEl.textContent = proj;
+        goalDateEl.innerHTML = proj;
         goalDateEl.className = 'value neutral';
         goalDateSub.textContent = '';
       } else {
@@ -2128,7 +2321,7 @@
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
-      document.getElementById('modal-date').value = `${dd}/${mm}/${yyyy}`;
+      document.getElementById('modal-date').textContent = `${dd}/${mm}/${yyyy}`;
       document.getElementById('modal-weight').value = entry.weight.toFixed(2);
       document.getElementById('entry-modal-overlay').classList.remove('hidden');
       document.getElementById('modal-weight').focus();
@@ -2140,14 +2333,11 @@
     }
 
     document.getElementById('modal-save').addEventListener('click', () => {
-      const dateStr = document.getElementById('modal-date').value.trim();
-      const weightVal = parseFloat(document.getElementById('modal-weight').value);
-      const parts = dateStr.split('/');
-      if (parts.length !== 3) return;
-      const isoDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate) || isNaN(weightVal) || weightVal < 30 || weightVal > 300) return;
+      const raw = parseFloat(document.getElementById('modal-weight').value);
+      const weightVal = isNaN(raw) ? NaN : snapWeight(raw);
+      if (!_editingEntryDate || isNaN(weightVal) || weightVal < 30 || weightVal > 300) return;
       const entries = _entries.filter(e => e.date !== _editingEntryDate);
-      entries.push({ date: isoDate, weight: weightVal });
+      entries.push({ date: _editingEntryDate, weight: weightVal });
       closeEntryModal();
       save(entries);
     });
@@ -2270,7 +2460,7 @@
       const tbody = tbl.querySelector('tbody');
 
       let prevAvgR = null;
-      weeks.forEach(([monStr, weights]) => {
+      weeks.forEach(([monStr, weights], weekIdx) => {
         const avg = weights.reduce((a, b) => a + b, 0) / weights.length;
         const avgR = Math.round(avg / 0.05) * 0.05;
         const delta = prevAvgR !== null ? avgR - prevAvgR : null;
@@ -2290,30 +2480,37 @@
           const w = getProjectedWeightAtMs(monMs + d * 86400000);
           if (w !== null) { projSum += w; projCount++; }
         }
-        const targetHtml = projCount > 0
-          ? (Math.round((projSum / projCount) / 0.05) * 0.05).toFixed(2)
+        const targetHtml = (projCount > 0 && weekIdx > 0)
+          ? `<span style="color:rgba(167,139,250,0.85)">${(Math.round((projSum / projCount) / 0.05) * 0.05).toFixed(2)}</span>`
           : '<span class="wk-neu">—</span>';
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${label}</td><td>${avgR.toFixed(2)}</td><td>${deltaHtml}</td><td>${targetHtml}</td><td>${weights.length}</td>`;
         tbody.appendChild(tr);
       });
 
-      // Upcoming week: show projected target only
+      // Upcoming weeks: show projected target up to and including the week of the est end date
       if (weeks.length > 0) {
-        const nextMon = new Date(weeks[weeks.length - 1][0] + 'T00:00:00');
-        nextMon.setDate(nextMon.getDate() + 7);
-        const nextMonMs = nextMon.getTime();
-        let projSum = 0, projCount = 0;
-        for (let d = 0; d < 7; d++) {
-          const w = getProjectedWeightAtMs(nextMonMs + d * 86400000);
-          if (w !== null) { projSum += w; projCount++; }
-        }
-        if (projCount > 0) {
-          const nextLabel = nextMon.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-          const tr = document.createElement('tr');
-          tr.className = 'wk-upcoming';
-          tr.innerHTML = `<td>${nextLabel}</td><td><span class="wk-neu">—</span></td><td><span class="wk-neu">—</span></td><td>${(Math.round((projSum / projCount) / 0.05) * 0.05).toFixed(2)}</td><td><span class="wk-neu">—</span></td>`;
-          tbody.appendChild(tr);
+        const projPts = computeProjectedPoints();
+        const projEndMs = projPts ? projPts[projPts.length - 1].ms : null;
+        if (projEndMs) {
+          const cur = new Date(weeks[weeks.length - 1][0] + 'T00:00:00');
+          cur.setDate(cur.getDate() + 7);
+          while (cur.getTime() <= projEndMs) {
+            const curMs = cur.getTime();
+            let projSum = 0, projCount = 0;
+            for (let d = 0; d < 7; d++) {
+              const w = getProjectedWeightAtMs(curMs + d * 86400000);
+              if (w !== null) { projSum += w; projCount++; }
+            }
+            if (projCount > 0) {
+              const label = cur.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+              const tr = document.createElement('tr');
+              tr.className = 'wk-upcoming';
+              tr.innerHTML = `<td>${label}</td><td><span class="wk-neu">—</span></td><td><span class="wk-neu">—</span></td><td><span style="color:rgba(167,139,250,0.85)">${(Math.round((projSum / projCount) / 0.05) * 0.05).toFixed(2)}</span></td><td><span class="wk-neu">—</span></td>`;
+              tbody.appendChild(tr);
+            }
+            cur.setDate(cur.getDate() + 7);
+          }
         }
       }
     }
@@ -2509,14 +2706,15 @@
         const optCS = activeOptimal ? computeOptimalCurve() : null;
         const effectiveMaxMs = optCS ? Math.max(totalMaxMs, optCS.targetMs) : totalMaxMs;
         const totalDays = Math.max(7, Math.ceil((effectiveMaxMs - totalMinMs) / 86400000));
-        indexSlider.min = Math.min(7, totalDays);
-        indexSlider.max = totalDays;
+        indexSlider.min = 0;
+        indexSlider.max = 1000;
         if (panMin === null) {
-          indexSlider.value = totalDays;
+          indexSlider.value = 1000;
           indexSliderLabel.textContent = 'All';
         } else {
           const spanDays = Math.max(1, Math.round((panMax - panMin) / 86400000));
-          indexSlider.value = spanDays;
+          const t = totalDays > 7 ? Math.log(spanDays / 7) / Math.log(totalDays / 7) : 1;
+          indexSlider.value = Math.round(Math.max(0, Math.min(1000, t * 1000)));
           indexSliderLabel.textContent = formatDays(spanDays);
         }
       }
@@ -2547,24 +2745,26 @@
         const totalMaxMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
         const optCI = activeOptimal ? computeOptimalCurve() : null;
         const effectiveMaxMsI = optCI ? Math.max(totalMaxMs, optCI.targetMs) : totalMaxMs;
-        const totalDays = Math.ceil((effectiveMaxMsI - totalMinMs) / 86400000);
+        const totalDays = Math.max(7, Math.ceil((effectiveMaxMsI - totalMinMs) / 86400000));
         const val = parseInt(indexSlider.value);
-        if (val >= totalDays) {
+        if (val >= 1000) {
           panMin = null; panMax = null;
           indexSliderLabel.textContent = 'All';
         } else {
-          const spanMs = val * 86400000;
+          const t = val / 1000;
+          const spanDays = Math.max(7, Math.round(7 * Math.pow(totalDays / 7, t)));
+          const spanMs = spanDays * 86400000;
           const rightMs = panMax !== null ? panMax : effectiveMaxMsI;
           panMax = rightMs;
           panMin = Math.max(totalMinMs, panMax - spanMs);
           if (panMin === totalMinMs) panMax = Math.min(effectiveMaxMsI, totalMinMs + spanMs);
-          indexSliderLabel.textContent = formatDays(val);
+          indexSliderLabel.textContent = formatDays(spanDays);
         }
         if (chart) applyPanToChart();
       }
     });
 
-    // ─── OPTIMAL TOGGLE ──────────────────────────────────────────────────────────
+// ─── OPTIMAL TOGGLE ──────────────────────────────────────────────────────────
     document.getElementById('optimal-toggle').addEventListener('click', () => {
       activeOptimal = !activeOptimal;
       localStorage.setItem('wt-optimal', activeOptimal);
@@ -2608,19 +2808,20 @@
       } else if (activeScaleMode === 'time') {
         // In-place update
         const entries = sortedEntries(_entries);
-        const data = entries.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
+        const inpAllSpanMs = entries.length >= 2
+          ? new Date(entries[entries.length-1].date+'T00:00:00').getTime() - new Date(entries[0].date+'T00:00:00').getTime()
+          : 0;
+        const inpSpanDays = panMin !== null ? (panMax - panMin) / 86400000 : inpAllSpanMs / 86400000;
+        const inpSmoothed = adaptiveSmooth(entries, activeOptimal ? 0 : inpSpanDays);
+        const data = inpSmoothed.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
+        chart.data.datasets[0].data = data;
         const goalEndX = optCurve ? Math.max(data[data.length - 1].x, optCurve.targetMs) : data[data.length - 1].x;
         const goalData = _goal && data.length >= 2
           ? [{ x: data[0].x, y: _goal }, { x: goalEndX, y: _goal }] : [];
         chart.data.datasets[2].data = goalData;
         chart.data.datasets[3].data = optCurve ? optCurve.points : [];
-        if (panMin !== null) {
-          chart.options.scales.x.min = panMin;
-          chart.options.scales.x.max = panMax;
-        } else {
-          delete chart.options.scales.x.min;
-          delete chart.options.scales.x.max;
-        }
+        chart.options.scales.x.min = panMin !== null ? panMin : data[0].x;
+        chart.options.scales.x.max = panMax !== null ? panMax : goalEndX;
         const visible = getWindowEntries(entries);
         chart.data.datasets[1].data = computeTrend(visible);
         Object.assign(chart.options.scales.y, getYBounds(visible));
@@ -2632,6 +2833,11 @@
     // ─── PHASE MODAL ─────────────────────────────────────────────────────────────
     function openPhaseModal() {
       closeMenu();
+      // Sync type buttons to current state
+      const currentType = _phaseType || 'CUT';
+      document.querySelectorAll('[data-phase-type]').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.phaseType === currentType)
+      );
       // Pre-fill if phase already set
       const inp = document.getElementById('phase-date-inp');
       if (_phaseStart) {
@@ -2640,6 +2846,7 @@
         const activeRow = document.getElementById('phase-active-row');
         activeRow.style.display = 'flex';
         activeRow.classList.remove('hidden');
+        document.getElementById('phase-active-type').textContent = _phaseType || '';
         document.getElementById('phase-active-date').textContent =
           d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       } else {
@@ -2663,6 +2870,14 @@
       if (e.target === document.getElementById('phase-modal-overlay')) closePhaseModal();
     });
 
+    // Phase type toggle
+    document.querySelectorAll('[data-phase-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-phase-type]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
     document.getElementById('phase-clear-btn').addEventListener('click', async () => {
       await clearPhaseStart();
       closePhaseModal();
@@ -2678,7 +2893,9 @@
         setTimeout(() => fb.classList.remove('show'), 2500);
         return;
       }
-      await savePhaseStart(dateStr);
+      const activeTypeBtn = document.querySelector('[data-phase-type].active');
+      const type = activeTypeBtn?.dataset.phaseType || 'CUT';
+      await savePhaseStart(dateStr, type);
       closePhaseModal();
     });
 
@@ -2726,28 +2943,33 @@
     });
 
     // ─── CHART CLICK → EDIT ENTRY ────────────────────────────────────────────────
-    document.getElementById('chart').addEventListener('click', e => {
-      if (!chart) return;
-      const points = chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
-      if (!points.length) return;
-      const hit = points.find(p => chart.data.datasets[p.datasetIndex]?.label === 'Weight (kg)');
-      if (!hit) return;
-      let date;
-      if (activeScaleMode === 'index') {
-        date = _ordinalVisible[hit.index]?.date;
-      } else {
-        const ms = chart.data.datasets[hit.datasetIndex].data[hit.index]?.x;
-        date = _entries.find(e => new Date(e.date + 'T00:00:00').getTime() === ms)?.date;
-      }
-      if (date) openEntryModal(date);
+    // Click anywhere on chart while a point is highlighted → open edit modal for that point
+    document.getElementById('chart').addEventListener('click', () => {
+      if (!chart || !_tooltipEntryDate) return;
+      openEntryModal(_tooltipEntryDate);
+    });
+
+    // ─── INPUT HELPERS ────────────────────────────────────────────────────────────
+    function snapWeight(v) { return Math.round(v / 0.05) * 0.05; }
+
+    ['inp-weight', 'modal-weight', 'goal-modal-inp'].forEach(id => {
+      document.getElementById(id).addEventListener('blur', e => {
+        const v = parseFloat(e.target.value);
+        if (isNaN(v)) return;
+        const min = parseFloat(e.target.min) || 0;
+        const max = parseFloat(e.target.max) || Infinity;
+        e.target.value = snapWeight(Math.max(min, Math.min(max, v))).toFixed(2);
+      });
     });
 
     // ─── ADD ENTRY ────────────────────────────────────────────────────────────────
     document.getElementById('btn-add').addEventListener('click', async () => {
       const dateVal = document.getElementById('inp-date').value;
-      const weightVal = parseFloat(document.getElementById('inp-weight').value);
+      const rawWeight = parseFloat(document.getElementById('inp-weight').value);
+      const weightVal = isNaN(rawWeight) ? NaN : snapWeight(rawWeight);
 
-      if (!dateVal) return showFeedback('Please pick a date', true);
+      if (!dateVal) return showFeedback('Pick a date', true);
+      if (dateVal > todayStr) return showFeedback('Date cannot be in the future', true);
       if (isNaN(weightVal) || weightVal < 30 || weightVal > 300) return showFeedback('Enter a valid weight (30–300 kg)', true);
 
       const entries = [..._entries];
@@ -2820,7 +3042,7 @@
       const rateEnd   = !isNaN(re) && re > 0 ? re : rateStart;
       const proj = (!isNaN(g) && rateStart) ? projectedDateStr(g, rateStart, rateEnd) : null;
       if (proj) {
-        projDate.textContent = proj;
+        projDate.innerHTML = proj;
         projRow.classList.remove('hidden');
       } else {
         projRow.classList.add('hidden');
@@ -3018,8 +3240,10 @@
         let [, d, mo, y] = m;
         if (y.length === 2) y = '20' + y;
         const date = new Date(+y, +mo - 1, +d);
-        if (!isNaN(date) && date.getDate() === +d && date.getMonth() === +mo - 1)
-          return dateToStr(date);
+        if (!isNaN(date) && date.getDate() === +d && date.getMonth() === +mo - 1) {
+          const iso = dateToStr(date);
+          return iso <= todayStr ? iso : null; // reject future dates
+        }
       }
       return null;
     }
@@ -3070,10 +3294,11 @@
 
       for (let day = 1; day <= daysInMonth; day++) {
         const str = `${calViewYear}-${pad(calViewMonth + 1)}-${pad(day)}`;
-        let cls = 'cal-day';
+        const isFuture = str > todayStr;
+        let cls = 'cal-day' + (isFuture ? ' future-day' : '');
         if (str === todayStr) cls += ' today';
         if (str === selected) cls += ' selected';
-        html += `<button class="${cls}" data-date="${str}" type="button">${day}</button>`;
+        html += `<button class="${cls}" data-date="${str}" type="button"${isFuture ? ' disabled' : ''}>${day}</button>`;
       }
 
       const trailing = totalCells - firstDow - daysInMonth;
@@ -3213,17 +3438,14 @@
         activeLineStyle = savedStyle;
         const opt = document.querySelector(`.style-option[data-style="${activeLineStyle}"]`);
         if (opt) {
-          document.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
+          document.querySelectorAll('#style-dropdown .style-option').forEach(o => o.classList.remove('active'));
           opt.classList.add('active');
           document.getElementById('style-trigger').textContent = opt.textContent + ' ▾';
         }
       }
 
-      const savedOptimal = localStorage.getItem('wt-optimal');
-      if (savedOptimal !== null) {
-        activeOptimal = savedOptimal !== 'false';
-        document.getElementById('optimal-toggle').classList.toggle('active', activeOptimal);
-      }
+      // activeOptimal always starts true (Projected on by default)
+      document.getElementById('optimal-toggle').classList.toggle('active', activeOptimal);
 
       renderRangeBtns(); // reflect restored activeRange
       syncRangeSliderVisibility();
@@ -3237,6 +3459,7 @@
       _entries = data.entries || [];
       _goal = data.goal ?? null;
       _phaseStart = data.phaseStart ?? null;
+      _phaseType  = data.phaseType  ?? null;
       // Support old single-rate field as fallback
       const legacyRate = data.targetLossRate ?? null;
       _targetLossRateStart = data.targetLossRateStart ?? legacyRate;
