@@ -1258,10 +1258,12 @@
         align-items: flex-start; /* buttons sit at top; padding fills safe area */
         position: fixed;
         bottom: 0; left: 0; right: 0;
-        padding-bottom: env(safe-area-inset-bottom, 20px);
+        padding-bottom: env(safe-area-inset-bottom, 34px);
         background: var(--bg2);
         border-top: 1px solid var(--border);
         z-index: 200;
+        /* Extend bg below the element to cover any remaining safe area gap */
+        box-shadow: 0 60px 0 60px var(--bg2);
       }
 
       .mobile-tab {
@@ -1284,8 +1286,8 @@
         -webkit-tap-highlight-color: transparent;
       }
       .mobile-tab.open { color: var(--accent); }
-      .mobile-tab--add { color: var(--accent); }
-      .mobile-tab--add.open { color: var(--text); }
+      .mobile-tab--add { color: var(--text); }
+      .mobile-tab--add.open { color: var(--accent); }
 
       /* Menu dropdown: open upward from taskbar */
       #menu-dropdown:not(.hidden) {
@@ -3622,6 +3624,9 @@
       // Wire mobile hamburger to the existing menu dropdown
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const _menuDropdown = document.getElementById('menu-dropdown');
+      // header has display:none on mobile — position:fixed can't escape a display:none ancestor.
+      // Detach the dropdown to body so it renders independently.
+      document.body.appendChild(_menuDropdown);
 
       mobileMenuBtn.addEventListener('click', e => {
         e.stopPropagation();
