@@ -163,7 +163,7 @@
     .bottom-grid {
       flex-shrink: 0;
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: 200px auto 1fr;
       gap: 14px;
       align-items: stretch;
     }
@@ -523,58 +523,11 @@
       text-transform: uppercase;
       letter-spacing: 0.07em;
     }
-    .milestones {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      max-height: 38px;
-    }
-    .milestone-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.55rem;
-      letter-spacing: 0.02em;
-      color: var(--accent);
-      background: rgba(74,222,128,0.07);
-      border: 1px solid rgba(74,222,128,0.2);
-      border-radius: 20px;
-      padding: 2px 6px;
-      white-space: nowrap;
-    }
     .insights-sep {
       height: 1px;
       background: var(--border);
       flex-shrink: 0;
     }
-    .insights-bottom {
-      display: flex;
-      gap: 12px;
-      flex: 1;
-      min-height: 0;
-    }
-    .insights-col {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-    .insights-col:first-child { flex-shrink: 0; }
-    .insights-col:last-child  { flex: 1; }
-    .insights-vsep {
-      width: 1px;
-      background: var(--border);
-      flex-shrink: 0;
-    }
-    .insights-section-lbl {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.54rem;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 5px;
-    }
-
     /* 30-day log calendar — GitHub-style compact dots */
     .log-cal {
       display: grid;
@@ -605,7 +558,7 @@
       color: var(--accent);
     }
     .log-cal-cell.today { outline: 1px solid var(--border2); outline-offset: -1px; }
-    .log-cal-cell.empty { background: transparent; color: transparent; }
+    .log-cal-cell.future { background: transparent; color: transparent; border: none; }
 
     /* Weekly table */
     .weekly-tbl {
@@ -632,6 +585,7 @@
     .wk-pos { color: var(--accent); }
     .wk-neg { color: var(--red); }
     .wk-neu { color: var(--muted); }
+    .wk-upcoming td { opacity: 0.5; border-top: 1px dashed var(--border2) !important; }
 
     /* PANELS */
     .panel {
@@ -1153,7 +1107,6 @@
     <header>
       <div class="logo-block">
         <h1>Weight<span>.</span></h1>
-        <p>Body mass over time — to scale</p>
       </div>
       <div class="menu-wrap" id="menu-wrap">
         <button class="menu-btn" id="menu-btn" type="button" title="Menu">
@@ -1200,7 +1153,7 @@
         <div class="sub">kg / week avg</div>
       </div>
       <div class="stat-card">
-        <div class="label">Projected Date</div>
+        <div class="label">Projected End Date</div>
         <div class="value" id="stat-goal-date">—</div>
         <div class="sub" id="stat-goal-date-sub">set goal &amp; pace</div>
       </div>
@@ -1331,29 +1284,23 @@
 
       <input type="file" id="import-file" accept=".csv">
 
-      <!-- INSIGHTS PANEL -->
+      <!-- ACTIVITY PANEL -->
       <div class="panel insights-panel" id="insights-panel">
-        <!-- Streak + milestones -->
+        <div class="panel-title">Activity</div>
         <div class="insights-top">
           <div class="streak-badge">
             <span class="streak-num zero" id="streak-num">0</span>
             <span class="streak-lbl">day streak</span>
           </div>
-          <div class="milestones" id="milestones"></div>
         </div>
         <div class="insights-sep"></div>
-        <!-- Calendar and Weekly side by side -->
-        <div class="insights-bottom">
-          <div class="insights-col">
-            <div class="insights-section-lbl">30-day log</div>
-            <div class="log-cal" id="log-cal"></div>
-          </div>
-          <div class="insights-vsep"></div>
-          <div class="insights-col">
-            <div class="insights-section-lbl">Weekly</div>
-            <table class="weekly-tbl" id="weekly-tbl"></table>
-          </div>
-        </div>
+        <div class="log-cal" id="log-cal"></div>
+      </div>
+
+      <!-- WEEKLY PANEL -->
+      <div class="panel" id="weekly-panel">
+        <div class="panel-title">Weekly</div>
+        <table class="weekly-tbl" id="weekly-tbl"></table>
       </div>
 
     </div>
@@ -1375,11 +1322,26 @@
       </div>
       <div class="field">
         <label>Weekly Loss Rate (% of body weight)</label>
-        <div class="num-wrap">
-          <input type="number" id="goal-rate-inp" step="0.05" min="0.1" max="3" placeholder="e.g. 0.75">
-          <div class="num-spin">
-            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
-            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="flex:1">
+            <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Start</div>
+            <div class="num-wrap">
+              <input type="number" id="goal-rate-start-inp" step="0.05" min="0.1" max="3" placeholder="e.g. 1.0">
+              <div class="num-spin">
+                <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
+                <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">End</div>
+            <div class="num-wrap">
+              <input type="number" id="goal-rate-end-inp" step="0.05" min="0.1" max="3" placeholder="= Start">
+              <div class="num-spin">
+                <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
+                <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1458,8 +1420,9 @@
     // In-memory state kept in sync via onSnapshot
     let _entries = [];
     let _goal = null;
-    let _phaseStart = null;      // 'YYYY-MM-DD' | null
-    let _targetLossRate = null;  // % per week, e.g. 0.75
+    let _phaseStart = null;           // 'YYYY-MM-DD' | null
+    let _targetLossRateStart = null;  // % per week at phase start, e.g. 1.0
+    let _targetLossRateEnd   = null;  // % per week at phase end (interpolated), e.g. 0.5
 
     async function save(entries) {
       _entries = entries;
@@ -1467,11 +1430,12 @@
       docRef.set({ entries, goal: _goal }, { merge: true });
     }
 
-    async function saveGoal(g, rate) {
+    async function saveGoal(g, rateStart, rateEnd) {
       _goal = g;
-      _targetLossRate = rate ?? null;
+      _targetLossRateStart = rateStart ?? null;
+      _targetLossRateEnd   = rateEnd   ?? null;
       refresh();
-      docRef.set({ goal: g, targetLossRate: _targetLossRate }, { merge: true });
+      docRef.set({ goal: g, targetLossRateStart: _targetLossRateStart, targetLossRateEnd: _targetLossRateEnd }, { merge: true });
     }
 
     async function savePhaseStart(dateStr) {
@@ -1584,6 +1548,11 @@
       return ticks;
     }
 
+    function savePanState() {
+      localStorage.setItem('wt-pan-min', panMin === null ? '' : String(panMin));
+      localStorage.setItem('wt-pan-max', panMax === null ? '' : String(panMax));
+    }
+
     function applyPanToChart() {
       if (!chart) return;
       const sorted = sortedEntries(_entries);
@@ -1599,6 +1568,7 @@
       }
       Object.assign(chart.options.scales.y, getYBounds(visible));
       chart.update('none');
+      savePanState();
     }
 
     function applyIndexPanToChart() {
@@ -1818,7 +1788,7 @@
           { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 6, hitRadius: 8, ...lsProps, fill: true },
           { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false, hidden: true },
           { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0, fill: false },
-          { label: 'Projected', data: optData, borderColor: 'rgba(167,139,250,0.85)', borderDash: [3, 3], borderWidth: 2, pointRadius: 0, tension: 0.35, fill: false },
+          { label: 'Projected', data: optData, borderColor: 'rgba(167,139,250,0.85)', borderDash: [3, 3], borderWidth: 2, pointRadius: 0, tension: 0, fill: false },
         ];
 
         const xWin = panMin !== null ? { min: panMin, max: panMax } : {};
@@ -1903,44 +1873,76 @@
     }
 
 
-    // ─── OPTIMAL CURVE ───────────────────────────────────────────────────────────
-    // Returns { points: [{x:ms, y:weight}], targetMs } or null
-    function computeOptimalCurve() {
-      if (!_goal || !_targetLossRate || !_entries.length) return null;
+    // ─── PROJECTED CURVE ─────────────────────────────────────────────────────────
+    // Core: iterate weekly steps with time-based linearly interpolated rate.
+    //   rate(k) = rS + (k / N) * (rE - rS)   where k=0 is the first step, k=N-1 is the last.
+    // Because N (total weeks) is unknown upfront, we bootstrap with the constant-avg-rate
+    // estimate and then iterate to convergence (typically 3-5 passes).
+    // rateStart/rateEnd are % per week (e.g. 1.0, 0.5). Pass overrides for modal preview.
+    // Returns array of {t, ms, weight} or null.
+    function computeProjectedPoints(goalKg, rateStartPct, rateEndPct) {
+      const g  = goalKg       ?? _goal;
+      const rs = rateStartPct ?? _targetLossRateStart;
+      const re = rateEndPct   ?? _targetLossRateEnd ?? rs;
+      if (!g || !rs || !_entries.length) return null;
       const sorted = sortedEntries(_entries);
       const startDate = _phaseStart || sorted[0].date;
       const phaseEntries = sorted.filter(e => e.date >= startDate);
-      if (!phaseEntries.length) return null;
+      if (!phaseEntries.length || g >= phaseEntries[0].weight) return null;
       const startMs = new Date(startDate + 'T00:00:00').getTime();
       const startWeight = phaseEntries[0].weight;
-      if (_goal >= startWeight) return null;
-      const rate = _targetLossRate / 100;
-      // W(t) = startWeight * (1 - rate)^t  [t in weeks]
-      const t_weeks = Math.log(_goal / startWeight) / Math.log(1 - rate);
-      if (!isFinite(t_weeks) || t_weeks <= 0 || t_weeks > 2600) return null;
-      const targetMs = startMs + t_weeks * 7 * 86400000;
-      const points = [];
-      for (let w = 0; w <= Math.ceil(t_weeks); w++) {
-        const ms = startMs + w * 7 * 86400000;
-        if (ms >= targetMs) { points.push({ x: targetMs, y: parseFloat(_goal.toFixed(2)) }); break; }
-        const weight = startWeight * Math.pow(1 - rate, w);
-        points.push({ x: ms, y: parseFloat(Math.max(_goal, weight).toFixed(2)) });
+      const rS = rs / 100, rE = re / 100;
+
+      // Bootstrap N from the average rate (exact for constant case)
+      const rAvg = (rS + rE) / 2;
+      let N = Math.log(g / startWeight) / Math.log(1 - rAvg);
+      if (!isFinite(N) || N <= 0 || N > 2600) return null;
+
+      // Converge N: simulate with rate(k) = rS + (k/N)*(rE-rS), update N from actual step count
+      for (let iter = 0; iter < 8; iter++) {
+        let W = startWeight, k = 0;
+        while (W > g && k < 2600) { W *= (1 - (rS + (k / N) * (rE - rS))); k++; }
+        if (k >= 2600) return null;
+        if (Math.abs(k - N) < 0.5) break;
+        N = k;
       }
-      return { points, targetMs };
+
+      // Build high-resolution daily points so the chart curve is smooth.
+      // Each week k uses rate rWeek; convert to equivalent daily rate for sub-sampling.
+      const N_int = Math.round(N);
+      const pts = [{ t: 0, ms: startMs, weight: startWeight }];
+      let W = startWeight;
+      outer: for (let k = 0; k < N_int && k < 2600; k++) {
+        const rWeek = rS + (k / Math.max(N_int, 1)) * (rE - rS);
+        const rDay  = 1 - Math.pow(1 - rWeek, 1 / 7); // equivalent daily rate
+        for (let d = 1; d <= 7; d++) {
+          W *= (1 - rDay);
+          const ms = startMs + (k * 7 + d) * 86400000;
+          if (W <= g) { pts.push({ t: k + d / 7, ms, weight: g }); break outer; }
+          pts.push({ t: k + d / 7, ms, weight: W });
+        }
+      }
+      if (pts[pts.length - 1].weight > g) return null;
+      return pts;
     }
 
-    // Compute projected date string for display (or null)
-    function projectedDateStr(goalKg, ratePercent) {
-      if (!goalKg || !ratePercent || !_entries.length) return null;
-      const sorted = sortedEntries(_entries);
-      const startDate = _phaseStart || sorted[0].date;
-      const phaseEntries = sorted.filter(e => e.date >= startDate);
-      if (!phaseEntries.length || goalKg >= phaseEntries[0].weight) return null;
-      const rate = ratePercent / 100;
-      const t_weeks = Math.log(goalKg / phaseEntries[0].weight) / Math.log(1 - rate);
-      if (!isFinite(t_weeks) || t_weeks <= 0) return null;
-      const targetMs = new Date(startDate + 'T00:00:00').getTime() + t_weeks * 7 * 86400000;
-      return new Date(targetMs).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    // Returns { points: [{x:ms, y:weight}], targetMs } for Chart.js, or null
+    function computeOptimalCurve() {
+      const pts = computeProjectedPoints();
+      if (!pts) return null;
+      const targetMs = pts[pts.length - 1].ms;
+      return {
+        points: pts.map(p => ({ x: p.ms, y: parseFloat(p.weight.toFixed(2)) })),
+        targetMs
+      };
+    }
+
+    // Compute projected end date string (or null). Accepts optional overrides for modal preview.
+    function projectedDateStr(goalKg, rateStartPct, rateEndPct) {
+      const pts = computeProjectedPoints(goalKg, rateStartPct, rateEndPct);
+      if (!pts) return null;
+      return new Date(pts[pts.length - 1].ms)
+        .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
     // ─── CHART ANNOTATIONS PLUGIN ────────────────────────────────────────────────
@@ -1982,7 +1984,7 @@
             ctx.setLineDash([]);
             ctx.fillStyle = 'rgba(251,191,36,0.8)';
             ctx.textAlign = 'right';
-            ctx.fillText('GOAL', right - 5, yPos - 5);
+            ctx.fillText('GOAL', right - 5, yPos + 14);
             ctx.textAlign = 'left';
           }
         }
@@ -2031,6 +2033,13 @@
     }
 
     // ─── STATS ───────────────────────────────────────────────────────────────────
+    // Average of up to the 4 most recent entries — smooths single-reading noise.
+    function computeSmoothedWeight(entries) {
+      if (!entries.length) return null;
+      const recent = entries.slice(-4);
+      return recent.reduce((sum, e) => sum + e.weight, 0) / recent.length;
+    }
+
     function updateStats(entries, goal) {
       const s = sortedEntries(entries);
       const fmt = w => w != null ? fmtWeight(w) + ' kg' : '—';
@@ -2071,32 +2080,33 @@
       const arc = document.getElementById('goal-arc');
       const arcCircumference = 2 * Math.PI * 18; // 113.1
       if (goal != null && first && last) {
+        const smoothed = computeSmoothedWeight(s); // avg of last 4 entries for stable progress
         const total = first.weight - goal;
-        const done = first.weight - last.weight;
+        const done = first.weight - smoothed;
         const pct = total <= 0 ? 100 : Math.min(100, Math.max(0, (done / total) * 100));
-        const rem = last.weight - goal;
+        const rem = smoothed - goal;
         const pctEl = document.getElementById('stat-goal-pct');
         pctEl.textContent = pct.toFixed(0) + '%';
         pctEl.className = pct >= 100 ? 'value positive' : 'value neutral';
-        document.getElementById('stat-goal-rem').textContent = rem > 0 ? fmtWeight(rem) + ' kg to go' : 'goal reached!';
+        document.getElementById('stat-goal-rem').textContent = '';
         arc.style.strokeDashoffset = (arcCircumference * (1 - Math.min(1, pct / 100))).toFixed(1);
         arc.style.stroke = pct >= 100 ? 'var(--accent)' : 'var(--amber)';
       } else {
         document.getElementById('stat-goal-pct').textContent = '—';
         document.getElementById('stat-goal-pct').className = 'value';
-        document.getElementById('stat-goal-rem').textContent = 'set a goal in menu';
+        document.getElementById('stat-goal-rem').textContent = '';
         arc.style.strokeDashoffset = arcCircumference.toFixed(1);
         arc.style.stroke = 'var(--amber)';
       }
 
       // Goal Date stat card
-      const proj = projectedDateStr(goal, _targetLossRate);
+      const proj = projectedDateStr();
       const goalDateEl = document.getElementById('stat-goal-date');
       const goalDateSub = document.getElementById('stat-goal-date-sub');
       if (proj) {
         goalDateEl.textContent = proj;
         goalDateEl.className = 'value neutral';
-        goalDateSub.textContent = 'est. projected date';
+        goalDateSub.textContent = '';
       } else {
         goalDateEl.textContent = '—';
         goalDateEl.className = 'value';
@@ -2157,82 +2167,57 @@
 
     // ─── INSIGHTS ────────────────────────────────────────────────────────────────
 
+    function localDateStr(d) {
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
     function computeStreak(entries) {
       if (!entries.length) return 0;
       const loggedDates = new Set(entries.map(e => e.date));
       const today = new Date(); today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().slice(0, 10);
+      const todayStr = localDateStr(today);
       const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+      const yesterdayStr = localDateStr(yesterday);
       // Streak is active if today or yesterday was logged
       const anchor = loggedDates.has(todayStr) ? today : loggedDates.has(yesterdayStr) ? yesterday : null;
       if (!anchor) return 0;
       let streak = 0;
       const d = new Date(anchor);
-      while (loggedDates.has(d.toISOString().slice(0, 10))) {
+      while (loggedDates.has(localDateStr(d))) {
         streak++;
         d.setDate(d.getDate() - 1);
       }
       return streak;
     }
 
-    function computeMilestones(entries, goal) {
-      if (!entries.length) return [];
-      const s = sortedEntries(entries);
-      const totalLost = s[0].weight - s[s.length - 1].weight;
-      const streak = computeStreak(entries);
-      const pct = goal && s[0].weight > goal
-        ? Math.min(100, (totalLost / (s[0].weight - goal)) * 100) : 0;
-      const badges = [];
-      if (s.length >= 1)   badges.push('First log');
-      if (s.length >= 10)  badges.push('10 logged');
-      if (s.length >= 50)  badges.push('50 logged');
-      if (s.length >= 100) badges.push('100 logged');
-      if (totalLost >= 1)  badges.push('1 kg lost');
-      if (totalLost >= 5)  badges.push('5 kg lost');
-      if (totalLost >= 10) badges.push('10 kg lost');
-      if (totalLost >= 20) badges.push('20 kg lost');
-      if (pct >= 25)  badges.push('25% to goal');
-      if (pct >= 50)  badges.push('50% to goal');
-      if (pct >= 75)  badges.push('75% to goal');
-      if (pct >= 100) badges.push('Goal reached!');
-      if (streak >= 7)  badges.push('7-day streak');
-      if (streak >= 30) badges.push('30-day streak');
-      return badges;
-    }
-
     function renderLogCalendar(entries) {
       const loggedDates = new Set(entries.map(e => e.date));
       const today = new Date(); today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().slice(0, 10);
-      // Window: last 30 days ending today
-      const windowStart = new Date(today); windowStart.setDate(windowStart.getDate() - 29);
-      // Find Monday on or before windowStart
-      const gridStart = new Date(windowStart);
-      const dow = gridStart.getDay(); // 0=Sun
-      gridStart.setDate(gridStart.getDate() - (dow === 0 ? 6 : dow - 1));
+      const todayStr = localDateStr(today);
+      // Grid starts on the Monday 4 full weeks before the current week's Monday
+      const currentMonday = new Date(today);
+      const todayDow = today.getDay(); // 0=Sun
+      currentMonday.setDate(today.getDate() - (todayDow === 0 ? 6 : todayDow - 1));
+      const gridStart = new Date(currentMonday);
+      gridStart.setDate(gridStart.getDate() - 28); // 4 weeks back = always a Monday
 
       const container = document.getElementById('log-cal');
       container.innerHTML = '';
-      ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d => {
+      ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(lbl => {
         const h = document.createElement('div');
         h.className = 'log-cal-head';
-        h.textContent = d;
+        h.textContent = lbl;
         container.appendChild(h);
       });
 
-      const gridStartMs = gridStart.getTime();
-      const todayMs = today.getTime();
-      const windowStartMs = windowStart.getTime();
-      const totalCells = Math.ceil(((todayMs - gridStartMs) / 86400000 + 1) / 7) * 7;
-
-      for (let i = 0; i < totalCells; i++) {
-        const ms = gridStartMs + i * 86400000;
-        const d = new Date(ms);
-        const iso = d.toISOString().slice(0, 10);
+      // Always 35 cells (5 weeks × 7) — use setDate arithmetic to avoid DST ms drift
+      for (let i = 0; i < 35; i++) {
+        const d = new Date(gridStart);
+        d.setDate(gridStart.getDate() + i);
+        const iso = localDateStr(d);
         const cell = document.createElement('div');
-        if (ms > todayMs || ms < windowStartMs) {
-          cell.className = 'log-cal-cell empty';
+        if (iso > todayStr) {
+          cell.className = 'log-cal-cell future';
         } else {
           cell.className = 'log-cal-cell' + (loggedDates.has(iso) ? ' logged' : '');
           if (iso === todayStr) cell.classList.add('today');
@@ -2240,6 +2225,19 @@
         }
         container.appendChild(cell);
       }
+    }
+
+    function getProjectedWeightAtMs(ms) {
+      const pts = computeProjectedPoints();
+      if (!pts) return null;
+      if (ms < pts[0].ms || ms > pts[pts.length - 1].ms) return null;
+      for (let i = 0; i < pts.length - 1; i++) {
+        if (ms >= pts[i].ms && ms <= pts[i + 1].ms) {
+          const frac = (ms - pts[i].ms) / (pts[i + 1].ms - pts[i].ms);
+          return pts[i].weight + frac * (pts[i + 1].weight - pts[i].weight);
+        }
+      }
+      return null;
     }
 
     function renderWeeklyTable(entries) {
@@ -2251,7 +2249,7 @@
         const d = new Date(dateStr + 'T00:00:00');
         const dow = d.getDay();
         d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
-        return d.toISOString().slice(0, 10);
+        return localDateStr(d);
       }
 
       const weekMap = new Map();
@@ -2267,15 +2265,16 @@
         .filter(([mon]) => !phaseMonday || mon >= phaseMonday);
 
       tbl.innerHTML = `<thead><tr>
-        <th>Week of</th><th>Avg</th><th>Δ</th><th>n</th>
+        <th>Week of</th><th>Avg</th><th>Δ</th><th>Target</th><th>n</th>
       </tr></thead><tbody></tbody>`;
       const tbody = tbl.querySelector('tbody');
 
-      let prevAvg = null;
+      let prevAvgR = null;
       weeks.forEach(([monStr, weights]) => {
         const avg = weights.reduce((a, b) => a + b, 0) / weights.length;
-        const delta = prevAvg !== null ? avg - prevAvg : null;
-        prevAvg = avg;
+        const avgR = Math.round(avg / 0.05) * 0.05;
+        const delta = prevAvgR !== null ? avgR - prevAvgR : null;
+        prevAvgR = avgR;
         const label = new Date(monStr + 'T00:00:00')
           .toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
         let deltaHtml = '<span class="wk-neu">—</span>';
@@ -2284,10 +2283,39 @@
           const cls = delta < 0 ? 'wk-pos' : delta > 0.001 ? 'wk-neg' : 'wk-neu';
           deltaHtml = `<span class="${cls}">${sign}${Math.abs(delta).toFixed(2)}</span>`;
         }
+        // Projected target: average the projected curve value for each day of this week
+        const monMs = new Date(monStr + 'T00:00:00').getTime();
+        let projSum = 0, projCount = 0;
+        for (let d = 0; d < 7; d++) {
+          const w = getProjectedWeightAtMs(monMs + d * 86400000);
+          if (w !== null) { projSum += w; projCount++; }
+        }
+        const targetHtml = projCount > 0
+          ? (Math.round((projSum / projCount) / 0.05) * 0.05).toFixed(2)
+          : '<span class="wk-neu">—</span>';
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${label}</td><td>${fmtWeight(avg)}</td><td>${deltaHtml}</td><td>${weights.length}</td>`;
+        tr.innerHTML = `<td>${label}</td><td>${avgR.toFixed(2)}</td><td>${deltaHtml}</td><td>${targetHtml}</td><td>${weights.length}</td>`;
         tbody.appendChild(tr);
       });
+
+      // Upcoming week: show projected target only
+      if (weeks.length > 0) {
+        const nextMon = new Date(weeks[weeks.length - 1][0] + 'T00:00:00');
+        nextMon.setDate(nextMon.getDate() + 7);
+        const nextMonMs = nextMon.getTime();
+        let projSum = 0, projCount = 0;
+        for (let d = 0; d < 7; d++) {
+          const w = getProjectedWeightAtMs(nextMonMs + d * 86400000);
+          if (w !== null) { projSum += w; projCount++; }
+        }
+        if (projCount > 0) {
+          const nextLabel = nextMon.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          const tr = document.createElement('tr');
+          tr.className = 'wk-upcoming';
+          tr.innerHTML = `<td>${nextLabel}</td><td><span class="wk-neu">—</span></td><td><span class="wk-neu">—</span></td><td>${(Math.round((projSum / projCount) / 0.05) * 0.05).toFixed(2)}</td><td><span class="wk-neu">—</span></td>`;
+          tbody.appendChild(tr);
+        }
+      }
     }
 
     function updateInsights(entries) {
@@ -2295,10 +2323,6 @@
       const streakEl = document.getElementById('streak-num');
       streakEl.textContent = streak;
       streakEl.className = 'streak-num' + (streak === 0 ? ' zero' : '');
-
-      const badges = computeMilestones(entries, _goal);
-      document.getElementById('milestones').innerHTML =
-        badges.map(b => `<span class="milestone-badge">${b}</span>`).join('');
 
       renderLogCalendar(entries);
       renderWeeklyTable(entries);
@@ -2396,7 +2420,7 @@
           try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch {}
           localStorage.setItem('wt-custom-ranges', JSON.stringify(extras.filter(r => r.days !== days)));
         }
-        if (wasActive) { activeRange = 'all'; initPan(_entries, 'all'); initPanIndex(sortedEntries(_entries), 'all'); }
+        if (wasActive) { activeRange = 'all'; initPan(_entries, 'all'); initPanIndex(sortedEntries(_entries), 'all'); savePanState(); }
         renderRangeBtns();
         if (wasActive) { if (chart) { chart.destroy(); chart = null; } refresh(); }
         return;
@@ -2407,6 +2431,7 @@
       localStorage.setItem('wt-range', activeRange);
       initPan(_entries, activeRange);
       initPanIndex(sortedEntries(_entries), activeRange);
+      savePanState();
       syncSliderToState();
       renderRangeBtns();
       if (chart) { chart.destroy(); chart = null; }
@@ -2570,10 +2595,12 @@
         const startDate = _phaseStart || entries[0].date;
         panMin = new Date(startDate + 'T00:00:00').getTime();
         panMax = optCurve.targetMs;
+        savePanState();
       } else if (!activeOptimal) {
         // Restore saved pan state
         panMin = _optSavedPanMin;
         panMax = _optSavedPanMax;
+        savePanState();
       }
 
       if (needsRebuild || !chart) {
@@ -2784,11 +2811,14 @@
 
     // ─── GOAL MODAL ──────────────────────────────────────────────────────────────
     function updateGoalProjection() {
-      const g = parseFloat(document.getElementById('goal-modal-inp').value);
-      const r = parseFloat(document.getElementById('goal-rate-inp').value);
+      const g  = parseFloat(document.getElementById('goal-modal-inp').value);
+      const rs = parseFloat(document.getElementById('goal-rate-start-inp').value);
+      const re = parseFloat(document.getElementById('goal-rate-end-inp').value);
       const projRow = document.getElementById('goal-proj-row');
       const projDate = document.getElementById('goal-proj-date');
-      const proj = (!isNaN(g) && !isNaN(r) && r > 0) ? projectedDateStr(g, r) : null;
+      const rateStart = !isNaN(rs) && rs > 0 ? rs : null;
+      const rateEnd   = !isNaN(re) && re > 0 ? re : rateStart;
+      const proj = (!isNaN(g) && rateStart) ? projectedDateStr(g, rateStart, rateEnd) : null;
       if (proj) {
         projDate.textContent = proj;
         projRow.classList.remove('hidden');
@@ -2800,8 +2830,10 @@
     function openGoalModal() {
       closeMenu();
       if (_goal != null) document.getElementById('goal-modal-inp').value = fmtWeight(_goal);
-      if (_targetLossRate != null) document.getElementById('goal-rate-inp').value = _targetLossRate.toFixed(2);
-      else document.getElementById('goal-rate-inp').value = '';
+      if (_targetLossRateStart != null) document.getElementById('goal-rate-start-inp').value = _targetLossRateStart.toFixed(2);
+      else document.getElementById('goal-rate-start-inp').value = '';
+      if (_targetLossRateEnd != null) document.getElementById('goal-rate-end-inp').value = _targetLossRateEnd.toFixed(2);
+      else document.getElementById('goal-rate-end-inp').value = '';
       document.getElementById('goal-feedback').className = 'feedback';
       updateGoalProjection();
       document.getElementById('goal-modal-overlay').classList.remove('hidden');
@@ -2817,13 +2849,14 @@
       if (e.target === document.getElementById('goal-modal-overlay')) closeGoalModal();
     });
 
-    ['goal-modal-inp', 'goal-rate-inp'].forEach(id =>
+    ['goal-modal-inp', 'goal-rate-start-inp', 'goal-rate-end-inp'].forEach(id =>
       document.getElementById(id).addEventListener('input', updateGoalProjection)
     );
 
     document.getElementById('goal-modal-save').addEventListener('click', async () => {
-      const g = parseFloat(document.getElementById('goal-modal-inp').value);
-      const r = parseFloat(document.getElementById('goal-rate-inp').value);
+      const g  = parseFloat(document.getElementById('goal-modal-inp').value);
+      const rs = parseFloat(document.getElementById('goal-rate-start-inp').value);
+      const re = parseFloat(document.getElementById('goal-rate-end-inp').value);
       const fb = document.getElementById('goal-feedback');
       if (isNaN(g) || g < 30 || g > 300) {
         fb.textContent = 'Enter a valid weight (30–300 kg)';
@@ -2831,11 +2864,13 @@
         setTimeout(() => fb.classList.remove('show'), 2500);
         return;
       }
-      await saveGoal(g, isNaN(r) ? null : r);
+      const rateStart = isNaN(rs) ? null : rs;
+      const rateEnd   = isNaN(re) ? rateStart : re;
+      await saveGoal(g, rateStart, rateEnd);
       closeGoalModal();
     });
 
-    ['goal-modal-inp', 'goal-rate-inp'].forEach(id =>
+    ['goal-modal-inp', 'goal-rate-start-inp', 'goal-rate-end-inp'].forEach(id =>
       document.getElementById(id).addEventListener('keydown', e => {
         if (e.key === 'Enter') document.getElementById('goal-modal-save').click();
         if (e.key === 'Escape') closeGoalModal();
@@ -3158,6 +3193,11 @@
       const savedRange = localStorage.getItem('wt-range');
       if (savedRange) activeRange = savedRange;
 
+      const smn = localStorage.getItem('wt-pan-min');
+      const smx = localStorage.getItem('wt-pan-max');
+      if (smn) panMin = parseInt(smn);
+      if (smx) panMax = parseInt(smx);
+
       const savedMode = localStorage.getItem('wt-scale-mode');
       if (savedMode === 'time' || savedMode === 'index') {
         activeScaleMode = savedMode;
@@ -3197,11 +3237,28 @@
       _entries = data.entries || [];
       _goal = data.goal ?? null;
       _phaseStart = data.phaseStart ?? null;
-      _targetLossRate = data.targetLossRate ?? null;
+      // Support old single-rate field as fallback
+      const legacyRate = data.targetLossRate ?? null;
+      _targetLossRateStart = data.targetLossRateStart ?? legacyRate;
+      _targetLossRateEnd   = data.targetLossRateEnd   ?? legacyRate;
       if (_goal != null) document.getElementById('goal-modal-inp').value = _goal;
       if (!_panInitialized) {
         _panInitialized = true;
-        if (activeScaleMode === 'time' && activeRange !== 'all') initPan(_entries, activeRange);
+        if (activeOptimal && activeScaleMode === 'time') {
+          // Projected is on — always snap to phase start → projected end
+          const optCurve = computeOptimalCurve();
+          if (optCurve) {
+            const sorted = sortedEntries(_entries);
+            const startDate = _phaseStart || sorted[0]?.date;
+            if (startDate) {
+              panMin = new Date(startDate + 'T00:00:00').getTime();
+              panMax = optCurve.targetMs;
+              savePanState();
+            }
+          }
+          // else: use panMin/panMax restored from localStorage (or null)
+        }
+        // Non-projected: use panMin/panMax restored from localStorage (or null)
       }
       syncSliderToState();
       refresh();
