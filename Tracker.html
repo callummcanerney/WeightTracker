@@ -1174,20 +1174,31 @@
     /* ── MOBILE TASKBAR (hidden on desktop) ─────────────────────────────── */
     #mobile-taskbar { display: none; }
     #mobile-log-backdrop { display: none; }
+    #mobile-menu-backdrop { display: none; }
     .mobile-menu-scale-item { display: none !important; }
 
     @media (max-width: 430px) {
-      /* Shell — tighter padding; bottom space = 54px buttons + safe area */
+      /* Safe-area fill — fixed band below taskbar matching its bg color */
+      body::after {
+        content: '';
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: env(safe-area-inset-bottom, 34px);
+        background: var(--bg2);
+        z-index: 199;
+      }
+
+      /* Shell — tighter padding; bottom = 54px tab height + safe area */
       .shell {
         padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px
-                 calc(54px + env(safe-area-inset-bottom, 20px) + 8px);
+                 calc(54px + env(safe-area-inset-bottom, 34px) + 8px);
         gap: 8px;
       }
 
-      /* Hide desktop header entirely */
+      /* Hide desktop header */
       header { display: none; }
 
-      /* Compact stats row — all 6 fit in one narrow row */
+      /* Compact stats row */
       .stats-row { gap: 4px; }
       .stat-card { padding: 5px 4px; border-radius: 7px; }
       .stat-card .label { font-size: 0.46rem; margin-bottom: 2px; letter-spacing: 0.04em; }
@@ -1197,22 +1208,28 @@
       .stat-card--ring .value { font-size: 0.75rem; }
       .goal-arc-container svg { width: 46px; height: 46px; }
 
-      /* Hide chart controls removed on mobile */
-      #style-picker   { display: none; }
-      #scale-picker   { display: none; }
+      /* Hide chart controls */
+      #style-picker { display: none; }
+      #scale-picker { display: none; }
       #optimal-toggle { display: none; }
 
-      /* Show the mobile-only scale toggle in the menu */
+      /* Show mobile-only scale toggle in menu */
       .mobile-menu-scale-item { display: flex !important; }
 
-      /* Bottom grid: log entry is a sheet now, so just activity + weekly */
-      .bottom-grid { grid-template-columns: 1fr 1fr; }
+      /* Bottom grid: log entry is a sheet; tighter gap + padding */
+      .bottom-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .bottom-grid .panel { padding: 10px; }
+      .bottom-grid .panel-title { margin-bottom: 6px; }
 
-      /* Log entry: lift out of grid, become a bottom sheet */
+      /* Shrink activity calendar cells to fit narrower panel */
+      .log-cal { grid-template-columns: repeat(7, 19px); gap: 2px; }
+      .log-cal-cell { width: 19px; height: 19px; }
+
+      /* Log entry: becomes a bottom sheet */
       #log-entry-panel {
         position: fixed !important;
         left: 0; right: 0;
-        bottom: calc(54px + env(safe-area-inset-bottom, 20px));
+        bottom: calc(54px + env(safe-area-inset-bottom, 34px));
         z-index: 150;
         height: auto !important;
         min-height: 0 !important;
@@ -1223,10 +1240,7 @@
         padding: 20px 16px 16px;
       }
       #log-entry-panel.mobile-open { transform: translateY(0); }
-      /* Reset desktop alignment trick */
       #log-entry-panel #weight-field { margin-top: 0 !important; }
-
-      /* Drag handle above sheet content */
       #log-entry-panel::before {
         content: '';
         display: block;
@@ -1236,7 +1250,7 @@
         margin: 0 auto 14px;
       }
 
-      /* Dim backdrop behind sheet */
+      /* Log entry backdrop */
       #mobile-log-backdrop {
         display: block;
         position: fixed;
@@ -1247,23 +1261,57 @@
         pointer-events: none;
         transition: opacity 0.32s;
       }
-      #mobile-log-backdrop.visible {
-        opacity: 1;
-        pointer-events: all;
+      #mobile-log-backdrop.visible { opacity: 1; pointer-events: all; }
+
+      /* Menu: becomes a bottom sheet (same style as log entry) */
+      #menu-dropdown {
+        display: block !important; /* always rendered; hidden via transform */
+        position: fixed !important;
+        left: 0 !important; right: 0 !important;
+        bottom: calc(54px + env(safe-area-inset-bottom, 34px)) !important;
+        top: auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        border-radius: 16px 16px 0 0;
+        padding: 8px 0 12px;
+        transform: translateY(calc(100% + 24px));
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 152 !important;
+        box-shadow: 0 -2px 20px rgba(0,0,0,0.4);
+      }
+      #menu-dropdown.mobile-open { transform: translateY(0); }
+      #menu-dropdown::before {
+        content: '';
+        display: block;
+        width: 36px; height: 4px;
+        background: var(--border2);
+        border-radius: 2px;
+        margin: 0 auto 12px;
       }
 
-      /* Mobile taskbar — height = 54px content + safe-area padding */
+      /* Menu backdrop */
+      #mobile-menu-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 151;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.32s;
+      }
+      #mobile-menu-backdrop.visible { opacity: 1; pointer-events: all; }
+
+      /* Mobile taskbar */
       #mobile-taskbar {
         display: flex;
-        align-items: flex-start; /* buttons sit at top; padding fills safe area */
+        align-items: flex-start;
         position: fixed;
         bottom: 0; left: 0; right: 0;
         padding-bottom: env(safe-area-inset-bottom, 34px);
         background: var(--bg2);
         border-top: 1px solid var(--border);
         z-index: 200;
-        /* Extend bg below the element to cover any remaining safe area gap */
-        box-shadow: 0 60px 0 60px var(--bg2);
       }
 
       .mobile-tab {
@@ -1286,16 +1334,7 @@
         -webkit-tap-highlight-color: transparent;
       }
       .mobile-tab.open { color: var(--accent); }
-      .mobile-tab--add { color: var(--text); }
       .mobile-tab--add.open { color: var(--accent); }
-
-      /* Menu dropdown: open upward from taskbar */
-      #menu-dropdown:not(.hidden) {
-        position: fixed !important;
-        bottom: calc(54px + env(safe-area-inset-bottom, 20px) + 6px);
-        right: 12px;
-        top: auto; left: auto;
-      }
     }
   </style>
 </head>
@@ -1621,6 +1660,7 @@
 
   <!-- MOBILE TASKBAR — must be before main script so getElementById works -->
   <div id="mobile-log-backdrop"></div>
+  <div id="mobile-menu-backdrop"></div>
   <nav id="mobile-taskbar">
     <button class="mobile-tab" id="mobile-menu-btn" type="button">
       <svg width="24" height="18" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -3621,32 +3661,43 @@
       activeLineStyle = 'linear';
       document.getElementById('optimal-toggle').classList.add('active');
 
-      // Wire mobile hamburger to the existing menu dropdown
-      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-      const _menuDropdown = document.getElementById('menu-dropdown');
-      // header has display:none on mobile — position:fixed can't escape a display:none ancestor.
-      // Detach the dropdown to body so it renders independently.
+      const mobileMenuBtn  = document.getElementById('mobile-menu-btn');
+      const mobileAddBtn   = document.getElementById('mobile-add-btn');
+      const _menuDropdown  = document.getElementById('menu-dropdown');
+      const logPanel       = document.getElementById('log-entry-panel');
+      const logBackdrop    = document.getElementById('mobile-log-backdrop');
+      const menuBackdrop   = document.getElementById('mobile-menu-backdrop');
+
+      // Detach menu dropdown from hidden header so it renders freely
       document.body.appendChild(_menuDropdown);
+
+      // ── Menu sheet ──────────────────────────────────────────────────────────
+      function openMenuSheet() {
+        _menuDropdown.classList.remove('hidden');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          _menuDropdown.classList.add('mobile-open');
+          menuBackdrop.classList.add('visible');
+          mobileMenuBtn.classList.add('open');
+        }));
+      }
+      function closeMenuSheet() {
+        _menuDropdown.classList.remove('mobile-open');
+        menuBackdrop.classList.remove('visible');
+        mobileMenuBtn.classList.remove('open');
+        setTimeout(() => {
+          if (!_menuDropdown.classList.contains('mobile-open'))
+            _menuDropdown.classList.add('hidden');
+        }, 340);
+      }
 
       mobileMenuBtn.addEventListener('click', e => {
         e.stopPropagation();
-        const isOpen = !_menuDropdown.classList.contains('hidden');
-        if (isOpen) {
-          _menuDropdown.classList.add('hidden');
-          mobileMenuBtn.classList.remove('open');
-        } else {
-          _menuDropdown.classList.remove('hidden');
-          mobileMenuBtn.classList.add('open');
-        }
+        _menuDropdown.classList.contains('mobile-open') ? closeMenuSheet() : openMenuSheet();
       });
-
-      // Close when clicking outside (override desktop handler for menu-wrap)
-      document.addEventListener('click', e => {
-        if (!mobileMenuBtn.contains(e.target) && !_menuDropdown.contains(e.target)) {
-          _menuDropdown.classList.add('hidden');
-          mobileMenuBtn.classList.remove('open');
-        }
-      }, true);
+      menuBackdrop.addEventListener('click', closeMenuSheet);
+      _menuDropdown.addEventListener('click', e => {
+        if (e.target.closest('.menu-item')) setTimeout(closeMenuSheet, 150);
+      });
 
       // Scale mode toggle in menu
       const menuScaleToggle = document.getElementById('menu-scale-toggle');
@@ -3656,18 +3707,11 @@
       }
       updateScaleLabel();
       menuScaleToggle.addEventListener('click', () => {
-        const newMode = activeScaleMode === 'time' ? 'index' : 'time';
-        document.querySelector(`#scale-dropdown [data-scale="${newMode}"]`).click();
+        document.querySelector(`#scale-dropdown [data-scale="${activeScaleMode === 'time' ? 'index' : 'time'}"]`).click();
         updateScaleLabel();
-        _menuDropdown.classList.add('hidden');
-        mobileMenuBtn.classList.remove('open');
       });
 
-      // Log entry bottom sheet
-      const mobileAddBtn   = document.getElementById('mobile-add-btn');
-      const logPanel       = document.getElementById('log-entry-panel');
-      const logBackdrop    = document.getElementById('mobile-log-backdrop');
-
+      // ── Log entry sheet ─────────────────────────────────────────────────────
       function openLogSheet() {
         logPanel.classList.add('mobile-open');
         logBackdrop.classList.add('visible');
@@ -3684,12 +3728,11 @@
       });
       logBackdrop.addEventListener('click', closeLogSheet);
 
-      // Auto-close sheet on successful entry (feedback shows non-error)
+      // Auto-close after successful save
       const feedbackEl = document.getElementById('feedback');
       new MutationObserver(() => {
-        if (feedbackEl.classList.contains('show') && !feedbackEl.classList.contains('err')) {
+        if (feedbackEl.classList.contains('show') && !feedbackEl.classList.contains('err'))
           setTimeout(closeLogSheet, 800);
-        }
       }).observe(feedbackEl, { attributes: true, attributeFilter: ['class'] });
     }
 
