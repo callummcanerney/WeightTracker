@@ -1178,21 +1178,15 @@
     .mobile-menu-scale-item { display: none !important; }
 
     @media (max-width: 430px) {
-      /* The home indicator zone is outside the CSS viewport — iOS paints it
-         with the document background colour. Use the PAGE background (--bg)
-         rather than the taskbar background (--bg2), so the home indicator zone
-         appears as a distinct, darker element below the taskbar. This creates a
-         visible bottom boundary for the bar so icons read as "at the bottom". */
-      html, body { background: var(--bg); }
-
-      /* Shell — tighter padding; 36px bar + env() clears the taskbar */
+      /* Shell — nav bar (44px) sits at top below status bar, bottom just needs
+         home indicator clearance (env) with a small gap. No bottom bar. */
       .shell {
-        padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px
-                 calc(36px + env(safe-area-inset-bottom, 0px) + 8px);
+        padding: calc(env(safe-area-inset-top, 47px) + 44px + 8px) 10px
+                 calc(env(safe-area-inset-bottom, 0px) + 8px);
         gap: 8px;
       }
 
-      /* Hide desktop header */
+      /* Hide desktop header — mobile uses the taskbar nav at the top instead */
       header { display: none; }
 
       /* Compact stats row */
@@ -1222,11 +1216,11 @@
       .log-cal { grid-template-columns: repeat(7, 19px); gap: 2px; }
       .log-cal-cell { width: 19px; height: 19px; }
 
-      /* Log entry: becomes a bottom sheet */
+      /* Log entry: becomes a bottom sheet — no taskbar to clear, just safe area */
       #log-entry-panel {
         position: fixed !important;
         left: 0; right: 0;
-        bottom: calc(36px + env(safe-area-inset-bottom, 0px));
+        bottom: 0;
         z-index: 150;
         height: auto !important;
         min-height: 0 !important;
@@ -1234,7 +1228,7 @@
         border-bottom: none;
         transform: translateY(calc(100% + 24px));
         transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 20px 16px 16px;
+        padding: 20px 16px max(env(safe-area-inset-bottom, 0px), 16px);
       }
       #log-entry-panel.mobile-open { transform: translateY(0); }
       #log-entry-panel #weight-field { margin-top: 0 !important; }
@@ -1266,12 +1260,12 @@
       #menu-dropdown {
         position: fixed !important;
         left: 0 !important; right: 0 !important;
-        bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: 0 !important;
         top: auto !important;
         width: auto !important;
         min-width: 0 !important;
         border-radius: 16px 16px 0 0;
-        padding: 8px 0 12px;
+        padding: 8px 0 max(env(safe-area-inset-bottom, 0px), 12px);
         transform: translateY(calc(100% + 24px));
         transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 152 !important;
@@ -1300,31 +1294,36 @@
       }
       #mobile-menu-backdrop.visible { opacity: 1; pointer-events: all; }
 
-      /* Mobile taskbar */
+      /* Mobile nav bar — sits at the TOP, just below the status bar.
+         No bottom-zone dead space issue. Standard iOS navigation bar pattern. */
       #mobile-taskbar {
         display: flex;
-        align-items: stretch;
+        align-items: center;
+        justify-content: space-between;
         position: fixed;
-        bottom: 0; left: 0; right: 0;
+        top: env(safe-area-inset-top, 47px);
+        left: 0; right: 0;
+        height: 44px;
+        padding: 0 4px;
         background: var(--bg2);
-        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
         z-index: 200;
       }
 
       .mobile-tab {
-        flex: 1;
-        height: 36px;
+        flex: 0 0 auto;
+        height: 44px;
+        width: 56px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-end;
-        padding-bottom: 5px;
-        gap: 3px;
+        justify-content: center;
+        gap: 2px;
         background: none;
         border: none;
         color: var(--muted);
         font-family: 'JetBrains Mono', monospace;
-        font-size: 0.52rem;
+        font-size: 0.46rem;
         letter-spacing: 0.07em;
         text-transform: uppercase;
         cursor: pointer;
