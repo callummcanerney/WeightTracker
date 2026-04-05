@@ -1183,10 +1183,10 @@
          the taskbar so the "dead space" is the same colour and invisible. */
       html, body { background: var(--bg2); }
 
-      /* Shell — tighter padding; 49px clears the taskbar buttons */
+      /* Shell — tighter padding; 40px clears the taskbar buttons */
       .shell {
         padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px
-                 calc(49px + env(safe-area-inset-bottom, 0px) + 8px);
+                 calc(40px + env(safe-area-inset-bottom, 0px) + 8px);
         gap: 8px;
       }
 
@@ -1224,7 +1224,7 @@
       #log-entry-panel {
         position: fixed !important;
         left: 0; right: 0;
-        bottom: calc(49px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(40px + env(safe-area-inset-bottom, 0px));
         z-index: 150;
         height: auto !important;
         min-height: 0 !important;
@@ -1263,7 +1263,7 @@
         display: block !important; /* always rendered; hidden via transform */
         position: fixed !important;
         left: 0 !important; right: 0 !important;
-        bottom: calc(49px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(40px + env(safe-area-inset-bottom, 0px)) !important;
         top: auto !important;
         width: auto !important;
         min-width: 0 !important;
@@ -1301,6 +1301,7 @@
       #mobile-taskbar {
         display: flex;
         align-items: stretch;
+        height: 40px;
         position: fixed;
         bottom: 0; left: 0; right: 0;
         padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -1311,7 +1312,7 @@
 
       .mobile-tab {
         flex: 1;
-        height: 49px;
+        height: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
