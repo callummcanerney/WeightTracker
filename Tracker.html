@@ -1178,10 +1178,12 @@
     .mobile-menu-scale-item { display: none !important; }
 
     @media (max-width: 430px) {
-      /* The home indicator area is outside the viewport on iOS PWA — the OS
-         paints it with the document background colour. Match html/body bg to
-         the taskbar so the "dead space" is the same colour and invisible. */
-      html, body { background: var(--bg2); }
+      /* The home indicator zone is outside the CSS viewport — iOS paints it
+         with the document background colour. Use the PAGE background (--bg)
+         rather than the taskbar background (--bg2), so the home indicator zone
+         appears as a distinct, darker element below the taskbar. This creates a
+         visible bottom boundary for the bar so icons read as "at the bottom". */
+      html, body { background: var(--bg); }
 
       /* Shell — tighter padding; 36px bar + env() clears the taskbar */
       .shell {
