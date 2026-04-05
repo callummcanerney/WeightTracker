@@ -1178,20 +1178,15 @@
     .mobile-menu-scale-item { display: none !important; }
 
     @media (max-width: 430px) {
-      /* Safe-area fill — fixed band below taskbar matching its bg color */
-      body::after {
-        content: '';
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        height: env(safe-area-inset-bottom, 34px);
-        background: var(--bg2);
-        z-index: 199;
-      }
+      /* The home indicator area is outside the viewport on iOS PWA — the OS
+         paints it with the document background colour. Match html/body bg to
+         the taskbar so the "dead space" is the same colour and invisible. */
+      html, body { background: var(--bg2); }
 
-      /* Shell — tighter padding; bottom = 54px tab height + safe area */
+      /* Shell — tighter padding; 54px clears the taskbar buttons */
       .shell {
         padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px
-                 calc(54px + env(safe-area-inset-bottom, 34px) + 8px);
+                 calc(54px + env(safe-area-inset-bottom, 0px) + 8px);
         gap: 8px;
       }
 
