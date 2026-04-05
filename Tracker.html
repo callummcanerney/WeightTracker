@@ -1258,9 +1258,10 @@
       }
       #mobile-log-backdrop.visible { opacity: 1; pointer-events: all; }
 
-      /* Menu: becomes a bottom sheet (same style as log entry) */
+      /* Menu: becomes a bottom sheet (same style as log entry).
+         No display: block !important — after document.body.appendChild the
+         element is out of the display:none header, so .hidden works normally. */
       #menu-dropdown {
-        display: block !important; /* always rendered; hidden via transform */
         position: fixed !important;
         left: 0 !important; right: 0 !important;
         bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
@@ -1302,10 +1303,7 @@
         display: flex;
         align-items: stretch;
         position: fixed;
-        /* bottom: env() positions the bar above the safe area zone instead of
-           using padding-bottom inside a border-box height (which collapses content) */
-        bottom: env(safe-area-inset-bottom, 0px);
-        left: 0; right: 0;
+        bottom: 0; left: 0; right: 0;
         background: var(--bg2);
         border-top: 1px solid var(--border);
         z-index: 200;
