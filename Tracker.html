@@ -1183,10 +1183,10 @@
          the taskbar so the "dead space" is the same colour and invisible. */
       html, body { background: var(--bg2); }
 
-      /* Shell — tighter padding; 28px clears the taskbar buttons */
+      /* Shell — tighter padding; 49px clears the taskbar buttons */
       .shell {
         padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px
-                 calc(28px + env(safe-area-inset-bottom, 0px) + 8px);
+                 calc(49px + env(safe-area-inset-bottom, 0px) + 8px);
         gap: 8px;
       }
 
@@ -1224,7 +1224,7 @@
       #log-entry-panel {
         position: fixed !important;
         left: 0; right: 0;
-        bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(49px + env(safe-area-inset-bottom, 0px));
         z-index: 150;
         height: auto !important;
         min-height: 0 !important;
@@ -1263,7 +1263,7 @@
         display: block !important; /* always rendered; hidden via transform */
         position: fixed !important;
         left: 0 !important; right: 0 !important;
-        bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(49px + env(safe-area-inset-bottom, 0px)) !important;
         top: auto !important;
         width: auto !important;
         min-width: 0 !important;
@@ -1300,10 +1300,10 @@
       /* Mobile taskbar */
       #mobile-taskbar {
         display: flex;
-        align-items: flex-start;
+        align-items: stretch;
         position: fixed;
         bottom: 0; left: 0; right: 0;
-        padding-bottom: env(safe-area-inset-bottom, 34px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
         background: var(--bg2);
         border-top: 1px solid var(--border);
         z-index: 200;
@@ -1311,17 +1311,17 @@
 
       .mobile-tab {
         flex: 1;
-        height: 28px;
+        height: 49px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 2px;
+        gap: 3px;
         background: none;
         border: none;
         color: var(--muted);
         font-family: 'JetBrains Mono', monospace;
-        font-size: 0.44rem;
+        font-size: 0.52rem;
         letter-spacing: 0.07em;
         text-transform: uppercase;
         cursor: pointer;
@@ -1658,7 +1658,7 @@
   <div id="mobile-menu-backdrop"></div>
   <nav id="mobile-taskbar">
     <button class="mobile-tab" id="mobile-menu-btn" type="button">
-      <svg width="16" height="12" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <svg width="22" height="16" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="0" y1="1" x2="24" y2="1"/>
         <line x1="0" y1="9" x2="24" y2="9"/>
         <line x1="0" y1="17" x2="24" y2="17"/>
@@ -1666,7 +1666,7 @@
       Menu
     </button>
     <button class="mobile-tab mobile-tab--add" id="mobile-add-btn" type="button">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="7" x2="12" y2="17"/>
         <line x1="7" y1="12" x2="17" y2="12"/>
