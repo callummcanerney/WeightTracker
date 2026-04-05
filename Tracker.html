@@ -1176,6 +1176,7 @@
     #mobile-log-backdrop { display: none; }
     #mobile-menu-backdrop { display: none; }
     .mobile-menu-scale-item { display: none !important; }
+    #mobile-range-btns { display: none; }
 
     @media (max-width: 430px) {
       /* Shell — nav bar (44px) sits at top below status bar, bottom just needs
@@ -1199,10 +1200,16 @@
       .stat-card--ring .value { font-size: 0.75rem; }
       .goal-arc-container svg { width: 46px; height: 46px; }
 
-      /* Hide chart controls */
+      /* Chart layout — reduce height so bottom panels always fit */
+      .chart-wrap { min-height: 0; max-height: 40vh; padding: 10px 10px 8px; }
+      .chart-header { margin-bottom: 6px; }
+
+      /* Hide desktop chart controls, show mobile replacements */
       #style-picker { display: none; }
       #scale-picker { display: none; }
-      #optimal-toggle { display: none; }
+      .index-slider-wrap { display: none; }
+      #mobile-range-btns { display: flex; gap: 6px; align-items: center; }
+      /* optimal-toggle stays visible — projected is now a toggleable option */
 
       /* Show mobile-only scale toggle in menu */
       .mobile-menu-scale-item { display: flex !important; }
@@ -1455,6 +1462,11 @@
           <div class="index-slider-wrap" id="index-slider-wrap">
             <input type="range" class="index-slider" id="index-slider" min="2" max="100" value="100">
             <span class="index-slider-label" id="index-slider-label">All</span>
+          </div>
+          <div id="mobile-range-btns">
+            <button class="range-btn" data-mobile-range="7" type="button">1W</button>
+            <button class="range-btn" data-mobile-range="30" type="button">1M</button>
+            <button class="range-btn" data-mobile-range="365" type="button">1Y</button>
           </div>
         </div>
         <!-- Right: point size control (Projected only) + Projected toggle -->
@@ -3653,10 +3665,8 @@
     // ─── MOBILE OVERRIDES ────────────────────────────────────────────────────────
     const _isMobile = window.matchMedia('(max-width: 430px)').matches;
     if (_isMobile) {
-      // Force projected + linear — override any stored preference
-      activeOptimal = true;
+      // Default to linear on mobile (style picker is hidden); projected is toggleable
       activeLineStyle = 'linear';
-      document.getElementById('optimal-toggle').classList.add('active');
 
       const mobileMenuBtn  = document.getElementById('mobile-menu-btn');
       const mobileAddBtn   = document.getElementById('mobile-add-btn');
@@ -3731,6 +3741,89 @@
         if (feedbackEl.classList.contains('show') && !feedbackEl.classList.contains('err'))
           setTimeout(closeLogSheet, 800);
       }).observe(feedbackEl, { attributes: true, attributeFilter: ['class'] });
+
+      // ── Mobile range buttons (1W / 1M / 1Y) ──────────────────────────────
+      function syncMobileRangeBtns() {
+        document.querySelectorAll('[data-mobile-range]').forEach(btn => {
+          btn.classList.toggle('active', String(activeRange) === btn.dataset.mobileRange);
+        });
+      }
+      document.querySelectorAll('[data-mobile-range]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeRange = parseInt(btn.dataset.mobileRange);
+          localStorage.setItem('wt-range', String(activeRange));
+          initPan(_entries, activeRange);
+          initPanIndex(sortedEntries(_entries), activeRange);
+          savePanState();
+          syncSliderToState();
+          syncMobileRangeBtns();
+          if (chart) { chart.destroy(); chart = null; }
+          refresh();
+        });
+      });
+      syncMobileRangeBtns();
+
+      // ── Touch pan on chart canvas (horizontal swipe = scroll x-axis) ─────
+      const _chartCanvas = document.getElementById('chart');
+      let _tLastX = null, _tStartX = null, _tStartY = null, _tIsHoriz = null;
+
+      _chartCanvas.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) return;
+        _tLastX  = e.touches[0].clientX;
+        _tStartX = e.touches[0].clientX;
+        _tStartY = e.touches[0].clientY;
+        _tIsHoriz = null;
+      }, { passive: true });
+
+      _chartCanvas.addEventListener('touchmove', e => {
+        if (e.touches.length !== 1 || _tLastX === null || !chart) return;
+        const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+        if (_tIsHoriz === null) {
+          const adx = Math.abs(cx - _tStartX), ady = Math.abs(cy - _tStartY);
+          if (adx < 3 && ady < 3) return;
+          _tIsHoriz = adx >= ady;
+        }
+        if (!_tIsHoriz) return;
+        e.preventDefault();
+        const deltaX = _tLastX - cx;
+        _tLastX = cx;
+        if (!deltaX) return;
+
+        if (activeScaleMode === 'index') {
+          if (panIndexMin === null) return;
+          const sorted = sortedEntries(_entries);
+          const n = sorted.length;
+          if (n < 2) return;
+          const idxPerPx = (panIndexMax - panIndexMin) / chart.scales.x.width;
+          let ni = panIndexMin + deltaX * idxPerPx, nx = panIndexMax + deltaX * idxPerPx;
+          if (ni < 0) { nx -= ni; ni = 0; }
+          if (nx > n - 1) { ni -= nx - (n - 1); nx = n - 1; }
+          panIndexMin = ni; panIndexMax = nx;
+          savePanState(); syncSliderToState();
+          chart.scales.x.options.min = panIndexMin;
+          chart.scales.x.options.max = panIndexMax;
+          chart.update('none');
+        } else {
+          if (panMin === null) return;
+          const sorted = sortedEntries(_entries);
+          if (!sorted.length) return;
+          const dataMinMs = new Date(sorted[0].date + 'T00:00:00').getTime();
+          const dataMaxMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
+          const optC = activeOptimal ? computeOptimalCurve() : null;
+          const effMaxMs = optC ? Math.max(dataMaxMs, optC.targetMs) : dataMaxMs;
+          const msPerPx = (panMax - panMin) / chart.scales.x.width;
+          let nMin = panMin + deltaX * msPerPx, nMax = panMax + deltaX * msPerPx;
+          if (nMin < dataMinMs) { nMax += dataMinMs - nMin; nMin = dataMinMs; }
+          if (nMax > effMaxMs) { nMin -= nMax - effMaxMs; nMax = effMaxMs; }
+          panMin = nMin; panMax = nMax;
+          savePanState(); syncSliderToState();
+          chart.scales.x.options.min = panMin;
+          chart.scales.x.options.max = panMax;
+          chart.update('none');
+        }
+      }, { passive: false });
+
+      _chartCanvas.addEventListener('touchend', () => { _tLastX = null; _tIsHoriz = null; });
     }
 
     // ─── INIT ─────────────────────────────────────────────────────────────────────
