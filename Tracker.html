@@ -1495,6 +1495,16 @@
         margin-bottom: 6px;
       }
 
+      /* Weekly breakdown: remove n column, equalise right padding with left */
+      .weekly-scroll {
+        padding-right: 0;
+      }
+
+      .weekly-tbl thead th:last-child,
+      .weekly-tbl tbody td:last-child {
+        display: none;
+      }
+
       /* Shrink activity calendar cells to fit narrower panel */
       .log-cal {
         grid-template-columns: repeat(7, 19px);
