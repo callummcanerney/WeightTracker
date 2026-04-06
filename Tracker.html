@@ -1611,7 +1611,7 @@
         left: 0;
         right: 0;
         height: calc(44px + env(safe-area-inset-top, 47px));
-        padding: env(safe-area-inset-top, 47px) 4px 0;
+        padding: env(safe-area-inset-top, 47px) 11px 0;
         background: var(--bg2);
         border-bottom: 1px solid var(--border);
         z-index: 200;
@@ -2029,15 +2029,6 @@
   <div id="mobile-log-backdrop"></div>
   <div id="mobile-menu-backdrop"></div>
   <nav id="mobile-taskbar">
-    <button class="mobile-tab" id="mobile-menu-btn" type="button">
-      <svg width="26" height="19" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.5"
-        stroke-linecap="round">
-        <line x1="0" y1="1" x2="24" y2="1" />
-        <line x1="0" y1="9" x2="24" y2="9" />
-        <line x1="0" y1="17" x2="24" y2="17" />
-      </svg>
-      Menu
-    </button>
     <button class="mobile-tab mobile-tab--add" id="mobile-add-btn" type="button">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
         stroke-linecap="round">
@@ -2046,6 +2037,15 @@
         <line x1="7" y1="12" x2="17" y2="12" />
       </svg>
       Add
+    </button>
+    <button class="mobile-tab" id="mobile-menu-btn" type="button">
+      <svg width="26" height="19" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round">
+        <line x1="0" y1="1" x2="24" y2="1" />
+        <line x1="0" y1="9" x2="24" y2="9" />
+        <line x1="0" y1="17" x2="24" y2="17" />
+      </svg>
+      Menu
     </button>
   </nav>
 
@@ -4126,29 +4126,11 @@
       // ── Touch pan on chart canvas (horizontal swipe = scroll x-axis) ─────
       const _chartCanvas = document.getElementById('chart');
       let _tLastX = null, _tStartX = null, _tStartY = null, _tIsHoriz = null;
+      let _tVelX = 0, _tLastTime = null, _momentumRAF = null;
 
-      _chartCanvas.addEventListener('touchstart', e => {
-        if (e.touches.length !== 1) return;
-        _tLastX = e.touches[0].clientX;
-        _tStartX = e.touches[0].clientX;
-        _tStartY = e.touches[0].clientY;
-        _tIsHoriz = null;
-      }, { passive: true });
-
-      _chartCanvas.addEventListener('touchmove', e => {
-        if (e.touches.length !== 1 || _tLastX === null || !chart) return;
-        const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
-        if (_tIsHoriz === null) {
-          const adx = Math.abs(cx - _tStartX), ady = Math.abs(cy - _tStartY);
-          if (adx < 3 && ady < 3) return;
-          _tIsHoriz = adx >= ady;
-        }
-        if (!_tIsHoriz) return;
-        e.preventDefault();
-        const deltaX = _tLastX - cx;
-        _tLastX = cx;
-        if (!deltaX) return;
-
+      // Apply a pan of deltaX pixels — updates state and redraws with y-axis fit
+      function _mobilePanBy(deltaX) {
+        if (!chart || !deltaX) return;
         if (activeScaleMode === 'index') {
           if (panIndexMin === null) return;
           const sorted = sortedEntries(_entries);
@@ -4160,9 +4142,7 @@
           if (nx > n - 1) { ni -= nx - (n - 1); nx = n - 1; }
           panIndexMin = ni; panIndexMax = nx;
           savePanState(); syncSliderToState();
-          chart.scales.x.options.min = panIndexMin;
-          chart.scales.x.options.max = panIndexMax;
-          chart.update('none');
+          applyIndexPanToChart();
         } else {
           if (panMin === null) return;
           const sorted = sortedEntries(_entries);
@@ -4177,13 +4157,59 @@
           if (nMax > effMaxMs) { nMin -= nMax - effMaxMs; nMax = effMaxMs; }
           panMin = nMin; panMax = nMax;
           savePanState(); syncSliderToState();
-          chart.scales.x.options.min = panMin;
-          chart.scales.x.options.max = panMax;
-          chart.update('none');
+          applyPanToChart();
         }
+      }
+
+      _chartCanvas.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) return;
+        if (_momentumRAF) { cancelAnimationFrame(_momentumRAF); _momentumRAF = null; }
+        _tLastX = e.touches[0].clientX;
+        _tStartX = e.touches[0].clientX;
+        _tStartY = e.touches[0].clientY;
+        _tLastTime = e.timeStamp;
+        _tIsHoriz = null;
+        _tVelX = 0;
+      }, { passive: true });
+
+      _chartCanvas.addEventListener('touchmove', e => {
+        if (e.touches.length !== 1 || _tLastX === null || !chart) return;
+        const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+        if (_tIsHoriz === null) {
+          const adx = Math.abs(cx - _tStartX), ady = Math.abs(cy - _tStartY);
+          if (adx < 3 && ady < 3) return;
+          _tIsHoriz = adx >= ady;
+        }
+        if (!_tIsHoriz) return;
+        e.preventDefault();
+        const deltaX = _tLastX - cx;
+        const dt = e.timeStamp - _tLastTime;
+        if (dt > 0) _tVelX = deltaX / dt; // px/ms — used for momentum
+        _tLastX = cx;
+        _tLastTime = e.timeStamp;
+        _mobilePanBy(deltaX);
       }, { passive: false });
 
-      _chartCanvas.addEventListener('touchend', () => { _tLastX = null; _tIsHoriz = null; });
+      _chartCanvas.addEventListener('touchend', () => {
+        _tLastX = null;
+        _tIsHoriz = null;
+        // Momentum: continue scrolling with exponentially decaying velocity
+        const DECAY = 0.95;        // per normalised 16.67ms frame
+        const MIN_VEL = 0.05;      // px/ms — stop below this
+        let vel = _tVelX;
+        if (Math.abs(vel) < MIN_VEL) return;
+        let prevTs = null;
+        function step(ts) {
+          if (prevTs === null) { prevTs = ts; _momentumRAF = requestAnimationFrame(step); return; }
+          const dt = Math.min(ts - prevTs, 32); // cap for tab-switch spikes
+          prevTs = ts;
+          vel *= Math.pow(DECAY, dt / 16.67); // normalise decay to 60fps
+          if (Math.abs(vel) < MIN_VEL) { _momentumRAF = null; return; }
+          _mobilePanBy(vel * dt);
+          _momentumRAF = requestAnimationFrame(step);
+        }
+        _momentumRAF = requestAnimationFrame(step);
+      });
     }
 
     // ─── INIT ─────────────────────────────────────────────────────────────────────
