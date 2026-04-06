@@ -3,9 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Weight Tracker</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b0c0e'/><polyline points='4,8 11,13 17,11 23,18 28,24' fill='none' stroke='%234ade80' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='4' cy='8' r='2' fill='%234ade80'/></svg>">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b0c0e'/><polyline points='4,8 11,13 17,11 23,18 28,24' fill='none' stroke='%234ade80' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='4' cy='8' r='2' fill='%234ade80'/></svg>">
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -113,13 +115,17 @@
       padding: 10px 14px;
       transition: border-color 0.2s;
     }
+
     .stat-card--ring {
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 4px;
     }
-    .stat-card--ring .value { font-size: 1rem; }
+
+    .stat-card--ring .value {
+      font-size: 1rem;
+    }
 
     .stat-card:hover {
       border-color: var(--border2);
@@ -220,7 +226,12 @@
       border-color: var(--border2);
       color: var(--text);
     }
-    .range-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+    .range-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
 
     .range-btn.active {
       background: var(--accent-dim);
@@ -229,9 +240,25 @@
     }
 
     /* Chart header three-zone layout */
-    .ctrl-left  { display: flex; align-items: center; gap: 8px; }
-    .ctrl-center { flex: 1; display: flex; justify-content: center; align-items: center; padding: 0 12px; }
-    .ctrl-right  { display: flex; align-items: center; gap: 8px; }
+    .ctrl-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ctrl-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 12px;
+    }
+
+    .ctrl-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
     /* INDEX MODE SLIDER */
     .index-slider-wrap {
@@ -239,7 +266,10 @@
       align-items: center;
       gap: 8px;
     }
-    .index-slider-wrap.hidden { display: none; }
+
+    .index-slider-wrap.hidden {
+      display: none;
+    }
 
     .index-slider {
       -webkit-appearance: none;
@@ -251,6 +281,7 @@
       outline: none;
       cursor: pointer;
     }
+
     .index-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 13px;
@@ -260,7 +291,11 @@
       cursor: pointer;
       transition: transform 0.1s;
     }
-    .index-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .index-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
     .index-slider::-moz-range-thumb {
       width: 13px;
       height: 13px;
@@ -270,8 +305,15 @@
       cursor: pointer;
     }
 
-    .index-slider:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
-    .index-slider-label.locked { opacity: 0.3; }
+    .index-slider:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .index-slider-label.locked {
+      opacity: 0.3;
+    }
 
 
     .index-slider-label {
@@ -318,7 +360,11 @@
       letter-spacing: 0.05em;
       transition: color 0.1s, background 0.1s;
     }
-    .tooltip-edit-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+
+    .tooltip-edit-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.07);
+    }
 
     .ext-tooltip::after {
       content: '';
@@ -491,7 +537,7 @@
       position: absolute;
       pointer-events: none;
       width: 1px;
-      background: rgba(255,255,255,0.18);
+      background: rgba(255, 255, 255, 0.18);
       display: none;
     }
 
@@ -530,6 +576,7 @@
       min-height: 0;
       overflow: hidden;
     }
+
     .insights-top {
       display: flex;
       align-items: center;
@@ -537,12 +584,14 @@
       flex-wrap: nowrap;
       min-width: 0;
     }
+
     .streak-badge {
       display: flex;
       align-items: baseline;
       gap: 4px;
       flex-shrink: 0;
     }
+
     .streak-num {
       font-family: 'JetBrains Mono', monospace;
       font-size: 1.2rem;
@@ -551,7 +600,11 @@
       letter-spacing: -0.04em;
       line-height: 1;
     }
-    .streak-num.zero { color: var(--muted); }
+
+    .streak-num.zero {
+      color: var(--muted);
+    }
+
     .streak-lbl {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.58rem;
@@ -559,17 +612,20 @@
       text-transform: uppercase;
       letter-spacing: 0.07em;
     }
+
     .insights-sep {
       height: 1px;
       background: var(--border);
       flex-shrink: 0;
     }
+
     /* 30-day log calendar — GitHub-style compact dots */
     .log-cal {
       display: grid;
       grid-template-columns: repeat(7, 22px);
       gap: 3px;
     }
+
     .log-cal-head {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.48rem;
@@ -577,6 +633,7 @@
       text-align: center;
       line-height: 14px;
     }
+
     .log-cal-cell {
       width: 22px;
       height: 22px;
@@ -589,12 +646,22 @@
       color: var(--muted);
       background: var(--bg3);
     }
+
     .log-cal-cell.logged {
-      background: rgba(74,222,128,0.22);
+      background: rgba(74, 222, 128, 0.22);
       color: var(--accent);
     }
-    .log-cal-cell.today { outline: 1px solid var(--border2); outline-offset: -1px; }
-    .log-cal-cell.future { background: transparent; color: transparent; border: none; }
+
+    .log-cal-cell.today {
+      outline: 1px solid var(--border2);
+      outline-offset: -1px;
+    }
+
+    .log-cal-cell.future {
+      background: transparent;
+      color: transparent;
+      border: none;
+    }
 
     /* Weekly table */
     #weekly-panel {
@@ -604,18 +671,21 @@
       flex-direction: column;
       overflow: hidden;
     }
+
     .weekly-scroll {
       overflow-y: auto;
       flex: 1;
       min-height: 0;
       padding-right: 14px;
     }
+
     .weekly-tbl {
       width: 100%;
       border-collapse: collapse;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.6rem;
     }
+
     .weekly-tbl thead th {
       color: var(--muted);
       font-weight: 400;
@@ -623,18 +693,42 @@
       padding: 0 4px 4px;
       letter-spacing: 0.05em;
     }
-    .weekly-tbl thead th:first-child { text-align: left; }
-    .weekly-tbl tbody tr { border-top: 1px solid var(--border); }
+
+    .weekly-tbl thead th:first-child {
+      text-align: left;
+    }
+
+    .weekly-tbl tbody tr {
+      border-top: 1px solid var(--border);
+    }
+
     .weekly-tbl tbody td {
       padding: 3px 4px;
       color: var(--text);
       text-align: right;
     }
-    .weekly-tbl tbody td:first-child { text-align: left; color: var(--muted); }
-    .wk-pos { color: var(--accent); }
-    .wk-neg { color: var(--red); }
-    .wk-neu { color: var(--muted); }
-    .wk-upcoming td { opacity: 0.5; border-top: 1px dashed var(--border2) !important; }
+
+    .weekly-tbl tbody td:first-child {
+      text-align: left;
+      color: var(--muted);
+    }
+
+    .wk-pos {
+      color: var(--accent);
+    }
+
+    .wk-neg {
+      color: var(--red);
+    }
+
+    .wk-neu {
+      color: var(--muted);
+    }
+
+    .wk-upcoming td {
+      opacity: 0.5;
+      border-top: 1px dashed var(--border2) !important;
+    }
 
     /* PANELS */
     .panel {
@@ -643,19 +737,43 @@
       border-radius: 12px;
       padding: 18px 20px;
     }
-    .bottom-grid .panel { padding: 12px 14px; }
-    #log-entry-panel { height: 0; min-height: 100%; display: flex; flex-direction: column; }
-    #weight-field { margin-top: auto; }
-    .bottom-grid .panel-title { margin-bottom: 8px; }
-    .bottom-grid .field { margin-bottom: 7px; }
-    .bottom-grid .field label { margin-bottom: 4px; }
-    .bottom-grid .field input { padding: 7px 10px; }
+
+    .bottom-grid .panel {
+      padding: 12px 14px;
+    }
+
+    #log-entry-panel {
+      height: 0;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #weight-field {
+      margin-top: auto;
+    }
+
+    .bottom-grid .panel-title {
+      margin-bottom: 8px;
+    }
+
+    .bottom-grid .field {
+      margin-bottom: 7px;
+    }
+
+    .bottom-grid .field label {
+      margin-bottom: 4px;
+    }
+
+    .bottom-grid .field input {
+      padding: 7px 10px;
+    }
 
     /* ENTRY EDIT MODAL */
     .entry-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.55);
+      background: rgba(0, 0, 0, 0.55);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       z-index: 200;
@@ -663,7 +781,10 @@
       align-items: center;
       justify-content: center;
     }
-    .entry-modal-overlay.hidden { display: none; }
+
+    .entry-modal-overlay.hidden {
+      display: none;
+    }
 
     .entry-modal {
       background: var(--bg2);
@@ -702,7 +823,11 @@
       transition: border-color 0.15s, background 0.15s;
       white-space: nowrap;
     }
-    .btn-danger:hover { border-color: var(--red); background: rgba(248,113,113,0.07); }
+
+    .btn-danger:hover {
+      border-color: var(--red);
+      background: rgba(248, 113, 113, 0.07);
+    }
 
     .btn-ghost {
       background: none;
@@ -717,7 +842,11 @@
       transition: border-color 0.15s, color 0.15s;
       white-space: nowrap;
     }
-    .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+
+    .btn-ghost:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
 
     .panel-title {
       font-size: 0.72rem;
@@ -757,7 +886,7 @@
       -webkit-appearance: none;
     }
 
-.field input:focus {
+    .field input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-dim);
     }
@@ -977,6 +1106,7 @@
     .cal-day.selected:hover {
       opacity: 0.9;
     }
+
     .cal-day.future-day {
       color: var(--muted);
       opacity: 0.2;
@@ -995,17 +1125,22 @@
       -webkit-appearance: none;
       margin: 0;
     }
-    input[type=number] { -moz-appearance: textfield; }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
 
     /* custom stepper wrapper */
     .num-wrap {
       position: relative;
       display: flex;
     }
+
     .num-wrap input[type=number] {
       padding-right: 32px;
       width: 100%;
     }
+
     .num-spin {
       position: absolute;
       right: 1px;
@@ -1018,6 +1153,7 @@
       border-radius: 0 7px 7px 0;
       overflow: hidden;
     }
+
     .num-up,
     .num-dn {
       flex: 1;
@@ -1031,12 +1167,16 @@
       transition: color 0.12s, background 0.12s;
       padding: 0;
     }
+
     .num-up:hover,
     .num-dn:hover {
       color: var(--text);
       background: rgba(255, 255, 255, 0.05);
     }
-    .num-up { border-bottom: 1px solid var(--border2); }
+
+    .num-up {
+      border-bottom: 1px solid var(--border2);
+    }
 
     /* GOAL ARC */
     .goal-arc-container {
@@ -1045,9 +1185,11 @@
       justify-content: center;
       margin: 4px 0 2px;
     }
+
     .goal-arc-pct {
       position: absolute;
-      top: 50%; left: 50%;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
       display: flex;
       flex-direction: column;
@@ -1055,8 +1197,20 @@
       pointer-events: none;
       line-height: 1;
     }
-    .goal-arc-sign { font-size: 0.55em; opacity: 0.45; margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
-    .goal-arc-bg { fill: none; stroke: var(--border2); stroke-width: 3; }
+
+    .goal-arc-sign {
+      font-size: 0.55em;
+      opacity: 0.45;
+      margin-top: 3px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .goal-arc-bg {
+      fill: none;
+      stroke: var(--border2);
+      stroke-width: 3;
+    }
+
     .goal-arc-fill {
       fill: none;
       stroke: var(--amber);
@@ -1067,8 +1221,19 @@
       transition: stroke-dashoffset 0.5s ease, stroke 0.4s;
     }
 
-    .stat-kg { font-size: 0.6em; opacity: 0.5; margin-left: 2px; vertical-align: baseline; }
-    .stat-year { font-size: 0.72em; opacity: 0.5; margin-left: 3px; vertical-align: baseline; }
+    .stat-kg {
+      font-size: 0.6em;
+      opacity: 0.5;
+      margin-left: 2px;
+      vertical-align: baseline;
+    }
+
+    .stat-year {
+      font-size: 0.72em;
+      opacity: 0.5;
+      margin-left: 3px;
+      vertical-align: baseline;
+    }
 
     /* GOAL MODAL PROJECTION */
     .goal-proj-row {
@@ -1077,11 +1242,15 @@
       gap: 8px;
       margin-bottom: 14px;
       padding: 8px 10px;
-      background: rgba(251,191,36,0.06);
-      border: 1px solid rgba(251,191,36,0.2);
+      background: rgba(251, 191, 36, 0.06);
+      border: 1px solid rgba(251, 191, 36, 0.2);
       border-radius: 8px;
     }
-    .goal-proj-row.hidden { display: none; }
+
+    .goal-proj-row.hidden {
+      display: none;
+    }
+
     .goal-proj-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.62rem;
@@ -1090,6 +1259,7 @@
       color: var(--amber);
       white-space: nowrap;
     }
+
     .goal-proj-date {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.78rem;
@@ -1112,6 +1282,7 @@
       gap: 4px;
       transition: border-color 0.15s;
     }
+
     .menu-btn span {
       display: block;
       width: 17px;
@@ -1120,10 +1291,22 @@
       border-radius: 1px;
       transition: background 0.15s;
     }
-    .menu-btn:hover { border-color: var(--border2); }
-    .menu-btn:hover span { background: var(--text); }
-    .menu-btn.open { border-color: var(--accent); }
-    .menu-btn.open span { background: var(--accent); }
+
+    .menu-btn:hover {
+      border-color: var(--border2);
+    }
+
+    .menu-btn:hover span {
+      background: var(--text);
+    }
+
+    .menu-btn.open {
+      border-color: var(--accent);
+    }
+
+    .menu-btn.open span {
+      background: var(--accent);
+    }
 
     .menu-dropdown {
       position: absolute;
@@ -1135,9 +1318,12 @@
       padding: 4px;
       z-index: 200;
       min-width: 168px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
     }
-    .menu-dropdown.hidden { display: none; }
+
+    .menu-dropdown.hidden {
+      display: none;
+    }
 
     .menu-item {
       display: flex;
@@ -1157,7 +1343,12 @@
       transition: background 0.1s, color 0.1s;
       white-space: nowrap;
     }
-    .menu-item:hover { background: var(--bg3); color: var(--text); }
+
+    .menu-item:hover {
+      background: var(--bg3);
+      color: var(--text);
+    }
+
     .menu-item-icon {
       font-size: 0.9rem;
       font-family: 'JetBrains Mono', monospace;
@@ -1165,6 +1356,7 @@
       width: 16px;
       text-align: center;
     }
+
     .menu-sep {
       height: 1px;
       background: var(--border);
@@ -1172,61 +1364,145 @@
     }
 
     /* ── MOBILE TASKBAR (hidden on desktop) ─────────────────────────────── */
-    #mobile-taskbar { display: none; }
-    #mobile-log-backdrop { display: none; }
-    #mobile-menu-backdrop { display: none; }
-    .mobile-menu-scale-item { display: none !important; }
-    #mobile-range-btns { display: none; }
+    #mobile-taskbar {
+      display: none;
+    }
+
+    #mobile-log-backdrop {
+      display: none;
+    }
+
+    #mobile-menu-backdrop {
+      display: none;
+    }
+
+    .mobile-menu-scale-item {
+      display: none !important;
+    }
+
+    #mobile-range-btns {
+      display: none;
+    }
 
     @media (max-width: 430px) {
+
       /* Shell — nav bar (44px) sits at top below status bar, bottom just needs
          home indicator clearance (env) with a small gap. No bottom bar. */
       .shell {
-        padding: calc(env(safe-area-inset-top, 47px) + 44px + 8px) 10px
-                 calc(env(safe-area-inset-bottom, 0px) + 8px);
+        padding: calc(env(safe-area-inset-top, 47px) + 44px + 8px) 10px env(safe-area-inset-bottom, 0px);
         gap: 8px;
       }
 
       /* Hide desktop header — mobile uses the taskbar nav at the top instead */
-      header { display: none; }
+      header {
+        display: none;
+      }
 
       /* Compact stats row */
-      .stats-row { gap: 4px; }
-      .stat-card { padding: 5px 4px; border-radius: 7px; }
-      .stat-card .label { font-size: 0.46rem; margin-bottom: 2px; letter-spacing: 0.04em; }
-      .stat-card .value { font-size: 0.85rem; }
-      .stat-card .sub   { font-size: 0.46rem; margin-top: 2px; }
-      .stat-card--ring  { padding: 2px; }
-      .stat-card--ring .value { font-size: 0.75rem; }
-      .goal-arc-container svg { width: 46px; height: 46px; }
+      .stats-row {
+        gap: 4px;
+      }
 
-      /* Chart layout — reduce height so bottom panels always fit */
-      .chart-wrap { min-height: 0; max-height: 40vh; padding: 10px 10px 8px; }
-      .chart-header { margin-bottom: 6px; }
+      .stat-card {
+        padding: 5px 4px;
+        border-radius: 7px;
+      }
+
+      .stat-card .label {
+        font-size: 0.46rem;
+        margin-bottom: 2px;
+        letter-spacing: 0.04em;
+      }
+
+      .stat-card .value {
+        font-size: 0.85rem;
+      }
+
+      .stat-card .sub {
+        font-size: 0.46rem;
+        margin-top: 2px;
+      }
+
+      .stat-card--ring {
+        padding: 2px;
+      }
+
+      .stat-card--ring .value {
+        font-size: 0.75rem;
+      }
+
+      .goal-arc-container svg {
+        width: 46px;
+        height: 46px;
+      }
+
+      /* Chart layout — no max-height so flex: 1 1 0 fills remaining space
+         after stats-row and bottom-grid, pushing bottom-grid to the safe-area edge */
+      .chart-wrap {
+        min-height: 0;
+        padding: 10px 10px 8px;
+      }
+
+      .chart-header {
+        margin-bottom: 6px;
+      }
 
       /* Hide desktop chart controls, show mobile replacements */
-      #style-picker { display: none; }
-      #scale-picker { display: none; }
-      .index-slider-wrap { display: none; }
-      #mobile-range-btns { display: flex; gap: 6px; align-items: center; }
+      #style-picker {
+        display: none;
+      }
+
+      #scale-picker {
+        display: none;
+      }
+
+      .index-slider-wrap {
+        display: none;
+      }
+
+      #mobile-range-btns {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
       /* optimal-toggle stays visible — projected is now a toggleable option */
 
       /* Show mobile-only scale toggle in menu */
-      .mobile-menu-scale-item { display: flex !important; }
+      .mobile-menu-scale-item {
+        display: flex !important;
+      }
 
       /* Bottom grid: log entry is a sheet; tighter gap + padding */
-      .bottom-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-      .bottom-grid .panel { padding: 10px; }
-      .bottom-grid .panel-title { margin-bottom: 6px; }
+      .bottom-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .bottom-grid .panel {
+        padding: 10px;
+      }
+
+      .bottom-grid .panel-title {
+        margin-bottom: 6px;
+      }
 
       /* Shrink activity calendar cells to fit narrower panel */
-      .log-cal { grid-template-columns: repeat(7, 19px); gap: 2px; }
-      .log-cal-cell { width: 19px; height: 19px; }
+      .log-cal {
+        grid-template-columns: repeat(7, 19px);
+        gap: 2px;
+      }
+
+      .log-cal-cell {
+        width: 19px;
+        height: 19px;
+      }
 
       /* Log entry: becomes a bottom sheet — no taskbar to clear, just safe area */
       #log-entry-panel {
         position: fixed !important;
-        left: 0; right: 0;
+        left: 0;
+        right: 0;
         bottom: 0;
         z-index: 150;
         height: auto !important;
@@ -1237,12 +1513,20 @@
         transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
         padding: 20px 16px max(env(safe-area-inset-bottom, 0px), 16px);
       }
-      #log-entry-panel.mobile-open { transform: translateY(0); }
-      #log-entry-panel #weight-field { margin-top: 0 !important; }
+
+      #log-entry-panel.mobile-open {
+        transform: translateY(0);
+      }
+
+      #log-entry-panel #weight-field {
+        margin-top: 0 !important;
+      }
+
       #log-entry-panel::before {
         content: '';
         display: block;
-        width: 36px; height: 4px;
+        width: 36px;
+        height: 4px;
         background: var(--border2);
         border-radius: 2px;
         margin: 0 auto 14px;
@@ -1259,14 +1543,19 @@
         pointer-events: none;
         transition: opacity 0.32s;
       }
-      #mobile-log-backdrop.visible { opacity: 1; pointer-events: all; }
+
+      #mobile-log-backdrop.visible {
+        opacity: 1;
+        pointer-events: all;
+      }
 
       /* Menu: becomes a bottom sheet (same style as log entry).
          No display: block !important — after document.body.appendChild the
          element is out of the display:none header, so .hidden works normally. */
       #menu-dropdown {
         position: fixed !important;
-        left: 0 !important; right: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
         bottom: 0 !important;
         top: auto !important;
         width: auto !important;
@@ -1276,13 +1565,18 @@
         transform: translateY(calc(100% + 24px));
         transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 152 !important;
-        box-shadow: 0 -2px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.4);
       }
-      #menu-dropdown.mobile-open { transform: translateY(0); }
+
+      #menu-dropdown.mobile-open {
+        transform: translateY(0);
+      }
+
       #menu-dropdown::before {
         content: '';
         display: block;
-        width: 36px; height: 4px;
+        width: 36px;
+        height: 4px;
         background: var(--border2);
         border-radius: 2px;
         margin: 0 auto 12px;
@@ -1299,7 +1593,11 @@
         pointer-events: none;
         transition: opacity 0.32s;
       }
-      #mobile-menu-backdrop.visible { opacity: 1; pointer-events: all; }
+
+      #mobile-menu-backdrop.visible {
+        opacity: 1;
+        pointer-events: all;
+      }
 
       /* Mobile nav bar — sits at the TOP, just below the status bar.
          No bottom-zone dead space issue. Standard iOS navigation bar pattern. */
@@ -1309,7 +1607,8 @@
         justify-content: space-between;
         position: fixed;
         top: env(safe-area-inset-top, 47px);
-        left: 0; right: 0;
+        left: 0;
+        right: 0;
         height: 44px;
         padding: 0 4px;
         background: var(--bg2);
@@ -1337,8 +1636,14 @@
         transition: color 0.15s;
         -webkit-tap-highlight-color: transparent;
       }
-      .mobile-tab.open { color: var(--accent); }
-      .mobile-tab--add.open { color: var(--accent); }
+
+      .mobile-tab.open {
+        color: var(--accent);
+      }
+
+      .mobile-tab--add.open {
+        color: var(--accent);
+      }
 
       /* Prevent iOS auto-zoom on input focus (triggered when font-size < 16px) */
       .date-text-input,
@@ -1414,18 +1719,18 @@
       <div class="stat-card stat-card--ring">
         <div class="goal-arc-container">
           <svg width="72" height="72" viewBox="0 0 72 72">
-            <circle class="goal-arc-bg" cx="36" cy="36" r="30"/>
-            <circle class="goal-arc-fill" id="goal-arc" cx="36" cy="36" r="30" transform="rotate(-90 36 36)"/>
+            <circle class="goal-arc-bg" cx="36" cy="36" r="30" />
+            <circle class="goal-arc-fill" id="goal-arc" cx="36" cy="36" r="30" transform="rotate(-90 36 36)" />
             <!-- 10% segment breakers scaled to r=30/72px -->
-            <line x1="50.8" y1="15.7" x2="56.6" y2="7.6"  stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="60.0" y1="28.3" x2="69.4" y2="25.1" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="60.0" y1="43.7" x2="69.4" y2="46.9" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="50.8" y1="56.2" x2="56.6" y2="64.6" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="36.0" y1="61.1" x2="36.0" y2="71.2" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="21.2" y1="56.2" x2="15.4" y2="64.6" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="12.0" y1="43.7" x2="2.6"  y2="46.9" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="12.0" y1="28.3" x2="2.6"  y2="25.1" stroke="var(--bg2)" stroke-width="1.5"/>
-            <line x1="21.2" y1="15.7" x2="15.4" y2="7.6"  stroke="var(--bg2)" stroke-width="1.5"/>
+            <line x1="50.8" y1="15.7" x2="56.6" y2="7.6" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="60.0" y1="28.3" x2="69.4" y2="25.1" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="60.0" y1="43.7" x2="69.4" y2="46.9" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="50.8" y1="56.2" x2="56.6" y2="64.6" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="36.0" y1="61.1" x2="36.0" y2="71.2" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="21.2" y1="56.2" x2="15.4" y2="64.6" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="12.0" y1="43.7" x2="2.6" y2="46.9" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="12.0" y1="28.3" x2="2.6" y2="25.1" stroke="var(--bg2)" stroke-width="1.5" />
+            <line x1="21.2" y1="15.7" x2="15.4" y2="7.6" stroke="var(--bg2)" stroke-width="1.5" />
           </svg>
           <div class="goal-arc-pct">
             <div class="value" id="stat-goal-pct">—</div>
@@ -1462,7 +1767,8 @@
             <div class="range-btns" id="range-btns"></div>
             <button class="range-btn" id="range-add-btn" type="button" title="Add custom range">+</button>
             <form class="range-add-form hidden" id="range-add-form">
-              <input class="range-add-input" id="range-add-input" type="number" placeholder="days" min="1" max="3650" autocomplete="off">
+              <input class="range-add-input" id="range-add-input" type="number" placeholder="days" min="1" max="3650"
+                autocomplete="off">
               <button class="range-btn" type="submit">✓</button>
               <button class="range-btn" type="button" id="range-add-cancel">✕</button>
             </form>
@@ -1482,7 +1788,7 @@
         <!-- Right: point size control (Projected only) + Projected toggle -->
         <div class="ctrl-right">
           <div id="range-sep" style="display:none;"></div>
-<button class="range-btn active" id="optimal-toggle" type="button">Projected</button>
+          <button class="range-btn active" id="optimal-toggle" type="button">Projected</button>
         </div>
       </div>
       <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
@@ -1535,8 +1841,14 @@
           <div class="num-wrap">
             <input type="number" id="inp-weight" step="0.05" min="30" max="300" placeholder="kg">
             <div class="num-spin">
-              <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
-              <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+              <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
+                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1,4 4,1 7,4" />
+                </svg></button>
+              <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
+                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1,1 4,4 7,1" />
+                </svg></button>
             </div>
           </div>
         </div>
@@ -1580,8 +1892,14 @@
         <div class="num-wrap">
           <input type="number" id="goal-modal-inp" step="0.05" min="30" max="300" placeholder="kg">
           <div class="num-spin">
-            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
-            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,4 4,1 7,4" />
+              </svg></button>
+            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,1 4,4 7,1" />
+              </svg></button>
           </div>
         </div>
       </div>
@@ -1589,22 +1907,38 @@
         <label>Weekly Loss Rate (% of body weight)</label>
         <div style="display:flex;gap:8px;align-items:flex-start">
           <div style="flex:1">
-            <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Start</div>
+            <div
+              style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">
+              Start</div>
             <div class="num-wrap">
               <input type="number" id="goal-rate-start-inp" step="0.05" min="0.1" max="3" placeholder="%/wk">
               <div class="num-spin">
-                <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
-                <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+                <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5"
+                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1,4 4,1 7,4" />
+                  </svg></button>
+                <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5"
+                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1,1 4,4 7,1" />
+                  </svg></button>
               </div>
             </div>
           </div>
           <div style="flex:1">
-            <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">End</div>
+            <div
+              style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">
+              End</div>
             <div class="num-wrap">
               <input type="number" id="goal-rate-end-inp" step="0.05" min="0.1" max="3" placeholder="= Start">
               <div class="num-spin">
-                <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
-                <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+                <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5"
+                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1,4 4,1 7,4" />
+                  </svg></button>
+                <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5"
+                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1,1 4,4 7,1" />
+                  </svg></button>
               </div>
             </div>
           </div>
@@ -1626,11 +1960,16 @@
   <div class="entry-modal-overlay hidden" id="phase-modal-overlay">
     <div class="entry-modal">
       <div class="entry-modal-title">Set Phase</div>
-      <div id="phase-active-row" class="hidden" style="display:none;align-items:center;gap:8px;margin-bottom:14px;padding:8px 10px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);border-radius:8px;">
-        <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--amber);letter-spacing:0.06em;text-transform:uppercase;">Active</span>
-        <span id="phase-active-type" style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;"></span>
-        <span id="phase-active-date" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);flex:1;"></span>
-        <button class="btn-ghost" id="phase-clear-btn" type="button" style="padding:4px 10px;font-size:0.72rem;">Clear</button>
+      <div id="phase-active-row" class="hidden"
+        style="display:none;align-items:center;gap:8px;margin-bottom:14px;padding:8px 10px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);border-radius:8px;">
+        <span
+          style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--amber);letter-spacing:0.06em;text-transform:uppercase;">Active</span>
+        <span id="phase-active-type"
+          style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;"></span>
+        <span id="phase-active-date"
+          style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);flex:1;"></span>
+        <button class="btn-ghost" id="phase-clear-btn" type="button"
+          style="padding:4px 10px;font-size:0.72rem;">Clear</button>
       </div>
       <div class="field">
         <label>Type</label>
@@ -1657,15 +1996,23 @@
     <div class="entry-modal">
       <div class="entry-modal-title">Edit Entry</div>
       <div class="field">
-        <div id="modal-date" style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--muted);padding:2px 0 10px;letter-spacing:0.04em;"></div>
+        <div id="modal-date"
+          style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--muted);padding:2px 0 10px;letter-spacing:0.04em;">
+        </div>
       </div>
       <div class="field">
         <label>Weight (kg)</label>
         <div class="num-wrap">
           <input type="number" id="modal-weight" step="0.05" min="30" max="300" placeholder="kg">
           <div class="num-spin">
-            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 4,1 7,4"/></svg></button>
-            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 4,4 7,1"/></svg></button>
+            <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,4 4,1 7,4" />
+              </svg></button>
+            <button class="num-dn" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,1 4,4 7,1" />
+              </svg></button>
           </div>
         </div>
       </div>
@@ -1682,18 +2029,20 @@
   <div id="mobile-menu-backdrop"></div>
   <nav id="mobile-taskbar">
     <button class="mobile-tab" id="mobile-menu-btn" type="button">
-      <svg width="26" height="19" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <line x1="0" y1="1" x2="24" y2="1"/>
-        <line x1="0" y1="9" x2="24" y2="9"/>
-        <line x1="0" y1="17" x2="24" y2="17"/>
+      <svg width="26" height="19" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round">
+        <line x1="0" y1="1" x2="24" y2="1" />
+        <line x1="0" y1="9" x2="24" y2="9" />
+        <line x1="0" y1="17" x2="24" y2="17" />
       </svg>
       Menu
     </button>
     <button class="mobile-tab mobile-tab--add" id="mobile-add-btn" type="button">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="7" x2="12" y2="17"/>
-        <line x1="7" y1="12" x2="17" y2="12"/>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="7" x2="12" y2="17" />
+        <line x1="7" y1="12" x2="17" y2="12" />
       </svg>
       Add
     </button>
@@ -1716,9 +2065,9 @@
     let _entries = [];
     let _goal = null;
     let _phaseStart = null;           // 'YYYY-MM-DD' | null
-    let _phaseType  = null;           // 'CUT' | 'BULK' | 'MAINTAIN' | null
+    let _phaseType = null;           // 'CUT' | 'BULK' | 'MAINTAIN' | null
     let _targetLossRateStart = null;  // % per week at phase start, e.g. 1.0
-    let _targetLossRateEnd   = null;  // % per week at phase end (interpolated), e.g. 0.5
+    let _targetLossRateEnd = null;  // % per week at phase end (interpolated), e.g. 0.5
 
     async function save(entries) {
       _entries = entries;
@@ -1729,21 +2078,21 @@
     async function saveGoal(g, rateStart, rateEnd) {
       _goal = g;
       _targetLossRateStart = rateStart ?? null;
-      _targetLossRateEnd   = rateEnd   ?? null;
+      _targetLossRateEnd = rateEnd ?? null;
       refresh();
       docRef.set({ goal: g, targetLossRateStart: _targetLossRateStart, targetLossRateEnd: _targetLossRateEnd }, { merge: true });
     }
 
     async function savePhaseStart(dateStr, type) {
       _phaseStart = dateStr;
-      _phaseType  = type || null;
+      _phaseType = type || null;
       refresh();
       docRef.set({ phaseStart: dateStr, phaseType: type || null }, { merge: true });
     }
 
     async function clearPhaseStart() {
       _phaseStart = null;
-      _phaseType  = null;
+      _phaseType = null;
       refresh();
       docRef.set({ phaseStart: null, phaseType: null }, { merge: true });
     }
@@ -1782,7 +2131,7 @@
       const sorted = sortedEntries(entries);
       const days = parseInt(range);
       const lastMs = new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime();
-      const todayMs = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+      const todayMs = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); })();
       panMax = Math.max(lastMs, todayMs);
       panMin = panMax - days * 86400000;
     }
@@ -1825,10 +2174,10 @@
       const ticks = [];
       if (spanDays <= 12) {
         const step = spanDays <= 6 ? 1 : 2;
-        const d = new Date(minMs); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1);
+        const d = new Date(minMs); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1);
         while (d.getTime() <= maxMs) { ticks.push(d.getTime()); d.setDate(d.getDate() + step); }
       } else if (spanDays <= 50) {
-        const d = new Date(minMs); d.setHours(0,0,0,0);
+        const d = new Date(minMs); d.setHours(0, 0, 0, 0);
         const dow = d.getDay(); // 0=Sun,1=Mon
         const daysToNextMon = dow === 1 ? 0 : dow === 0 ? 1 : 8 - dow;
         d.setDate(d.getDate() + daysToNextMon);
@@ -1841,7 +2190,7 @@
         else if (spanMonths <= 27) step = 3;
         else if (spanMonths <= 54) step = 6;
         else step = Math.ceil(spanMonths / 84) * 12;
-        const d = new Date(minMs); d.setHours(0,0,0,0); d.setDate(1);
+        const d = new Date(minMs); d.setHours(0, 0, 0, 0); d.setDate(1);
         d.setMonth(d.getMonth() + 1);
         while (d.getTime() <= maxMs) { ticks.push(d.getTime()); d.setMonth(d.getMonth() + step); }
       }
@@ -1860,7 +2209,7 @@
       _visibleCount = Math.max(1, visible.length);
       const panSpanDays = panMin !== null ? (panMax - panMin) / 86400000
         : sorted.length >= 2
-          ? (new Date(sorted[sorted.length-1].date+'T00:00:00').getTime() - new Date(sorted[0].date+'T00:00:00').getTime()) / 86400000
+          ? (new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime() - new Date(sorted[0].date + 'T00:00:00').getTime()) / 86400000
           : 0;
       const panSmoothed = adaptiveSmooth(sorted, activeOptimal ? 0 : panSpanDays);
       chart.data.datasets[0].data = panSmoothed.map(e => ({ x: new Date(e.date + 'T00:00:00').getTime(), y: e.weight }));
@@ -1874,8 +2223,8 @@
         x.min = sorted.length ? new Date(sorted[0].date + 'T00:00:00').getTime() : 0;
         x.max = sorted.length
           ? optCurveAll
-            ? Math.max(new Date(sorted[sorted.length-1].date+'T00:00:00').getTime(), optCurveAll.targetMs)
-            : new Date(sorted[sorted.length-1].date+'T00:00:00').getTime()
+            ? Math.max(new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime(), optCurveAll.targetMs)
+            : new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime()
           : 0;
       }
       Object.assign(chart.options.scales.y, getYBounds(visible));
@@ -1917,14 +2266,14 @@
           `<div class="ext-tooltip-bodies"></div>`;
         document.querySelector('.chart-canvas-wrap').appendChild(_extTooltipEl);
       }
-      if (!_crosshairEl)  _crosshairEl  = document.getElementById('chart-crosshair');
+      if (!_crosshairEl) _crosshairEl = document.getElementById('chart-crosshair');
       if (!_hoverpointEl) _hoverpointEl = document.getElementById('chart-hoverpoint');
     }
 
     function _hideChartOverlays() {
-      if (_extTooltipEl)  _extTooltipEl.style.opacity = '0';
-      if (_crosshairEl)   _crosshairEl.style.display = 'none';
-      if (_hoverpointEl)  _hoverpointEl.style.display = 'none';
+      if (_extTooltipEl) _extTooltipEl.style.opacity = '0';
+      if (_crosshairEl) _crosshairEl.style.display = 'none';
+      if (_hoverpointEl) _hoverpointEl.style.display = 'none';
       _tooltipEntryDate = null;
     }
 
@@ -1967,12 +2316,12 @@
         // Crosshair + hover point
         const ptPy = chart.scales.y.getPixelForValue(pt.y);
         _crosshairEl.style.display = 'block';
-        _crosshairEl.style.left  = ptPx + 'px';
-        _crosshairEl.style.top   = ca.top + 'px';
+        _crosshairEl.style.left = ptPx + 'px';
+        _crosshairEl.style.top = ca.top + 'px';
         _crosshairEl.style.height = (ca.bottom - ca.top) + 'px';
         _hoverpointEl.style.display = 'block';
         _hoverpointEl.style.left = ptPx + 'px';
-        _hoverpointEl.style.top  = ptPy + 'px';
+        _hoverpointEl.style.top = ptPy + 'px';
 
         // Actual (unsmoothed) entry data
         let entryDate = null, actualWeight = pt.y;
@@ -2024,7 +2373,7 @@
         const tx = ptPx - tw2 / 2;
         const ty = ptPy - th2 - 26;
         _extTooltipEl.style.left = tx + 'px';
-        _extTooltipEl.style.top  = ty + 'px';
+        _extTooltipEl.style.top = ty + 'px';
         _extTooltipEl.style.opacity = '1';
       });
 
@@ -2069,8 +2418,8 @@
       const lsProps = activeLineStyle === 'stepped'
         ? { tension: 0, stepped: 'before' }
         : activeLineStyle === 'linear'
-        ? { tension: 0, stepped: false }
-        : { tension: 0.35, stepped: false };
+          ? { tension: 0, stepped: false }
+          : { tension: 0.35, stepped: false };
 
       // ── Shared: background gradient ─────────────────────────────────────────
       const backgroundColor = (ctx) => {
@@ -2177,7 +2526,7 @@
         // ── TIME MODE: linear scale with ms timestamps — no date adapter overhead during pan ──
         // All entries in dataset; x-axis min/max controls the visible window.
         const allSpanMs = entries.length >= 2
-          ? new Date(entries[entries.length-1].date+'T00:00:00').getTime() - new Date(entries[0].date+'T00:00:00').getTime()
+          ? new Date(entries[entries.length - 1].date + 'T00:00:00').getTime() - new Date(entries[0].date + 'T00:00:00').getTime()
           : 0;
         const visSpanDays = panMin !== null ? (panMax - panMin) / 86400000 : allSpanMs / 86400000;
         const smoothedEntries = adaptiveSmooth(entries, activeOptimal ? 0 : visSpanDays);
@@ -2285,9 +2634,9 @@
     // rateStart/rateEnd are % per week (e.g. 1.0, 0.5). Pass overrides for modal preview.
     // Returns array of {t, ms, weight} or null.
     function computeProjectedPoints(goalKg, rateStartPct, rateEndPct) {
-      const g  = goalKg       ?? _goal;
+      const g = goalKg ?? _goal;
       const rs = rateStartPct ?? _targetLossRateStart;
-      const re = rateEndPct   ?? _targetLossRateEnd ?? rs;
+      const re = rateEndPct ?? _targetLossRateEnd ?? rs;
       if (!g || !rs || !_entries.length) return null;
       const sorted = sortedEntries(_entries);
       const startDate = _phaseStart || sorted[0].date;
@@ -2318,7 +2667,7 @@
       let W = startWeight;
       outer: for (let k = 0; k < N_int && k < 2600; k++) {
         const rWeek = rS + (k / Math.max(N_int, 1)) * (rE - rS);
-        const rDay  = 1 - Math.pow(1 - rWeek, 1 / 7); // equivalent daily rate
+        const rDay = 1 - Math.pow(1 - rWeek, 1 / 7); // equivalent daily rate
         for (let d = 1; d <= 7; d++) {
           W *= (1 - rDay);
           const ms = startMs + (k * 7 + d) * 86400000;
@@ -2576,7 +2925,7 @@
     // ─── INSIGHTS ────────────────────────────────────────────────────────────────
 
     function localDateStr(d) {
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     function computeStreak(entries) {
@@ -2611,7 +2960,7 @@
 
       const container = document.getElementById('log-cal');
       container.innerHTML = '';
-      ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(lbl => {
+      ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].forEach(lbl => {
         const h = document.createElement('div');
         h.className = 'log-cal-head';
         h.textContent = lbl;
@@ -2792,7 +3141,7 @@
 
     function loadCustomRanges() {
       let extras = [];
-      try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch {}
+      try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch { }
       const active = _DEFAULT_RANGES.filter(d => !_hiddenDefaults.has(d.days));
       const all = [...active, ...extras.filter(r => !active.find(d => d.days === r.days))];
       return all.sort((a, b) => a.days - b.days);
@@ -2800,8 +3149,8 @@
 
     function formatDays(d) {
       if (d % 365 === 0) return `${d / 365}Y`;
-      if (d % 30  === 0) return `${d / 30}M`;
-      if (d % 7   === 0) return `${d / 7}W`;
+      if (d % 30 === 0) return `${d / 30}M`;
+      if (d % 7 === 0) return `${d / 7}W`;
       return `${d}D`;
     }
 
@@ -2832,7 +3181,7 @@
           _hiddenDefaults.add(days);
         } else {
           let extras = [];
-          try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch {}
+          try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch { }
           localStorage.setItem('wt-custom-ranges', JSON.stringify(extras.filter(r => r.days !== days)));
         }
         if (wasActive) { activeRange = 'all'; initPan(_entries, 'all'); initPanIndex(sortedEntries(_entries), 'all'); savePanState(); }
@@ -2873,7 +3222,7 @@
       if (!days || days < 1 || days > 3650) return;
       if (!_DEFAULT_RANGES.find(d => d.days === days)) {
         let extras = [];
-        try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch {}
+        try { const s = localStorage.getItem('wt-custom-ranges'); if (s) extras = JSON.parse(s); } catch { }
         if (!extras.find(r => r.days === days)) {
           extras.push({ label: formatDays(days), days });
           localStorage.setItem('wt-custom-ranges', JSON.stringify(extras));
@@ -2982,7 +3331,7 @@
       }
     });
 
-// ─── OPTIMAL TOGGLE ──────────────────────────────────────────────────────────
+    // ─── OPTIMAL TOGGLE ──────────────────────────────────────────────────────────
     document.getElementById('optimal-toggle').addEventListener('click', () => {
       activeOptimal = !activeOptimal;
       localStorage.setItem('wt-optimal', activeOptimal);
@@ -3027,7 +3376,7 @@
         // In-place update
         const entries = sortedEntries(_entries);
         const inpAllSpanMs = entries.length >= 2
-          ? new Date(entries[entries.length-1].date+'T00:00:00').getTime() - new Date(entries[0].date+'T00:00:00').getTime()
+          ? new Date(entries[entries.length - 1].date + 'T00:00:00').getTime() - new Date(entries[0].date + 'T00:00:00').getTime()
           : 0;
         const inpSpanDays = panMin !== null ? (panMax - panMin) / 86400000 : inpAllSpanMs / 86400000;
         const inpSmoothed = adaptiveSmooth(entries, activeOptimal ? 0 : inpSpanDays);
@@ -3060,7 +3409,7 @@
       const inp = document.getElementById('phase-date-inp');
       if (_phaseStart) {
         const d = new Date(_phaseStart + 'T00:00:00');
-        inp.value = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        inp.value = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         const activeRow = document.getElementById('phase-active-row');
         activeRow.style.display = 'flex';
         activeRow.classList.remove('hidden');
@@ -3248,18 +3597,18 @@
     document.addEventListener('click', e => {
       const mobileBtn = document.getElementById('mobile-menu-btn');
       if (!document.getElementById('menu-wrap').contains(e.target) &&
-          !(mobileBtn && mobileBtn.contains(e.target))) closeMenu();
+        !(mobileBtn && mobileBtn.contains(e.target))) closeMenu();
     });
 
     // ─── GOAL MODAL ──────────────────────────────────────────────────────────────
     function updateGoalProjection() {
-      const g  = parseFloat(document.getElementById('goal-modal-inp').value);
+      const g = parseFloat(document.getElementById('goal-modal-inp').value);
       const rs = parseFloat(document.getElementById('goal-rate-start-inp').value);
       const re = parseFloat(document.getElementById('goal-rate-end-inp').value);
       const projRow = document.getElementById('goal-proj-row');
       const projDate = document.getElementById('goal-proj-date');
       const rateStart = !isNaN(rs) && rs > 0 ? rs : null;
-      const rateEnd   = !isNaN(re) && re > 0 ? re : rateStart;
+      const rateEnd = !isNaN(re) && re > 0 ? re : rateStart;
       const proj = (!isNaN(g) && rateStart) ? projectedDateStr(g, rateStart, rateEnd) : null;
       if (proj) {
         projDate.innerHTML = proj;
@@ -3296,7 +3645,7 @@
     );
 
     document.getElementById('goal-modal-save').addEventListener('click', async () => {
-      const g  = parseFloat(document.getElementById('goal-modal-inp').value);
+      const g = parseFloat(document.getElementById('goal-modal-inp').value);
       const rs = parseFloat(document.getElementById('goal-rate-start-inp').value);
       const re = parseFloat(document.getElementById('goal-rate-end-inp').value);
       const fb = document.getElementById('goal-feedback');
@@ -3307,7 +3656,7 @@
         return;
       }
       const rateStart = isNaN(rs) ? null : rs;
-      const rateEnd   = isNaN(re) ? rateStart : re;
+      const rateEnd = isNaN(re) ? rateStart : re;
       await saveGoal(g, rateStart, rateEnd);
       closeGoalModal();
     });
@@ -3678,12 +4027,12 @@
       // Default to linear on mobile (style picker is hidden); projected is toggleable
       activeLineStyle = 'linear';
 
-      const mobileMenuBtn  = document.getElementById('mobile-menu-btn');
-      const mobileAddBtn   = document.getElementById('mobile-add-btn');
-      const _menuDropdown  = document.getElementById('menu-dropdown');
-      const logPanel       = document.getElementById('log-entry-panel');
-      const logBackdrop    = document.getElementById('mobile-log-backdrop');
-      const menuBackdrop   = document.getElementById('mobile-menu-backdrop');
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const mobileAddBtn = document.getElementById('mobile-add-btn');
+      const _menuDropdown = document.getElementById('menu-dropdown');
+      const logPanel = document.getElementById('log-entry-panel');
+      const logBackdrop = document.getElementById('mobile-log-backdrop');
+      const menuBackdrop = document.getElementById('mobile-menu-backdrop');
 
       // Detach menu dropdown from hidden header so it renders freely
       document.body.appendChild(_menuDropdown);
@@ -3718,7 +4067,7 @@
 
       // Scale mode toggle in menu
       const menuScaleToggle = document.getElementById('menu-scale-toggle');
-      const menuScaleLabel  = document.getElementById('menu-scale-label');
+      const menuScaleLabel = document.getElementById('menu-scale-label');
       function updateScaleLabel() {
         menuScaleLabel.textContent = 'Scale: ' + (activeScaleMode === 'time' ? 'Date' : 'Step');
       }
@@ -3779,7 +4128,7 @@
 
       _chartCanvas.addEventListener('touchstart', e => {
         if (e.touches.length !== 1) return;
-        _tLastX  = e.touches[0].clientX;
+        _tLastX = e.touches[0].clientX;
         _tStartX = e.touches[0].clientX;
         _tStartY = e.touches[0].clientY;
         _tIsHoriz = null;
@@ -3843,11 +4192,11 @@
       _entries = data.entries || [];
       _goal = data.goal ?? null;
       _phaseStart = data.phaseStart ?? null;
-      _phaseType  = data.phaseType  ?? null;
+      _phaseType = data.phaseType ?? null;
       // Support old single-rate field as fallback
       const legacyRate = data.targetLossRate ?? null;
       _targetLossRateStart = data.targetLossRateStart ?? legacyRate;
-      _targetLossRateEnd   = data.targetLossRateEnd   ?? legacyRate;
+      _targetLossRateEnd = data.targetLossRateEnd ?? legacyRate;
       if (_goal != null) document.getElementById('goal-modal-inp').value = _goal;
       if (!_panInitialized) {
         _panInitialized = true;
