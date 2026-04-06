@@ -1436,14 +1436,22 @@
         height: 46px;
       }
 
-      /* Chart layout — no max-height so flex: 1 1 0 fills remaining space
-         after stats-row and bottom-grid, pushing bottom-grid to the safe-area edge */
+      /* Chart layout — edge-to-edge: break out of shell's 10px horizontal padding,
+         strip side borders/radius, keep only top + bottom border */
       .chart-wrap {
         min-height: 0;
-        padding: 10px 10px 8px;
+        margin-left: -10px;
+        margin-right: -10px;
+        border: none;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        border-radius: 0;
+        padding: 10px 0 8px;
       }
 
+      /* Keep chart header content inset so buttons don't sit at screen edge */
       .chart-header {
+        padding: 0 10px;
         margin-bottom: 6px;
       }
 
@@ -1473,9 +1481,9 @@
         display: flex !important;
       }
 
-      /* Bottom grid: log entry is a sheet; tighter gap + padding */
+      /* Bottom grid: activity gets exact width to fit calendar, weekly gets rest */
       .bottom-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 167px 1fr;
         gap: 8px;
       }
 
