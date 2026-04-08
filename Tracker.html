@@ -1494,9 +1494,9 @@
         display: flex !important;
       }
 
-      /* Bottom panels: two floating rounded cards — stats + weekly */
+      /* Bottom panels: two floating rounded cards — stats (narrow) + weekly (wide) */
       .bottom-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 5fr 8fr;
         gap: 8px;
       }
 
@@ -1505,7 +1505,7 @@
         border: none;
         border-radius: 10px;
         padding: 10px;
-        height: 145px;
+        height: 175px;
       }
 
       #weekly-panel {
@@ -2621,7 +2621,7 @@
         ? { tension: 0, stepped: 'before' }
         : activeLineStyle === 'linear'
           ? { tension: 0, stepped: false }
-          : { tension: 0.35, stepped: false };
+          : { tension: 0.5, stepped: false };
 
       // ── Shared: background gradient ─────────────────────────────────────────
       const backgroundColor = (ctx) => {
@@ -2629,7 +2629,8 @@
         const { ctx: cx, chartArea } = c;
         if (!chartArea) return 'transparent';
         const g = cx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-        g.addColorStop(0, 'rgba(74,222,128,0.18)');
+        g.addColorStop(0, 'rgba(74,222,128,0.45)');
+        g.addColorStop(0.5, 'rgba(74,222,128,0.1)');
         g.addColorStop(1, 'rgba(74,222,128,0)');
         return g;
       };
@@ -2645,7 +2646,7 @@
           const scale = ctx.chart.scales?.x;
           spanDays = scale ? (scale.max - scale.min) / 86400000 : 999;
         }
-        return spanDays <= 120 ? activePointSize : 0;
+        return spanDays <= 45 ? activePointSize : 0;
       };
 
       // ── Shared: tooltip label callback ──────────────────────────────────────
@@ -3382,7 +3383,7 @@
     function applyLineStyle() {
       if (!chart) return;
       const ds = chart.data.datasets[0];
-      if (activeLineStyle === 'smooth') { ds.tension = 0.35; ds.stepped = false; }
+      if (activeLineStyle === 'smooth') { ds.tension = 0.5; ds.stepped = false; }
       if (activeLineStyle === 'linear') { ds.tension = 0; ds.stepped = false; }
       if (activeLineStyle === 'stepped') { ds.tension = 0; ds.stepped = 'before'; }
       chart.update();
