@@ -1398,10 +1398,17 @@
         display: none;
       }
 
-      /* Compact stats row — hide Weekly Rate, use 5 equal columns */
+      /* Stats row: full-width band — no individual card bubbles */
       .stats-row {
-        gap: 4px;
         grid-template-columns: repeat(5, 1fr);
+        gap: 0;
+        margin-left: -10px;
+        margin-right: -10px;
+        padding: 0 10px;
+        background: var(--bg2);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        border-radius: 0;
       }
 
       .stats-row .stat-card:nth-child(4) {
@@ -1409,8 +1416,10 @@
       }
 
       .stat-card {
-        padding: 5px 4px;
-        border-radius: 7px;
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: 6px 3px;
       }
 
       .stat-card .label {
@@ -1429,7 +1438,7 @@
       }
 
       .stat-card--ring {
-        padding: 2px;
+        padding: 4px 3px;
       }
 
       .stat-card--ring .value {
@@ -1486,18 +1495,32 @@
         display: flex !important;
       }
 
-      /* Bottom grid: activity gets exact width to fit calendar, weekly gets rest */
+      /* Bottom panels: full-width band — no individual panel bubbles */
       .bottom-grid {
         grid-template-columns: 167px 1fr;
-        gap: 8px;
+        gap: 0;
+        margin-left: -10px;
+        margin-right: -10px;
+        background: var(--bg2);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        border-radius: 0;
       }
 
       .bottom-grid .panel {
+        background: none;
+        border: none;
+        border-radius: 0;
         padding: 10px;
       }
 
       .bottom-grid .panel-title {
         margin-bottom: 6px;
+      }
+
+      /* Thin divider between Activity and Weekly */
+      #insights-panel {
+        border-right: 1px solid var(--border);
       }
 
       /* Weekly breakdown: remove n column, equalise right padding with left */
