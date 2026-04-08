@@ -1389,8 +1389,8 @@
       /* Shell — nav bar (44px) sits at top below status bar, bottom just needs
          home indicator clearance (env) with a small gap. No bottom bar. */
       .shell {
-        padding: calc(env(safe-area-inset-top, 47px) + 44px + 8px) 10px calc(env(safe-area-inset-bottom, 0px) + 16px);
-        gap: 8px;
+        padding: calc(env(safe-area-inset-top, 47px) + 44px + 10px) 10px calc(env(safe-area-inset-bottom, 0px) + 12px);
+        gap: 10px;
       }
 
       /* Hide desktop header — mobile uses the taskbar nav at the top instead */
@@ -1398,17 +1398,10 @@
         display: none;
       }
 
-      /* Stats row: full-width band — no individual card bubbles */
+      /* Stats: 5 floating cards, no band treatment */
       .stats-row {
         grid-template-columns: repeat(5, 1fr);
-        gap: 0;
-        margin-left: -10px;
-        margin-right: -10px;
-        padding: 0 10px;
-        background: var(--bg2);
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-        border-radius: 0;
+        gap: 4px;
       }
 
       .stats-row .stat-card:nth-child(4) {
@@ -1416,10 +1409,10 @@
       }
 
       .stat-card {
-        background: none;
+        background: var(--bg2);
         border: none;
-        border-radius: 0;
-        padding: 6px 3px;
+        border-radius: 8px;
+        padding: 6px 4px;
       }
 
       .stat-card .label {
@@ -1438,7 +1431,7 @@
       }
 
       .stat-card--ring {
-        padding: 4px 3px;
+        padding: 4px;
       }
 
       .stat-card--ring .value {
@@ -1450,15 +1443,13 @@
         height: 46px;
       }
 
-      /* Chart layout — edge-to-edge: break out of shell's 10px horizontal padding,
-         strip side borders/radius, keep only top + bottom border */
+      /* Chart: edge-to-edge, completely open — no container borders or background */
       .chart-wrap {
         min-height: 0;
         margin-left: -10px;
         margin-right: -10px;
+        background: transparent;
         border: none;
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
         border-radius: 0;
         padding: 10px 0 8px;
       }
@@ -1495,32 +1486,21 @@
         display: flex !important;
       }
 
-      /* Bottom panels: full-width band — no individual panel bubbles */
+      /* Bottom panels: two floating rounded cards */
       .bottom-grid {
         grid-template-columns: 167px 1fr;
-        gap: 0;
-        margin-left: -10px;
-        margin-right: -10px;
-        background: var(--bg2);
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-        border-radius: 0;
+        gap: 8px;
       }
 
       .bottom-grid .panel {
-        background: none;
+        background: var(--bg2);
         border: none;
-        border-radius: 0;
+        border-radius: 10px;
         padding: 10px;
       }
 
       .bottom-grid .panel-title {
         margin-bottom: 6px;
-      }
-
-      /* Thin divider between Activity and Weekly */
-      #insights-panel {
-        border-right: 1px solid var(--border);
       }
 
       /* Weekly breakdown: remove n column, equalise right padding with left */
