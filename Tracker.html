@@ -1505,6 +1505,12 @@
         border: none;
         border-radius: 10px;
         padding: 10px;
+        height: 145px;
+      }
+
+      #weekly-panel {
+        display: flex;
+        flex-direction: column;
       }
 
       .bottom-grid .panel-title {
@@ -1570,6 +1576,7 @@
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr 1fr;
         width: 100%;
+        height: 100%;
         position: relative;
       }
 
@@ -1946,11 +1953,10 @@
             <span class="index-slider-label" id="index-slider-label">All</span>
           </div>
           <div id="mobile-range-btns">
-            <button class="range-btn" data-mobile-range="7" type="button">1W</button>
             <button class="range-btn" data-mobile-range="14" type="button">2W</button>
-            <button class="range-btn" data-mobile-range="21" type="button">3W</button>
             <button class="range-btn" data-mobile-range="30" type="button">1M</button>
-            <button class="range-btn" data-mobile-range="365" type="button">1Y</button>
+            <button class="range-btn" data-mobile-range="90" type="button">3M</button>
+            <button class="range-btn" data-mobile-range="180" type="button">6M</button>
           </div>
         </div>
         <!-- Right: point size control (Projected only) + Projected toggle -->
@@ -2359,9 +2365,9 @@
     function getYBounds(visibleEntries) {
       if (!visibleEntries.length) return {};
       const ws = visibleEntries.map(e => e.weight);
-      if (_goal != null) ws.push(_goal);
+      // Exclude goal from bounds — keeps data centred rather than pushed to top
       const lo = Math.min(...ws), hi = Math.max(...ws);
-      const pad = Math.max((hi - lo) * 0.12, 1.5);
+      const pad = Math.max((hi - lo) * 0.15, 2);
       return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
     }
 
@@ -2668,8 +2674,8 @@
           ? [{ x: xMin, y: goal }, { x: xMax, y: goal }] : [];
 
         datasets = [
-          { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
+          { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 1.2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#0b0c0e', pointBorderColor: '#4ade80', pointBorderWidth: 2, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
           { label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
         ];
 
@@ -2738,8 +2744,8 @@
         const optData = optCurve ? optCurve.points : [];
 
         datasets = [
-          { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#4ade80', pointBorderColor: '#0b0c0e', pointBorderWidth: 1.5, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
+          { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 1.2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#0b0c0e', pointBorderColor: '#4ade80', pointBorderWidth: 2, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
           { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
           { label: 'Projected', data: optData, borderColor: 'rgba(167,139,250,0.85)', borderDash: [3, 3], borderWidth: 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
         ];
