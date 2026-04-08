@@ -1368,6 +1368,14 @@
       display: none;
     }
 
+    #mobile-taskbar-center {
+      display: none;
+    }
+
+    #mobile-stats-panel {
+      display: none;
+    }
+
     #mobile-log-backdrop {
       display: none;
     }
@@ -1486,9 +1494,9 @@
         display: flex !important;
       }
 
-      /* Bottom panels: two floating rounded cards */
+      /* Bottom panels: two floating rounded cards — stats + weekly */
       .bottom-grid {
-        grid-template-columns: 167px 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
       }
 
@@ -1538,6 +1546,80 @@
 
       #insights-panel .log-cal {
         flex: 1 1 100%;
+      }
+
+      /* Hide desktop stats row and activity panel — replaced by mobile stats panel */
+      .stats-row {
+        display: none;
+      }
+
+      #insights-panel {
+        display: none;
+      }
+
+      /* Mobile stats panel — 2×2 grid with cross dividers */
+      #mobile-stats-panel {
+        display: flex;
+        align-items: stretch;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .mobile-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        width: 100%;
+        position: relative;
+      }
+
+      /* Cross dividers via pseudo-element borders */
+      .mobile-stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 8px;
+        text-align: center;
+        gap: 2px;
+      }
+
+      .mobile-stat-item:nth-child(1),
+      .mobile-stat-item:nth-child(2) {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .mobile-stat-item:nth-child(1),
+      .mobile-stat-item:nth-child(3) {
+        border-right: 1px solid var(--border);
+      }
+
+      .ms-label {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.46rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .ms-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text);
+        line-height: 1.2;
+      }
+
+      .ms-value.positive { color: var(--accent); }
+      .ms-value.negative { color: var(--red); }
+      .ms-value.neutral  { color: var(--amber); }
+
+      .ms-sub {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.46rem;
+        color: var(--muted);
+        margin-top: 1px;
       }
 
       /* Tooltip tappable on mobile: pointer-events: auto lets user tap to edit */
@@ -1658,9 +1740,7 @@
         pointer-events: all;
       }
 
-      /* Mobile nav bar — extends from top: 0 up behind the status bar so its
-         --bg2 background fills both the status bar area and the 44px button row.
-         padding-top pushes flex children (icons) below the status bar area. */
+      /* Mobile nav bar — transparent, no border, blends with page background */
       #mobile-taskbar {
         display: flex;
         align-items: center;
@@ -1671,9 +1751,37 @@
         right: 0;
         height: calc(44px + env(safe-area-inset-top, 47px));
         padding: env(safe-area-inset-top, 47px) 11px 0;
-        background: var(--bg2);
-        border-bottom: 1px solid var(--border);
+        background: transparent;
+        border-bottom: none;
         z-index: 200;
+      }
+
+      /* Center weight display in taskbar */
+      #mobile-taskbar-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        min-width: 0;
+        height: 44px;
+      }
+
+      .mobile-taskbar-weight {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: var(--text);
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+
+      .mobile-taskbar-date {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.55rem;
+        color: var(--muted);
+        margin-top: 3px;
+        letter-spacing: 0.03em;
       }
 
       .mobile-tab {
@@ -1932,6 +2040,32 @@
         <div class="log-cal" id="log-cal"></div>
       </div>
 
+      <!-- MOBILE STATS PANEL (hidden on desktop, replaces Activity on mobile) -->
+      <div class="panel" id="mobile-stats-panel">
+        <div class="mobile-stats-grid">
+          <div class="mobile-stat-item">
+            <div class="ms-label">Current</div>
+            <div class="ms-value" id="ms-current">—</div>
+            <div class="ms-sub" id="ms-current-sub">no data</div>
+          </div>
+          <div class="mobile-stat-item">
+            <div class="ms-label">Total Lost</div>
+            <div class="ms-value positive" id="ms-lost">—</div>
+            <div class="ms-sub" id="ms-days-sub">0 days</div>
+          </div>
+          <div class="mobile-stat-item">
+            <div class="ms-label">Avg Rate</div>
+            <div class="ms-value" id="ms-rate">—</div>
+            <div class="ms-sub">kg / wk</div>
+          </div>
+          <div class="mobile-stat-item">
+            <div class="ms-label">Goal</div>
+            <div class="ms-value neutral" id="ms-goal">—</div>
+            <div class="ms-sub" id="ms-goal-sub">—</div>
+          </div>
+        </div>
+      </div>
+
       <!-- WEEKLY PANEL -->
       <div class="panel" id="weekly-panel">
         <div class="panel-title">Weekly Breakdown</div>
@@ -2089,22 +2223,24 @@
   <div id="mobile-menu-backdrop"></div>
   <nav id="mobile-taskbar">
     <button class="mobile-tab mobile-tab--add" id="mobile-add-btn" type="button">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
         stroke-linecap="round">
         <circle cx="12" cy="12" r="10" />
         <line x1="12" y1="7" x2="12" y2="17" />
         <line x1="7" y1="12" x2="17" y2="12" />
       </svg>
-      Add
     </button>
+    <div id="mobile-taskbar-center">
+      <div class="mobile-taskbar-weight" id="mobile-taskbar-weight">—</div>
+      <div class="mobile-taskbar-date" id="mobile-taskbar-date"></div>
+    </div>
     <button class="mobile-tab" id="mobile-menu-btn" type="button">
-      <svg width="26" height="19" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.5"
+      <svg width="30" height="22" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.2"
         stroke-linecap="round">
         <line x1="0" y1="1" x2="24" y2="1" />
         <line x1="0" y1="9" x2="24" y2="9" />
         <line x1="0" y1="17" x2="24" y2="17" />
       </svg>
-      Menu
     </button>
   </nav>
 
@@ -2931,6 +3067,78 @@
         goalDateEl.textContent = '—';
         goalDateEl.className = 'value';
         goalDateSub.textContent = 'set goal & pace';
+      }
+
+      // ── Mobile stats panel + taskbar center ──────────────────────────────────
+      if (_isMobile) {
+        const fmtShort = d => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+
+        // Taskbar center: current weight + date
+        const twEl = document.getElementById('mobile-taskbar-weight');
+        const tdEl = document.getElementById('mobile-taskbar-date');
+        if (last) {
+          twEl.textContent = fmtWeight(last.weight) + ' kg';
+          tdEl.textContent = fmtShort(last.date);
+        } else {
+          twEl.textContent = '—';
+          tdEl.textContent = '';
+        }
+
+        // ms-current
+        const msCurEl = document.getElementById('ms-current');
+        const msCurSub = document.getElementById('ms-current-sub');
+        if (last) {
+          msCurEl.textContent = fmtWeight(last.weight);
+          msCurSub.textContent = fmtShort(last.date);
+        } else {
+          msCurEl.textContent = '—';
+          msCurSub.textContent = 'no data';
+        }
+
+        // ms-lost + ms-days-sub
+        const msLostEl = document.getElementById('ms-lost');
+        const msDaysSub = document.getElementById('ms-days-sub');
+        if (first && last && s.length > 1) {
+          const lost = first.weight - last.weight;
+          msLostEl.textContent = (lost >= 0 ? '−' : '+') + fmtWeight(Math.abs(lost));
+          msLostEl.className = 'ms-value ' + (lost >= 0 ? 'positive' : 'negative');
+          const days = Math.max(1, (new Date(last.date) - new Date(first.date)) / 86400000);
+          msDaysSub.textContent = Math.round(days) + ' days';
+        } else {
+          msLostEl.textContent = '—';
+          msLostEl.className = 'ms-value positive';
+          msDaysSub.textContent = '0 days';
+        }
+
+        // ms-rate
+        const msRateEl = document.getElementById('ms-rate');
+        if (first && last && s.length > 1) {
+          const lost = first.weight - last.weight;
+          const days = Math.max(1, (new Date(last.date) - new Date(first.date)) / 86400000);
+          const weeklyRate = (lost / days) * 7;
+          msRateEl.textContent = Math.abs(weeklyRate).toFixed(2);
+          msRateEl.className = 'ms-value ' + (weeklyRate >= 0 ? 'positive' : 'negative');
+        } else {
+          msRateEl.textContent = '—';
+          msRateEl.className = 'ms-value';
+        }
+
+        // ms-goal + ms-goal-sub
+        const msGoalEl = document.getElementById('ms-goal');
+        const msGoalSub = document.getElementById('ms-goal-sub');
+        if (goal != null && first && last) {
+          const smoothed = computeSmoothedWeight(s);
+          const total = first.weight - goal;
+          const done = first.weight - smoothed;
+          const pct = total <= 0 ? 100 : Math.min(100, Math.max(0, (done / total) * 100));
+          msGoalEl.textContent = pct.toFixed(0) + '%';
+          msGoalEl.className = 'ms-value ' + (pct >= 100 ? 'positive' : 'neutral');
+          msGoalSub.textContent = goal + ' kg target';
+        } else {
+          msGoalEl.textContent = '—';
+          msGoalEl.className = 'ms-value neutral';
+          msGoalSub.textContent = 'no goal set';
+        }
       }
     }
 
