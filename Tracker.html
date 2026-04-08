@@ -1398,9 +1398,14 @@
         display: none;
       }
 
-      /* Compact stats row */
+      /* Compact stats row — hide Weekly Rate, use 5 equal columns */
       .stats-row {
         gap: 4px;
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .stats-row .stat-card:nth-child(4) {
+        display: none;
       }
 
       .stat-card {
@@ -1503,6 +1508,39 @@
       .weekly-tbl thead th:last-child,
       .weekly-tbl tbody td:last-child {
         display: none;
+      }
+
+      /* Activity panel: streak inline with title, calendar below */
+      #insights-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0;
+        row-gap: 6px;
+      }
+
+      #insights-panel .panel-title {
+        flex: 1 1 auto;
+        margin-bottom: 0;
+        align-self: center;
+      }
+
+      #insights-panel .insights-top {
+        flex: 0 0 auto;
+        align-self: center;
+      }
+
+      #insights-panel .insights-sep {
+        display: none;
+      }
+
+      #insights-panel .log-cal {
+        flex: 1 1 100%;
+      }
+
+      /* Tooltip tappable on mobile: pointer-events: auto lets user tap to edit */
+      .ext-tooltip {
+        pointer-events: auto;
+        cursor: pointer;
       }
 
       /* Shrink activity calendar cells to fit narrower panel */
@@ -2636,7 +2674,7 @@
             y: {
               ...yOpts,
               grid: { color: '#1a1c22', drawBorder: false },
-              ticks: { color: '#5a5f70', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + ' kg', maxTicksLimit: 10 },
+              ticks: { color: '#5a5f70', font: { family: 'JetBrains Mono', size: 10 }, callback: v => _isMobile ? String(v) : v + ' kg', maxTicksLimit: 10 },
               border: { display: false },
             },
           },
@@ -3529,8 +3567,10 @@
     });
 
     // ─── CHART CLICK → EDIT ENTRY ────────────────────────────────────────────────
-    // Click anywhere on chart while a point is highlighted → open edit modal for that point
+    // Desktop: click anywhere on chart while a point is highlighted → open edit modal
+    // Mobile: tap the tooltip bubble itself → open edit modal (two-step: tap point, tap tooltip)
     document.getElementById('chart').addEventListener('click', () => {
+      if (_isMobile) return; // mobile uses tooltip-tap flow below
       if (!chart || !_tooltipEntryDate) return;
       openEntryModal(_tooltipEntryDate);
     });
@@ -4227,6 +4267,15 @@
           _momentumRAF = requestAnimationFrame(step);
         }
         _momentumRAF = requestAnimationFrame(step);
+      });
+
+      // Tooltip tap → open edit modal (two-step: tap chart point to show tooltip,
+      // then tap the tooltip to edit. pointer-events: auto is set via CSS above.)
+      document.querySelector('.chart-canvas-wrap').addEventListener('click', e => {
+        if (e.target.closest('.ext-tooltip') && _tooltipEntryDate) {
+          _hideChartOverlays();
+          openEntryModal(_tooltipEntryDate);
+        }
       });
     }
 
