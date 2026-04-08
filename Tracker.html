@@ -1763,12 +1763,14 @@
         z-index: 200;
       }
 
-      /* Center weight display in taskbar */
+      /* Center weight display in taskbar — pad so weight text mid-point aligns
+         with icon mid-point, date sits below without affecting weight alignment */
       #mobile-taskbar-center {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
+        padding-top: 12px;
         flex: 1;
         min-width: 0;
         height: 44px;
@@ -2362,10 +2364,11 @@
     }
 
     // Tight y bounds for the visible entries, including goal if set
-    function getYBounds(visibleEntries) {
-      if (!visibleEntries.length) return {};
-      const ws = visibleEntries.map(e => e.weight);
-      // Exclude goal from bounds — keeps data centred rather than pushed to top
+    function getYBounds() {
+      // Always use ALL entries so the y-axis stays fixed while panning
+      const all = sortedEntries(_entries);
+      if (!all.length) return {};
+      const ws = all.map(e => e.weight);
       const lo = Math.min(...ws), hi = Math.max(...ws);
       const pad = Math.max((hi - lo) * 0.15, 2);
       return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
@@ -2429,7 +2432,7 @@
             : new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime()
           : 0;
       }
-      Object.assign(chart.options.scales.y, getYBounds(visible));
+      Object.assign(chart.options.scales.y, getYBounds());
       chart.update('none');
       savePanState();
     }
@@ -2448,7 +2451,7 @@
         ? [{ x: xMin, y: _goal }, { x: xMax, y: _goal }] : [];
       chart.options.scales.x.min = xMin;
       chart.options.scales.x.max = xMax;
-      Object.assign(chart.options.scales.y, getYBounds(visible));
+      Object.assign(chart.options.scales.y, getYBounds());
       chart.update('none');
     }
 
@@ -2635,18 +2638,17 @@
         return g;
       };
 
-      // ── Shared: point radius — fixed when Projected; span-gated constant otherwise ──
+      // ── Shared: point radius — hide points for wide ranges (3M / 6M / All) ──
       const pointRadius = (ctx) => {
         if (activeOptimal) return activePointSize;
-        // Compute visible span in days from pan state or live scale
-        let spanDays;
-        if (panMin !== null) {
-          spanDays = (panMax - panMin) / 86400000;
-        } else {
-          const scale = ctx.chart.scales?.x;
-          spanDays = scale ? (scale.max - scale.min) / 86400000 : 999;
+        if (activeRange === 'all') {
+          // For 'all', fall back to actual data span
+          const s = sortedEntries(_entries);
+          if (s.length < 2) return activePointSize;
+          const spanDays = (new Date(s[s.length - 1].date + 'T00:00:00') - new Date(s[0].date + 'T00:00:00')) / 86400000;
+          return spanDays <= 45 ? activePointSize : 0;
         }
-        return spanDays <= 45 ? activePointSize : 0;
+        return Number(activeRange) <= 45 ? activePointSize : 0;
       };
 
       // ── Shared: tooltip label callback ──────────────────────────────────────
@@ -2713,7 +2715,7 @@
           return e ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
         };
 
-        yOpts = getYBounds(visible);
+        yOpts = getYBounds();
 
         if (chart) {
           chart.data.datasets[1].data = trendData;
@@ -2790,7 +2792,7 @@
 
         titleCb = (items) => new Date(items[0].parsed.x).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-        yOpts = getYBounds(visible);
+        yOpts = getYBounds();
 
         if (chart) {
           chart.data.datasets[0].data = data;
@@ -3666,7 +3668,7 @@
         chart.options.scales.x.max = panMax !== null ? panMax : goalEndX;
         const visible = getWindowEntries(entries);
         chart.data.datasets[1].data = computeTrend(visible);
-        Object.assign(chart.options.scales.y, getYBounds(visible));
+        Object.assign(chart.options.scales.y, getYBounds());
         chart.update('none');
       }
       syncSliderToState();
