@@ -1618,9 +1618,17 @@
         line-height: 1.2;
       }
 
-      .ms-value.positive { color: var(--accent); }
-      .ms-value.negative { color: var(--red); }
-      .ms-value.neutral  { color: var(--amber); }
+      .ms-value.positive {
+        color: var(--accent);
+      }
+
+      .ms-value.negative {
+        color: var(--red);
+      }
+
+      .ms-value.neutral {
+        color: var(--amber);
+      }
 
       .ms-sub {
         font-family: 'JetBrains Mono', monospace;
@@ -1763,14 +1771,12 @@
         z-index: 200;
       }
 
-      /* Center weight display in taskbar — pad so weight text mid-point aligns
-         with icon mid-point, date sits below without affecting weight alignment */
+      /* Center weight display in taskbar */
       #mobile-taskbar-center {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        padding-top: 12px;
+        justify-content: center;
         flex: 1;
         min-width: 0;
         height: 44px;
@@ -1778,7 +1784,7 @@
 
       .mobile-taskbar-weight {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 1.15rem;
+        font-size: 1.4rem;
         font-weight: 500;
         color: var(--text);
         line-height: 1;
@@ -1786,11 +1792,7 @@
       }
 
       .mobile-taskbar-date {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.55rem;
-        color: var(--muted);
-        margin-top: 3px;
-        letter-spacing: 0.03em;
+        display: none;
       }
 
       .mobile-tab {
@@ -2052,11 +2054,6 @@
       <div class="panel" id="mobile-stats-panel">
         <div class="mobile-stats-grid">
           <div class="mobile-stat-item">
-            <div class="ms-label">Current</div>
-            <div class="ms-value" id="ms-current">—</div>
-            <div class="ms-sub" id="ms-current-sub">no data</div>
-          </div>
-          <div class="mobile-stat-item">
             <div class="ms-label">Total Lost</div>
             <div class="ms-value positive" id="ms-lost">—</div>
             <div class="ms-sub" id="ms-days-sub">0 days</div>
@@ -2065,6 +2062,11 @@
             <div class="ms-label">Avg Rate</div>
             <div class="ms-value" id="ms-rate">—</div>
             <div class="ms-sub">kg / wk</div>
+          </div>
+          <div class="mobile-stat-item">
+            <div class="ms-label">Est. End Date</div>
+            <div class="ms-value neutral" id="ms-end-date">—</div>
+            <div class="ms-sub" id="ms-end-date-sub">set goal</div>
           </div>
           <div class="mobile-stat-item">
             <div class="ms-label">Goal</div>
@@ -2364,13 +2366,22 @@
     }
 
     // Tight y bounds for the visible entries, including goal if set
-    function getYBounds() {
-      // Always use ALL entries so the y-axis stays fixed while panning
-      const all = sortedEntries(_entries);
-      if (!all.length) return {};
-      const ws = all.map(e => e.weight);
+    function getYBounds(visibleEntries) {
+      if (_isMobile) {
+        // Mobile: fixed to all-data range so y-axis doesn't jump while panning
+        const all = sortedEntries(_entries);
+        if (!all.length) return {};
+        const ws = all.map(e => e.weight);
+        const lo = Math.min(...ws), hi = Math.max(...ws);
+        const pad = Math.max((hi - lo) * 0.15, 2);
+        return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
+      }
+      // Desktop: original — track visible window + include goal
+      if (!visibleEntries || !visibleEntries.length) return {};
+      const ws = visibleEntries.map(e => e.weight);
+      if (_goal != null) ws.push(_goal);
       const lo = Math.min(...ws), hi = Math.max(...ws);
-      const pad = Math.max((hi - lo) * 0.15, 2);
+      const pad = Math.max((hi - lo) * 0.12, 1.5);
       return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
     }
 
@@ -2432,7 +2443,7 @@
             : new Date(sorted[sorted.length - 1].date + 'T00:00:00').getTime()
           : 0;
       }
-      Object.assign(chart.options.scales.y, getYBounds());
+      Object.assign(chart.options.scales.y, getYBounds(visible));
       chart.update('none');
       savePanState();
     }
@@ -2451,7 +2462,7 @@
         ? [{ x: xMin, y: _goal }, { x: xMax, y: _goal }] : [];
       chart.options.scales.x.min = xMin;
       chart.options.scales.x.max = xMax;
-      Object.assign(chart.options.scales.y, getYBounds());
+      Object.assign(chart.options.scales.y, getYBounds(visible));
       chart.update('none');
     }
 
@@ -2620,11 +2631,12 @@
       noData.style.display = 'none';
 
       // ── Shared: line style ──────────────────────────────────────────────────
+      const smoothTension = _isMobile ? 0.5 : 0.35;
       const lsProps = activeLineStyle === 'stepped'
         ? { tension: 0, stepped: 'before' }
         : activeLineStyle === 'linear'
           ? { tension: 0, stepped: false }
-          : { tension: 0.5, stepped: false };
+          : { tension: smoothTension, stepped: false };
 
       // ── Shared: background gradient ─────────────────────────────────────────
       const backgroundColor = (ctx) => {
@@ -2632,23 +2644,39 @@
         const { ctx: cx, chartArea } = c;
         if (!chartArea) return 'transparent';
         const g = cx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-        g.addColorStop(0, 'rgba(74,222,128,0.45)');
-        g.addColorStop(0.5, 'rgba(74,222,128,0.1)');
-        g.addColorStop(1, 'rgba(74,222,128,0)');
+        if (_isMobile) {
+          g.addColorStop(0, 'rgba(74,222,128,0.45)');
+          g.addColorStop(0.5, 'rgba(74,222,128,0.1)');
+          g.addColorStop(1, 'rgba(74,222,128,0)');
+        } else {
+          g.addColorStop(0, 'rgba(74,222,128,0.18)');
+          g.addColorStop(1, 'rgba(74,222,128,0)');
+        }
         return g;
       };
 
-      // ── Shared: point radius — hide points for wide ranges (3M / 6M / All) ──
+      // ── Shared: point radius ─────────────────────────────────────────────────
       const pointRadius = (ctx) => {
         if (activeOptimal) return activePointSize;
-        if (activeRange === 'all') {
-          // For 'all', fall back to actual data span
-          const s = sortedEntries(_entries);
-          if (s.length < 2) return activePointSize;
-          const spanDays = (new Date(s[s.length - 1].date + 'T00:00:00') - new Date(s[0].date + 'T00:00:00')) / 86400000;
-          return spanDays <= 45 ? activePointSize : 0;
+        if (_isMobile) {
+          // Mobile: hide points for 3M / 6M / All (spans > 45 days)
+          if (activeRange === 'all') {
+            const s = sortedEntries(_entries);
+            if (s.length < 2) return activePointSize;
+            const spanDays = (new Date(s[s.length - 1].date + 'T00:00:00') - new Date(s[0].date + 'T00:00:00')) / 86400000;
+            return spanDays <= 45 ? activePointSize : 0;
+          }
+          return Number(activeRange) <= 45 ? activePointSize : 0;
         }
-        return Number(activeRange) <= 45 ? activePointSize : 0;
+        // Desktop: original span-based threshold
+        let spanDays;
+        if (panMin !== null) {
+          spanDays = (panMax - panMin) / 86400000;
+        } else {
+          const scale = ctx.chart.scales?.x;
+          spanDays = scale ? (scale.max - scale.min) / 86400000 : 999;
+        }
+        return spanDays <= 120 ? activePointSize : 0;
       };
 
       // ── Shared: tooltip label callback ──────────────────────────────────────
@@ -2677,8 +2705,8 @@
           ? [{ x: xMin, y: goal }, { x: xMax, y: goal }] : [];
 
         datasets = [
-          { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: 1.2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#0b0c0e', pointBorderColor: '#4ade80', pointBorderWidth: 2, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
+          { label: 'Weight (kg)', data: allData, borderColor: '#4ade80', backgroundColor, borderWidth: _isMobile ? 1.2 : 2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: _isMobile ? '#0b0c0e' : '#4ade80', pointBorderColor: _isMobile ? '#4ade80' : '#0b0c0e', pointBorderWidth: _isMobile ? 2 : 1.5, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: _isMobile ? 1.5 : 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
           { label: 'Goal', data: goalPts, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
         ];
 
@@ -2715,7 +2743,7 @@
           return e ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
         };
 
-        yOpts = getYBounds();
+        yOpts = getYBounds(visible);
 
         if (chart) {
           chart.data.datasets[1].data = trendData;
@@ -2747,8 +2775,8 @@
         const optData = optCurve ? optCurve.points : [];
 
         datasets = [
-          { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: 1.2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: '#0b0c0e', pointBorderColor: '#4ade80', pointBorderWidth: 2, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
-          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
+          { label: 'Weight (kg)', data, borderColor: '#4ade80', backgroundColor, borderWidth: _isMobile ? 1.2 : 2, pointRadius, pointStyle: activePointStyle, pointBackgroundColor: _isMobile ? '#0b0c0e' : '#4ade80', pointBorderColor: _isMobile ? '#4ade80' : '#0b0c0e', pointBorderWidth: _isMobile ? 2 : 1.5, pointHoverRadius: 0, hitRadius: 0, ...lsProps, fill: true },
+          { label: 'Trend', data: trendData, borderColor: 'rgba(96,165,250,0.8)', borderDash: [4, 4], borderWidth: _isMobile ? 1.5 : 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false, hidden: true },
           { label: 'Goal', data: goalData, borderColor: 'rgba(251,191,36,0.6)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
           { label: 'Projected', data: optData, borderColor: 'rgba(167,139,250,0.85)', borderDash: [3, 3], borderWidth: 2, pointRadius: 0, hitRadius: 0, pointHoverRadius: 0, tension: 0, fill: false },
         ];
@@ -2792,7 +2820,7 @@
 
         titleCb = (items) => new Date(items[0].parsed.x).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-        yOpts = getYBounds();
+        yOpts = getYBounds(visible);
 
         if (chart) {
           chart.data.datasets[0].data = data;
@@ -3080,28 +3108,22 @@
 
       // ── Mobile stats panel + taskbar center ──────────────────────────────────
       if (_isMobile) {
-        const fmtShort = d => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
-
-        // Taskbar center: current weight + date
+        // Taskbar center: current weight only
         const twEl = document.getElementById('mobile-taskbar-weight');
-        const tdEl = document.getElementById('mobile-taskbar-date');
-        if (last) {
-          twEl.textContent = fmtWeight(last.weight) + ' kg';
-          tdEl.textContent = fmtShort(last.date);
-        } else {
-          twEl.textContent = '—';
-          tdEl.textContent = '';
-        }
+        twEl.textContent = last ? fmtWeight(last.weight) + ' kg' : '—';
 
-        // ms-current
-        const msCurEl = document.getElementById('ms-current');
-        const msCurSub = document.getElementById('ms-current-sub');
-        if (last) {
-          msCurEl.textContent = fmtWeight(last.weight);
-          msCurSub.textContent = fmtShort(last.date);
+        // ms-end-date (projected goal date)
+        const msEndEl = document.getElementById('ms-end-date');
+        const msEndSub = document.getElementById('ms-end-date-sub');
+        const projMs = projectedDateStr();
+        if (projMs) {
+          msEndEl.innerHTML = projMs;
+          msEndEl.className = 'ms-value neutral';
+          msEndSub.textContent = '';
         } else {
-          msCurEl.textContent = '—';
-          msCurSub.textContent = 'no data';
+          msEndEl.textContent = '—';
+          msEndEl.className = 'ms-value neutral';
+          msEndSub.textContent = 'set goal & pace';
         }
 
         // ms-lost + ms-days-sub
@@ -3385,7 +3407,7 @@
     function applyLineStyle() {
       if (!chart) return;
       const ds = chart.data.datasets[0];
-      if (activeLineStyle === 'smooth') { ds.tension = 0.5; ds.stepped = false; }
+      if (activeLineStyle === 'smooth') { ds.tension = _isMobile ? 0.5 : 0.35; ds.stepped = false; }
       if (activeLineStyle === 'linear') { ds.tension = 0; ds.stepped = false; }
       if (activeLineStyle === 'stepped') { ds.tension = 0; ds.stepped = 'before'; }
       chart.update();
@@ -3668,7 +3690,7 @@
         chart.options.scales.x.max = panMax !== null ? panMax : goalEndX;
         const visible = getWindowEntries(entries);
         chart.data.datasets[1].data = computeTrend(visible);
-        Object.assign(chart.options.scales.y, getYBounds());
+        Object.assign(chart.options.scales.y, getYBounds(visible));
         chart.update('none');
       }
       syncSliderToState();
