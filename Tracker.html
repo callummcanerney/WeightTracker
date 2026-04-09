@@ -2650,28 +2650,37 @@
       };
 
       // ── Shared: point radius ─────────────────────────────────────────────────
-      const pointRadius = (ctx) => {
-        if (activeOptimal) return activePointSize;
-        if (_isMobile) {
-          // Mobile: hide points for 3M / 6M / All (spans > 45 days)
-          if (activeRange === 'all') {
-            const s = sortedEntries(_entries);
-            if (s.length < 2) return activePointSize;
-            const spanDays = (new Date(s[s.length - 1].date + 'T00:00:00') - new Date(s[0].date + 'T00:00:00')) / 86400000;
-            return spanDays <= 45 ? activePointSize : 0;
-          }
-          return Number(activeRange) <= 45 ? activePointSize : 0;
-        }
-        // Desktop: original span-based threshold
-        let spanDays;
-        if (panMin !== null) {
-          spanDays = (panMax - panMin) / 86400000;
+      // Mobile: static value computed once at chart-build time (chart is always
+      // destroyed + rebuilt when range changes, so no stale-closure risk).
+      // Desktop: function re-evaluated each render so it tracks pan span.
+      let pointRadius;
+      if (_isMobile) {
+        let showPoints;
+        if (activeOptimal) {
+          showPoints = true;
+        } else if (activeRange === 'all') {
+          const s = sortedEntries(_entries);
+          const spanDays = s.length >= 2
+            ? (new Date(s[s.length - 1].date + 'T00:00:00') - new Date(s[0].date + 'T00:00:00')) / 86400000
+            : 0;
+          showPoints = spanDays <= 45;
         } else {
-          const scale = ctx.chart.scales?.x;
-          spanDays = scale ? (scale.max - scale.min) / 86400000 : 999;
+          showPoints = Number(activeRange) <= 45;
         }
-        return spanDays <= 120 ? activePointSize : 0;
-      };
+        pointRadius = showPoints ? activePointSize : 0;
+      } else {
+        pointRadius = (ctx) => {
+          if (activeOptimal) return activePointSize;
+          let spanDays;
+          if (panMin !== null) {
+            spanDays = (panMax - panMin) / 86400000;
+          } else {
+            const scale = ctx.chart.scales?.x;
+            spanDays = scale ? (scale.max - scale.min) / 86400000 : 999;
+          }
+          return spanDays <= 120 ? activePointSize : 0;
+        };
+      }
 
       // ── Shared: tooltip label callback ──────────────────────────────────────
       const labelCb = (item) => {
