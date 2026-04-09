@@ -1777,16 +1777,27 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 3px;
         flex: 1;
         min-width: 0;
         height: 44px;
       }
 
+      .mobile-taskbar-label {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.44rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        line-height: 1;
+      }
+
       .mobile-taskbar-weight {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         font-weight: 500;
-        color: var(--text);
+        color: var(--accent);
         line-height: 1;
         letter-spacing: -0.02em;
       }
@@ -1798,21 +1809,15 @@
       .mobile-tab {
         flex: 0 0 auto;
         height: 44px;
-        width: 56px;
+        width: 48px;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 2px;
         background: none;
         border: none;
         color: var(--muted);
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.46rem;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
         cursor: pointer;
-        transition: color 0.15s;
+        transition: color 0.15s, background 0.15s;
         -webkit-tap-highlight-color: transparent;
       }
 
@@ -1820,8 +1825,18 @@
         color: var(--accent);
       }
 
-      .mobile-tab--add.open {
+      /* + button: accent-tinted chip */
+      .mobile-tab--add {
         color: var(--accent);
+        background: var(--accent-dim);
+        border: 1px solid rgba(74,222,128,0.18) !important;
+        border-radius: 10px;
+        width: 36px;
+        height: 36px;
+      }
+
+      .mobile-tab--add.open {
+        background: rgba(74,222,128,0.15);
       }
 
       /* Prevent iOS auto-zoom on input focus (triggered when font-size < 16px) */
@@ -2233,23 +2248,22 @@
   <div id="mobile-menu-backdrop"></div>
   <nav id="mobile-taskbar">
     <button class="mobile-tab mobile-tab--add" id="mobile-add-btn" type="button">
-      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="7" x2="12" y2="17" />
-        <line x1="7" y1="12" x2="17" y2="12" />
+        <line x1="9" y1="1" x2="9" y2="17" />
+        <line x1="1" y1="9" x2="17" y2="9" />
       </svg>
     </button>
     <div id="mobile-taskbar-center">
+      <div class="mobile-taskbar-label">Current</div>
       <div class="mobile-taskbar-weight" id="mobile-taskbar-weight">—</div>
-      <div class="mobile-taskbar-date" id="mobile-taskbar-date"></div>
     </div>
     <button class="mobile-tab" id="mobile-menu-btn" type="button">
-      <svg width="30" height="22" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.2"
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.6"
         stroke-linecap="round">
-        <line x1="0" y1="1" x2="24" y2="1" />
-        <line x1="0" y1="9" x2="24" y2="9" />
-        <line x1="0" y1="17" x2="24" y2="17" />
+        <line x1="0" y1="1" x2="20" y2="1" />
+        <line x1="4" y1="7" x2="20" y2="7" />
+        <line x1="0" y1="13" x2="20" y2="13" />
       </svg>
     </button>
   </nav>
@@ -2367,16 +2381,6 @@
 
     // Tight y bounds for the visible entries, including goal if set
     function getYBounds(visibleEntries) {
-      if (_isMobile) {
-        // Mobile: fixed to all-data range so y-axis doesn't jump while panning
-        const all = sortedEntries(_entries);
-        if (!all.length) return {};
-        const ws = all.map(e => e.weight);
-        const lo = Math.min(...ws), hi = Math.max(...ws);
-        const pad = Math.max((hi - lo) * 0.15, 2);
-        return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
-      }
-      // Desktop: original — track visible window + include goal
       if (!visibleEntries || !visibleEntries.length) return {};
       const ws = visibleEntries.map(e => e.weight);
       if (_goal != null) ws.push(_goal);
