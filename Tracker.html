@@ -1891,11 +1891,11 @@
         align-items: center;
         justify-content: center;
         gap: 2px;
-        height: 36px;
-        padding: 0 18px;
+        height: 40px;
+        padding: 0 22px;
         background: var(--bg2);
         border: 1px solid var(--border2);
-        border-radius: 12px;
+        border-radius: 13px;
       }
 
       .mobile-taskbar-label {
@@ -1910,7 +1910,7 @@
 
       .mobile-taskbar-weight {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 1.25rem;
+        font-size: 1.35rem;
         font-weight: 500;
         color: var(--text);
         line-height: 1;
@@ -2656,7 +2656,9 @@
         const xVal = chart.scales.x.getValueForPixel(px);
 
         // Only show tooltip within the data's x range
-        if (xVal < wData[0].x || xVal > wData[wData.length - 1].x) {
+        // On mobile, extend the right boundary by 4 days so tapping just past the last point still registers
+        const rightBound = wData[wData.length - 1].x + (_isMobile ? 4 * 86400000 : 0);
+        if (xVal < wData[0].x || xVal > rightBound) {
           _hideChartOverlays(); return;
         }
 
@@ -4722,8 +4724,19 @@
       if (_goal != null) document.getElementById('goal-modal-inp').value = _goal;
       if (!_panInitialized) {
         _panInitialized = true;
-        if (!_isMobile && activeOptimal && activeScaleMode === 'time') {
-          // Projected is on — snap to phase start → projected end (desktop only)
+        if (_isMobile) {
+          // Mobile: show from 1 day before phase start so the phase line is visible at the left edge
+          const rangeDays = (activeRange === 'all' || !activeRange) ? 30 : parseInt(activeRange);
+          if (_phaseStart && sortedEntries(_entries).length) {
+            const phaseStartMs = new Date(_phaseStart + 'T00:00:00').getTime();
+            panMin = phaseStartMs - 86400000; // 1 day before so the vertical line renders fully
+            panMax = panMin + rangeDays * 86400000;
+          } else {
+            initPan(_entries, rangeDays);
+          }
+          savePanState();
+        } else if (activeOptimal && activeScaleMode === 'time') {
+          // Desktop projected: snap to phase start → projected end
           const optCurve = computeOptimalCurve();
           if (optCurve) {
             const sorted = sortedEntries(_entries);
@@ -4735,7 +4748,6 @@
             }
           }
         }
-        // Mobile / non-projected: use panMin/panMax restored from localStorage (or null)
       }
       syncSliderToState();
       refresh();
