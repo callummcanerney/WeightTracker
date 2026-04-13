@@ -1466,6 +1466,7 @@
       .chart-header {
         padding: 0 10px;
         margin-bottom: 6px;
+        position: relative;
       }
 
       /* Hide desktop chart controls, show mobile replacements */
@@ -1482,21 +1483,25 @@
       }
 
       #mobile-range-btns {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
         display: flex;
         gap: 2px;
         align-items: center;
         background: var(--bg2);
-        border-radius: 10px;
+        border-radius: 11px;
         padding: 3px;
       }
 
       #mobile-range-btns .range-btn {
         background: transparent;
         border: none;
-        border-radius: 8px;
+        border-radius: 9px;
         color: var(--muted);
-        padding: 5px 10px;
-        font-size: 0.65rem;
+        padding: 7px 14px;
+        font-size: 0.72rem;
         letter-spacing: 0.04em;
         transition: all 0.15s;
         box-shadow: none;
@@ -1514,7 +1519,13 @@
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
       }
 
-      /* optimal-toggle stays visible — projected is now a toggleable option */
+      /* Projected toggle: icon-only square button */
+      #optimal-toggle {
+        padding: 7px 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
       /* Show mobile-only scale toggle in menu */
       .mobile-menu-scale-item {
@@ -2033,7 +2044,12 @@
         <!-- Right: point size control (Projected only) + Projected toggle -->
         <div class="ctrl-right">
           <div id="range-sep" style="display:none;"></div>
-          <button class="range-btn active" id="optimal-toggle" type="button">Projected</button>
+          <button class="range-btn active" id="optimal-toggle" type="button" title="Toggle projected line">
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="17" cy="2.5" r="1.5" fill="currentColor" stroke="none"/>
+              <line x1="1" y1="12" x2="15" y2="2.5" stroke-dasharray="3 2.2"/>
+            </svg>
+          </button>
         </div>
       </div>
       <div class="no-data-msg" id="no-data-msg">No entries yet — add your first weight below</div>
@@ -2448,7 +2464,7 @@
 
     // Tight y bounds for the visible entries, including goal if set
     function getYBounds(visibleEntries) {
-      if (_isMobile) return { min: 82, max: 100 };
+      if (_isMobile) return { min: 84, max: 98 };
       if (!visibleEntries || !visibleEntries.length) return {};
       const ws = visibleEntries.map(e => e.weight);
       if (_goal != null) ws.push(_goal);
@@ -4466,15 +4482,27 @@
       });
 
       // ── Log entry sheet ─────────────────────────────────────────────────────
+      // Prevent iOS from scrolling/resizing the background when the keyboard opens
+      function _lockScroll() { window.scrollTo(0, 0); }
       function openLogSheet() {
         logPanel.classList.add('mobile-open');
         logBackdrop.classList.add('visible');
         mobileAddBtn.classList.add('open');
+        window.addEventListener('scroll', _lockScroll, { passive: true });
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('scroll', _lockScroll);
+          window.visualViewport.addEventListener('resize', _lockScroll);
+        }
       }
       function closeLogSheet() {
         logPanel.classList.remove('mobile-open');
         logBackdrop.classList.remove('visible');
         mobileAddBtn.classList.remove('open');
+        window.removeEventListener('scroll', _lockScroll);
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('scroll', _lockScroll);
+          window.visualViewport.removeEventListener('resize', _lockScroll);
+        }
       }
 
       mobileAddBtn.addEventListener('click', () => {
