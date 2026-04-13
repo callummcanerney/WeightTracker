@@ -1388,6 +1388,10 @@
       display: none !important;
     }
 
+    .mobile-menu-style-item {
+      display: none !important;
+    }
+
     #mobile-range-btns {
       display: none;
     }
@@ -1527,9 +1531,42 @@
         justify-content: center;
       }
 
-      /* Show mobile-only scale toggle in menu */
+      /* Show mobile-only scale toggle + style picker in menu */
       .mobile-menu-scale-item {
         display: flex !important;
+      }
+
+      .mobile-menu-style-item {
+        display: flex !important;
+      }
+
+      .menu-style-row {
+        display: flex;
+        gap: 4px;
+      }
+
+      .menu-style-btn {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        color: var(--muted);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.04em;
+        padding: 5px 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .menu-style-btn.active {
+        background: var(--accent-dim);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* Hide Weekly Breakdown panel title on mobile — gives more row space */
+      #weekly-panel .panel-title {
+        display: none;
       }
 
       /* Bottom panels: two floating rounded cards — stats (narrow) + weekly (wide) */
@@ -1844,16 +1881,21 @@
         z-index: 200;
       }
 
-      /* Center weight display in taskbar */
+      /* Center weight display in taskbar — card widget */
       #mobile-taskbar-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 3px;
-        flex: 1;
-        min-width: 0;
-        height: 44px;
+        gap: 2px;
+        height: 36px;
+        padding: 0 18px;
+        background: var(--bg2);
+        border: 1px solid var(--border2);
+        border-radius: 12px;
       }
 
       .mobile-taskbar-label {
@@ -1942,6 +1984,15 @@
           <button class="menu-item mobile-menu-scale-item" id="menu-scale-toggle" type="button">
             <span class="menu-item-icon">⊡</span> <span id="menu-scale-label">Scale: Date</span>
           </button>
+          <div class="menu-sep mobile-menu-style-item"></div>
+          <div class="menu-item mobile-menu-style-item" style="gap:10px;cursor:default;">
+            <span class="menu-item-icon" style="opacity:0.5;">⌇</span>
+            <div class="menu-style-row" id="menu-style-row">
+              <button class="menu-style-btn" data-menu-style="smooth" type="button">Smooth</button>
+              <button class="menu-style-btn" data-menu-style="linear" type="button">Linear</button>
+              <button class="menu-style-btn" data-menu-style="stepped" type="button">Stepped</button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -2037,7 +2088,8 @@
           <div id="mobile-range-btns">
             <button class="range-btn" data-mobile-range="14" type="button">2W</button>
             <button class="range-btn" data-mobile-range="30" type="button">1M</button>
-            <button class="range-btn" data-mobile-range="90" type="button">3M</button>
+            <button class="range-btn" data-mobile-range="42" type="button">6W</button>
+            <button class="range-btn" data-mobile-range="60" type="button">2M</button>
             <button class="range-btn" data-mobile-range="180" type="button">6M</button>
           </div>
         </div>
@@ -3207,7 +3259,7 @@
       if (_isMobile) {
         // Taskbar center: current weight only
         const twEl = document.getElementById('mobile-taskbar-weight');
-        twEl.textContent = last ? fmtWeight(last.weight) + ' kg' : '—';
+        twEl.textContent = last ? fmtWeight(last.weight) : '—';
 
         // ms-end-date (projected goal date)
         const msEndEl = document.getElementById('ms-end-date');
@@ -4428,8 +4480,10 @@
     // ─── MOBILE OVERRIDES ────────────────────────────────────────────────────────
     const _isMobile = window.matchMedia('(max-width: 430px)').matches;
     if (_isMobile) {
-      // Default to linear on mobile (style picker is hidden); projected is toggleable
+      // Default to linear on mobile; projected is toggleable
       activeLineStyle = 'linear';
+      // Default to 1M on mobile if no range has been explicitly saved
+      if (!localStorage.getItem('wt-range')) activeRange = 30;
 
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const mobileAddBtn = document.getElementById('mobile-add-btn');
@@ -4537,6 +4591,23 @@
         });
       });
       syncMobileRangeBtns();
+
+      // ── Mobile line style picker ─────────────────────────────────────────
+      function syncMenuStyleBtns() {
+        document.querySelectorAll('[data-menu-style]').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.menuStyle === activeLineStyle);
+        });
+      }
+      document.querySelectorAll('[data-menu-style]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeLineStyle = btn.dataset.menuStyle;
+          localStorage.setItem('wt-line-style', activeLineStyle);
+          syncMenuStyleBtns();
+          if (chart) { chart.destroy(); chart = null; }
+          refresh();
+        });
+      });
+      syncMenuStyleBtns();
 
       // ── Touch pan on chart canvas (horizontal swipe = scroll x-axis) ─────
       const _chartCanvas = document.getElementById('chart');
@@ -4651,8 +4722,8 @@
       if (_goal != null) document.getElementById('goal-modal-inp').value = _goal;
       if (!_panInitialized) {
         _panInitialized = true;
-        if (activeOptimal && activeScaleMode === 'time') {
-          // Projected is on — always snap to phase start → projected end
+        if (!_isMobile && activeOptimal && activeScaleMode === 'time') {
+          // Projected is on — snap to phase start → projected end (desktop only)
           const optCurve = computeOptimalCurve();
           if (optCurve) {
             const sorted = sortedEntries(_entries);
@@ -4663,9 +4734,8 @@
               savePanState();
             }
           }
-          // else: use panMin/panMax restored from localStorage (or null)
         }
-        // Non-projected: use panMin/panMax restored from localStorage (or null)
+        // Mobile / non-projected: use panMin/panMax restored from localStorage (or null)
       }
       syncSliderToState();
       refresh();
