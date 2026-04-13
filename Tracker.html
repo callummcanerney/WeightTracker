@@ -1483,8 +1483,35 @@
 
       #mobile-range-btns {
         display: flex;
-        gap: 6px;
+        gap: 2px;
         align-items: center;
+        background: var(--bg2);
+        border-radius: 10px;
+        padding: 3px;
+      }
+
+      #mobile-range-btns .range-btn {
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        color: var(--muted);
+        padding: 5px 10px;
+        font-size: 0.65rem;
+        letter-spacing: 0.04em;
+        transition: all 0.15s;
+        box-shadow: none;
+      }
+
+      #mobile-range-btns .range-btn:hover {
+        color: var(--text);
+        border-color: transparent;
+      }
+
+      #mobile-range-btns .range-btn.active {
+        background: var(--bg3);
+        color: var(--text);
+        border-color: transparent;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
       }
 
       /* optimal-toggle stays visible — projected is now a toggleable option */
@@ -1635,6 +1662,42 @@
         font-size: 0.46rem;
         color: var(--muted);
         margin-top: 1px;
+      }
+
+      .ms-arc-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .ms-arc-bg {
+        fill: none;
+        stroke: var(--border2);
+        stroke-width: 2.5;
+      }
+
+      .ms-arc-fill {
+        fill: none;
+        stroke: var(--amber);
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-dasharray: 125.66;
+        stroke-dashoffset: 125.66;
+        transition: stroke-dashoffset 0.5s ease, stroke 0.4s;
+      }
+
+      .ms-arc-pct {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--text);
+        pointer-events: none;
+        white-space: nowrap;
       }
 
       /* Tooltip tappable on mobile: pointer-events: auto lets user tap to edit */
@@ -2074,7 +2137,22 @@
           </div>
           <div class="mobile-stat-item">
             <div class="ms-label">Goal</div>
-            <div class="ms-value neutral" id="ms-goal">—</div>
+            <div class="ms-arc-container">
+              <svg width="44" height="44" viewBox="0 0 48 48">
+                <circle class="ms-arc-bg" cx="24" cy="24" r="20" />
+                <circle class="ms-arc-fill" id="ms-goal-arc" cx="24" cy="24" r="20" transform="rotate(-90 24 24)" />
+                <line x1="33.87" y1="10.47" x2="37.73" y2="5.07" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="40" y1="18.87" x2="46.27" y2="16.73" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="40" y1="29.13" x2="46.27" y2="31.27" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="33.87" y1="37.47" x2="37.73" y2="43.07" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="24" y1="40.73" x2="24" y2="47.47" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="14.13" y1="37.47" x2="10.27" y2="43.07" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="8" y1="29.13" x2="1.73" y2="31.27" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="8" y1="18.87" x2="1.73" y2="16.73" stroke="var(--bg2)" stroke-width="1.2" />
+                <line x1="14.13" y1="10.47" x2="10.27" y2="5.07" stroke="var(--bg2)" stroke-width="1.2" />
+              </svg>
+              <div class="ms-arc-pct" id="ms-goal-pct">—</div>
+            </div>
             <div class="ms-sub" id="ms-goal-sub">—</div>
           </div>
         </div>
@@ -2098,7 +2176,7 @@
       <div class="field">
         <label>Target Weight (kg)</label>
         <div class="num-wrap">
-          <input type="number" id="goal-modal-inp" step="0.05" min="30" max="300" placeholder="kg">
+          <input type="number" id="goal-modal-inp" step="0.05" min="30" max="300" placeholder="kg" inputmode="decimal">
           <div class="num-spin">
             <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2119,7 +2197,7 @@
               style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">
               Start</div>
             <div class="num-wrap">
-              <input type="number" id="goal-rate-start-inp" step="0.05" min="0.1" max="3" placeholder="%/wk">
+              <input type="number" id="goal-rate-start-inp" step="0.05" min="0.1" max="3" placeholder="%/wk" inputmode="decimal">
               <div class="num-spin">
                 <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5"
                     fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2137,7 +2215,7 @@
               style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">
               End</div>
             <div class="num-wrap">
-              <input type="number" id="goal-rate-end-inp" step="0.05" min="0.1" max="3" placeholder="= Start">
+              <input type="number" id="goal-rate-end-inp" step="0.05" min="0.1" max="3" placeholder="= Start" inputmode="decimal">
               <div class="num-spin">
                 <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5"
                     fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2189,7 +2267,7 @@
       </div>
       <div class="field">
         <label>Start Date (DD/MM/YYYY)</label>
-        <input type="text" id="phase-date-inp" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
+        <input type="text" id="phase-date-inp" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" inputmode="url">
       </div>
       <div class="modal-btn-row">
         <button class="btn-add" id="phase-save-btn" style="flex:1">Set Phase</button>
@@ -2211,7 +2289,7 @@
       <div class="field">
         <label>Weight (kg)</label>
         <div class="num-wrap">
-          <input type="number" id="modal-weight" step="0.05" min="30" max="300" placeholder="kg">
+          <input type="number" id="modal-weight" step="0.05" min="30" max="300" placeholder="kg" inputmode="decimal">
           <div class="num-spin">
             <button class="num-up" type="button" tabindex="-1"><svg width="8" height="5" viewBox="0 0 8 5" fill="none"
                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2370,6 +2448,7 @@
 
     // Tight y bounds for the visible entries, including goal if set
     function getYBounds(visibleEntries) {
+      if (_isMobile) return { min: 82, max: 100 };
       if (!visibleEntries || !visibleEntries.length) return {};
       const ws = visibleEntries.map(e => e.weight);
       if (_goal != null) ws.push(_goal);
@@ -2666,7 +2745,7 @@
         } else {
           showPoints = Number(activeRange) <= 45;
         }
-        pointRadius = showPoints ? 2.2 : 0;
+        pointRadius = showPoints ? 2.6 : 0;
       } else {
         pointRadius = (ctx) => {
           if (activeOptimal) return activePointSize;
@@ -3156,20 +3235,26 @@
           msRateEl.className = 'ms-value';
         }
 
-        // ms-goal + ms-goal-sub
-        const msGoalEl = document.getElementById('ms-goal');
+        // ms-goal arc + ms-goal-sub
+        const msGoalArc = document.getElementById('ms-goal-arc');
+        const msGoalPct = document.getElementById('ms-goal-pct');
         const msGoalSub = document.getElementById('ms-goal-sub');
+        const msArcCircumference = 2 * Math.PI * 20; // 125.66
         if (goal != null && first && last) {
           const smoothed = computeSmoothedWeight(s);
           const total = first.weight - goal;
           const done = first.weight - smoothed;
           const pct = total <= 0 ? 100 : Math.min(100, Math.max(0, (done / total) * 100));
-          msGoalEl.textContent = pct.toFixed(0) + '%';
-          msGoalEl.className = 'ms-value ' + (pct >= 100 ? 'positive' : 'neutral');
+          msGoalPct.textContent = pct.toFixed(0) + '%';
+          msGoalPct.style.color = pct >= 100 ? 'var(--accent)' : 'var(--amber)';
+          msGoalArc.style.strokeDashoffset = (msArcCircumference * (1 - Math.min(1, pct / 100))).toFixed(1);
+          msGoalArc.style.stroke = pct >= 100 ? 'var(--accent)' : 'var(--amber)';
           msGoalSub.textContent = goal + ' kg target';
         } else {
-          msGoalEl.textContent = '—';
-          msGoalEl.className = 'ms-value neutral';
+          msGoalPct.textContent = '—';
+          msGoalPct.style.color = '';
+          msGoalArc.style.strokeDashoffset = msArcCircumference.toFixed(1);
+          msGoalArc.style.stroke = 'var(--amber)';
           msGoalSub.textContent = 'no goal set';
         }
       }
