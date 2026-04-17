@@ -2720,6 +2720,9 @@
         const py = e.clientY - rect.top;
         const ca = chart.chartArea;
         if (!ca || px < ca.left || px > ca.right || py < ca.top || py > ca.bottom) {
+          // On mobile, synthetic mousemove after tapping an arrow button fires outside the
+          // chart area — don't dismiss the tooltip if the real element under the pointer is it.
+          if (_isMobile && document.elementFromPoint(e.clientX, e.clientY)?.closest('.ext-tooltip')) return;
           _hideChartOverlays(); return;
         }
 
