@@ -1754,6 +1754,31 @@
         cursor: pointer;
       }
 
+      .ext-tooltip-nav {
+        margin-top: 5px;
+        display: flex;
+        gap: 4px;
+      }
+      .ext-tooltip-nav-btn {
+        flex: 1;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 0.95rem;
+        line-height: 1;
+        padding: 4px 8px;
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      .ext-tooltip-nav-btn:disabled {
+        opacity: 0.2;
+        pointer-events: none;
+      }
+      .ext-tooltip-nav-btn:active {
+        background: rgba(255,255,255,0.15);
+      }
+
       /* Shrink activity calendar cells to fit narrower panel */
       .log-cal {
         grid-template-columns: repeat(7, 19px);
@@ -2619,7 +2644,11 @@
         _extTooltipEl.className = 'ext-tooltip';
         _extTooltipEl.innerHTML =
           `<div class="ext-tooltip-title"></div>` +
-          `<div class="ext-tooltip-bodies"></div>`;
+          `<div class="ext-tooltip-bodies"></div>` +
+          `<div class="ext-tooltip-nav" style="display:none">` +
+          `<button class="tt-prev ext-tooltip-nav-btn" type="button">&#8249;</button>` +
+          `<button class="tt-next ext-tooltip-nav-btn" type="button">&#8250;</button>` +
+          `</div>`;
         document.querySelector('.chart-canvas-wrap').appendChild(_extTooltipEl);
       }
       if (!_crosshairEl) _crosshairEl = document.getElementById('chart-crosshair');
@@ -2631,6 +2660,51 @@
       if (_crosshairEl) _crosshairEl.style.display = 'none';
       if (_hoverpointEl) _hoverpointEl.style.display = 'none';
       _tooltipEntryDate = null;
+    }
+
+    function _updateTooltipNav() {
+      const nav = _extTooltipEl && _extTooltipEl.querySelector('.ext-tooltip-nav');
+      if (!nav) return;
+      if (!_isMobile) { nav.style.display = 'none'; return; }
+      const visible = getWindowEntries(sortedEntries(_entries));
+      const idx = visible.findIndex(e => e.date === _tooltipEntryDate);
+      nav.style.display = 'flex';
+      nav.querySelector('.tt-prev').disabled = idx <= 0;
+      nav.querySelector('.tt-next').disabled = idx < 0 || idx >= visible.length - 1;
+    }
+
+    function _showTooltipForDate(dateStr) {
+      if (!chart || !dateStr) return;
+      _ensureChartOverlays();
+      const entry = _entries.find(e => e.date === dateStr);
+      if (!entry) return;
+      const ca = chart.chartArea;
+      if (!ca) return;
+      const ms = new Date(dateStr + 'T00:00:00').getTime();
+      const ptPx = chart.scales.x.getPixelForValue(ms);
+      const ptPy = chart.scales.y.getPixelForValue(entry.weight);
+      _crosshairEl.style.display = 'block';
+      _crosshairEl.style.left = ptPx + 'px';
+      _crosshairEl.style.top = ca.top + 'px';
+      _crosshairEl.style.height = (ca.bottom - ca.top) + 'px';
+      _hoverpointEl.style.display = 'block';
+      _hoverpointEl.style.left = ptPx + 'px';
+      _hoverpointEl.style.top = ptPy + 'px';
+      _tooltipEntryDate = dateStr;
+      const d = new Date(dateStr + 'T00:00:00');
+      const dow = d.toLocaleDateString('en-GB', { weekday: 'short' });
+      const rest = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+      const kgTag = `<span style="font-size:0.72em;opacity:0.5"> kg</span>`;
+      _extTooltipEl.querySelector('.ext-tooltip-title').textContent = `${dow}, ${rest}`;
+      _extTooltipEl.querySelector('.ext-tooltip-bodies').innerHTML =
+        `<div class="ext-tooltip-body">${fmtWeight(entry.weight)}${kgTag}</div>`;
+      _updateTooltipNav();
+      _extTooltipEl.style.left = '0'; _extTooltipEl.style.top = '0'; _extTooltipEl.style.opacity = '0';
+      const tw2 = _extTooltipEl.offsetWidth;
+      const th2 = _extTooltipEl.offsetHeight;
+      _extTooltipEl.style.left = (ptPx - tw2 / 2) + 'px';
+      _extTooltipEl.style.top = (ptPy - th2 - 26) + 'px';
+      _extTooltipEl.style.opacity = '1';
     }
 
     // Attached once; references chart/activeScaleMode via closure
@@ -2693,9 +2767,16 @@
         _tooltipEntryDate = entryDate;
 
         // Title
-        const title = entryDate
-          ? new Date(entryDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-          : '';
+        const title = (() => {
+          if (!entryDate) return '';
+          const d = new Date(entryDate + 'T00:00:00');
+          if (_isMobile) {
+            const dow = d.toLocaleDateString('en-GB', { weekday: 'short' });
+            const rest = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+            return `${dow}, ${rest}`;
+          }
+          return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        })();
 
         // Weight line
         const kgTag = `<span style="font-size:0.72em;opacity:0.5"> kg</span>`;
@@ -2723,6 +2804,7 @@
 
         _extTooltipEl.querySelector('.ext-tooltip-title').textContent = title;
         _extTooltipEl.querySelector('.ext-tooltip-bodies').innerHTML = bodiesHtml;
+        _updateTooltipNav();
 
         // Position: centered on crosshair x, above cursor, clamped within chart area
         _extTooltipEl.style.left = '0'; _extTooltipEl.style.top = '0'; _extTooltipEl.style.opacity = '0';
@@ -4581,9 +4663,14 @@
       }
       document.querySelectorAll('[data-mobile-range]').forEach(btn => {
         btn.addEventListener('click', () => {
-          activeRange = parseInt(btn.dataset.mobileRange);
+          const newDays = parseInt(btn.dataset.mobileRange);
+          activeRange = newDays;
           localStorage.setItem('wt-range', String(activeRange));
-          initPan(_entries, activeRange);
+          if (panMin !== null) {
+            panMax = panMin + newDays * 86400000;
+          } else {
+            initPan(_entries, activeRange);
+          }
           initPanIndex(sortedEntries(_entries), activeRange);
           savePanState();
           syncSliderToState();
@@ -4699,9 +4786,21 @@
         _momentumRAF = requestAnimationFrame(step);
       });
 
+      // Tooltip nav arrows: step through visible data points without re-tapping
+      document.querySelector('.chart-canvas-wrap').addEventListener('click', e => {
+        const btn = e.target.closest('.ext-tooltip-nav-btn');
+        if (!btn || !_tooltipEntryDate) return;
+        e.stopPropagation();
+        const visible = getWindowEntries(sortedEntries(_entries));
+        const idx = visible.findIndex(en => en.date === _tooltipEntryDate);
+        if (btn.classList.contains('tt-prev') && idx > 0) _showTooltipForDate(visible[idx - 1].date);
+        else if (btn.classList.contains('tt-next') && idx < visible.length - 1) _showTooltipForDate(visible[idx + 1].date);
+      });
+
       // Tooltip tap → open edit modal (two-step: tap chart point to show tooltip,
       // then tap the tooltip to edit. pointer-events: auto is set via CSS above.)
       document.querySelector('.chart-canvas-wrap').addEventListener('click', e => {
+        if (e.target.closest('.ext-tooltip-nav-btn')) return;
         if (e.target.closest('.ext-tooltip') && _tooltipEntryDate) {
           _hideChartOverlays();
           openEntryModal(_tooltipEntryDate);
