@@ -2695,9 +2695,26 @@
       const dow = d.toLocaleDateString('en-GB', { weekday: 'short' });
       const rest = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
       const kgTag = `<span style="font-size:0.72em;opacity:0.5"> kg</span>`;
+      let bodiesHtml = activeOptimal
+        ? `<div class="ext-tooltip-body" style="font-size:0.95rem">${fmtWeight(entry.weight)}${kgTag}</div>`
+        : `<div class="ext-tooltip-body">${fmtWeight(entry.weight)}${kgTag}</div>`;
+      if (activeOptimal && activeScaleMode === 'time') {
+        const optCurve = computeOptimalCurve();
+        if (optCurve && optCurve.points.length >= 2) {
+          const pts = optCurve.points;
+          let lo = 0, hi = pts.length - 1;
+          while (lo < hi - 1) { const mid = (lo + hi) >> 1; if (pts[mid].x <= ms) lo = mid; else hi = mid; }
+          const p0 = pts[lo], p1 = pts[hi];
+          let tw;
+          if (ms <= pts[0].x) tw = pts[0].y;
+          else if (ms >= pts[pts.length - 1].x) tw = pts[pts.length - 1].y;
+          else { const t2 = (ms - p0.x) / (p1.x - p0.x); tw = p0.y + t2 * (p1.y - p0.y); }
+          const tRounded = (Math.round(tw / 0.05) * 0.05).toFixed(2);
+          bodiesHtml += `<div class="ext-tooltip-body" style="color:rgba(167,139,250,0.9);font-size:0.75rem">${tRounded}${kgTag}</div>`;
+        }
+      }
       _extTooltipEl.querySelector('.ext-tooltip-title').textContent = `${dow}, ${rest}`;
-      _extTooltipEl.querySelector('.ext-tooltip-bodies').innerHTML =
-        `<div class="ext-tooltip-body">${fmtWeight(entry.weight)}${kgTag}</div>`;
+      _extTooltipEl.querySelector('.ext-tooltip-bodies').innerHTML = bodiesHtml;
       _updateTooltipNav();
       _extTooltipEl.style.left = '0'; _extTooltipEl.style.top = '0'; _extTooltipEl.style.opacity = '0';
       const tw2 = _extTooltipEl.offsetWidth;
