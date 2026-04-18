@@ -1909,16 +1909,15 @@
         left: 50%;
         transform: translateX(-50%);
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 1px;
         height: 40px;
         padding: 0 18px;
         background: var(--bg2);
         border: 1px solid rgba(74,222,128,0.2);
         border-top: 2px solid var(--accent);
         border-radius: 0 0 13px 13px;
+        overflow: hidden;
       }
 
       .mobile-taskbar-weight {
@@ -1930,12 +1929,15 @@
         letter-spacing: -0.02em;
       }
 
-      .mobile-taskbar-delta {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.58rem;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-        line-height: 1;
+      .mobile-taskbar-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        background: var(--accent);
+        opacity: 0.5;
+        width: 0%;
+        transition: width 0.5s ease;
       }
 
       .mobile-taskbar-date {
@@ -2412,7 +2414,7 @@
     </button>
     <div id="mobile-taskbar-center">
       <div class="mobile-taskbar-weight" id="mobile-taskbar-weight">—</div>
-      <div class="mobile-taskbar-delta" id="mobile-taskbar-delta"></div>
+      <div class="mobile-taskbar-progress" id="mobile-taskbar-progress"></div>
     </div>
     <button class="mobile-tab" id="mobile-menu-btn" type="button">
       <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.6"
@@ -3354,18 +3356,17 @@
 
       // ── Mobile stats panel + taskbar center ──────────────────────────────────
       if (_isMobile) {
-        // Taskbar center: current weight + entry-to-entry delta
+        // Taskbar center: current weight + goal progress bar
         const twEl = document.getElementById('mobile-taskbar-weight');
-        const tdEl = document.getElementById('mobile-taskbar-delta');
+        const tpEl = document.getElementById('mobile-taskbar-progress');
         twEl.textContent = last ? fmtWeight(last.weight) : '—';
-        if (tdEl && last && s.length > 1) {
-          const prev = s[s.length - 2];
-          const delta = last.weight - prev.weight;
-          const sign = delta <= 0 ? '▼' : '▲';
-          tdEl.textContent = `${sign} ${Math.abs(delta).toFixed(1)}`;
-          tdEl.style.color = delta <= 0 ? 'var(--accent)' : 'var(--red)';
-        } else if (tdEl) {
-          tdEl.textContent = '';
+        if (tpEl && first && last && _goal != null && _goal < first.weight) {
+          const pct = Math.min(100, Math.max(0,
+            (first.weight - last.weight) / (first.weight - _goal) * 100
+          ));
+          tpEl.style.width = pct + '%';
+        } else if (tpEl) {
+          tpEl.style.width = '0%';
         }
 
         // ms-end-date (projected goal date)
@@ -4589,8 +4590,8 @@
     if (_isMobile) {
       // Default to linear on mobile; projected is toggleable
       activeLineStyle = 'linear';
-      // Default to 6W on mobile if no range has been explicitly saved
-      if (!localStorage.getItem('wt-range')) activeRange = 42;
+      // Default to 6W on mobile unless user has explicitly chosen a range
+      if (!localStorage.getItem('wt-range-explicit')) activeRange = 42;
 
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const mobileAddBtn = document.getElementById('mobile-add-btn');
@@ -4689,6 +4690,7 @@
           const newDays = parseInt(btn.dataset.mobileRange);
           activeRange = newDays;
           localStorage.setItem('wt-range', String(activeRange));
+          localStorage.setItem('wt-range-explicit', '1');
           if (panMin !== null) {
             panMax = panMin + newDays * 86400000;
           } else {
