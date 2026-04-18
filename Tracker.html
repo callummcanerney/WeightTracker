@@ -1974,6 +1974,97 @@
         font-size: 16px !important;
       }
     }
+
+    /* ── LANDSCAPE PHONE: chart-only full-screen view ─────────────────────────
+       Targets landscape iPhones (height ≤ 450px in landscape).
+       _isMobile stays true (set on load), so JS pan/touch/tooltip logic
+       continues to work — only the layout changes.                           */
+    @media (orientation: landscape) and (max-height: 450px) {
+
+      /* Hide everything except the chart */
+      header,
+      .stats-row,
+      #mobile-stats-panel,
+      #mobile-taskbar,
+      #mobile-taskbar-center,
+      #log-entry-panel,
+      .ctrl-left,
+      .range-btns,
+      .index-slider-wrap,
+      #range-add-btn,
+      #range-add-form {
+        display: none !important;
+      }
+
+      /* Shell: full screen, safe-area insets only (handles notch in landscape) */
+      .shell {
+        height: 100dvh;
+        padding: env(safe-area-inset-top, 0px)
+                 env(safe-area-inset-right, 0px)
+                 env(safe-area-inset-bottom, 0px)
+                 env(safe-area-inset-left, 0px);
+        gap: 0;
+      }
+
+      /* Chart: fills all remaining space, edge-to-edge */
+      .chart-wrap {
+        flex: 1 1 0;
+        min-height: 0;
+        margin: 0;
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 6px 0 4px;
+      }
+
+      /* Chart header: inset by safe areas so controls clear the notch */
+      .chart-header {
+        position: relative;
+        padding: 0 max(12px, env(safe-area-inset-right, 12px))
+                   0 max(12px, env(safe-area-inset-left, 12px));
+        margin-bottom: 4px;
+      }
+
+      /* Mobile range pill — re-enable (hidden outside max-width: 430px query) */
+      #mobile-range-btns {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        gap: 2px;
+        align-items: center;
+        background: var(--bg2);
+        border-radius: 11px;
+        padding: 3px;
+      }
+
+      #mobile-range-btns .range-btn {
+        background: transparent;
+        border: none;
+        border-radius: 9px;
+        color: var(--muted);
+        padding: 6px 12px;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        box-shadow: none;
+      }
+
+      #mobile-range-btns .range-btn.active {
+        background: var(--bg3);
+        color: var(--text);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+      }
+
+      /* Projected toggle: compact icon button */
+      #optimal-toggle {
+        padding: 6px 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 
