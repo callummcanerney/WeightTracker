@@ -1981,13 +1981,13 @@
        continues to work — only the layout changes.                           */
     @media (orientation: landscape) and (max-height: 450px) {
 
-      /* Hide everything except the chart */
+      /* Hide everything except the chart + its controls */
       header,
       .stats-row,
       #mobile-stats-panel,
       #mobile-taskbar,
       #mobile-taskbar-center,
-      #log-entry-panel,
+      .bottom-grid,
       .ctrl-left,
       .range-btns,
       .index-slider-wrap,
@@ -1996,7 +1996,7 @@
         display: none !important;
       }
 
-      /* Shell: full screen, safe-area insets only (handles notch in landscape) */
+      /* Shell: full screen, safe-area insets only (notch in landscape) */
       .shell {
         height: 100dvh;
         padding: env(safe-area-inset-top, 0px)
@@ -2006,35 +2006,47 @@
         gap: 0;
       }
 
-      /* Chart: fills all remaining space, edge-to-edge */
+      /* Chart wrap: row layout — canvas on left, sidebar on right */
       .chart-wrap {
         flex: 1 1 0;
         min-height: 0;
+        flex-direction: row;
+        align-items: stretch;
         margin: 0;
         width: 100%;
         background: transparent;
         border: none;
         border-radius: 0;
-        padding: 6px 0 4px;
+        padding: 0;
       }
 
-      /* Chart header: inset by safe areas so controls clear the notch */
+      /* Canvas fills all remaining horizontal space */
+      .chart-canvas-wrap {
+        order: 1;
+        flex: 1 1 0;
+        min-width: 0;
+      }
+
+      /* Chart header becomes the right sidebar */
       .chart-header {
-        position: relative;
-        padding: 0 max(12px, env(safe-area-inset-right, 12px))
-                   0 max(12px, env(safe-area-inset-left, 12px));
-        margin-bottom: 4px;
+        order: 2;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin: 0;
+        padding: 8px 8px 8px 4px;
+        position: static;
+        flex-shrink: 0;
       }
 
-      /* Mobile range pill — re-enable (hidden outside max-width: 430px query) */
+      /* Range buttons: vertical pill */
       #mobile-range-btns {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        gap: 2px;
-        align-items: center;
+        position: static !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column;
+        gap: 1px;
         background: var(--bg2);
         border-radius: 11px;
         padding: 3px;
@@ -2045,10 +2057,11 @@
         border: none;
         border-radius: 9px;
         color: var(--muted);
-        padding: 6px 12px;
+        padding: 7px 14px;
         font-size: 0.72rem;
         letter-spacing: 0.04em;
         box-shadow: none;
+        white-space: nowrap;
       }
 
       #mobile-range-btns .range-btn.active {
@@ -2057,9 +2070,9 @@
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
       }
 
-      /* Projected toggle: compact icon button */
+      /* Projected toggle below the range pill */
       #optimal-toggle {
-        padding: 6px 9px;
+        padding: 7px 9px;
         display: flex;
         align-items: center;
         justify-content: center;
