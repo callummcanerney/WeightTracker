@@ -2641,7 +2641,10 @@
 
     // Tight y bounds for the visible entries, including goal if set
     function getYBounds(visibleEntries) {
-      if (_isMobile) return { min: 84, max: 98 };
+      if (_isMobile) {
+        const yMin = (_goal != null && _goal <= 85) ? Math.floor(_goal) - 1 : 84;
+        return { min: yMin, max: 98 };
+      }
       if (!visibleEntries || !visibleEntries.length) return {};
       const ws = visibleEntries.map(e => e.weight);
       if (_goal != null) ws.push(_goal);
@@ -4688,8 +4691,9 @@
     if (_isMobile) {
       // Default to linear on mobile; projected is toggleable
       activeLineStyle = 'linear';
-      // Default to 6W on mobile unless user has explicitly chosen a range
-      if (!localStorage.getItem('wt-range-explicit')) activeRange = 42;
+      // Always open at 6W on mobile — don't restore previous range
+      activeRange = 42;
+      panMin = null; panMax = null;
 
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const mobileAddBtn = document.getElementById('mobile-add-btn');
